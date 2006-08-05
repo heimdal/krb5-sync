@@ -1,0 +1,16 @@
+Source: krb5-passwd-sync
+Section: net
+Priority: extra
+Maintainer: Russ Allbery <rra@debian.org>
+Build-Depends: debhelper (>= 4), autoconf, automake1.9
+Build-Conflicts: autoconf2.13, automake1.4
+Standards-Version: 3.7.2
+
+Package: krb5-passwd-sync
+Architecture: any
+Depends: ${shlibs:Depends}
+Recommends: krb5-admin-server
+Description: MIT Kerberos KDC plugin for password synchronization
+ This plugin synchronizes passwords changed via kadmind to a foreign
+ realm via the Kerberos v5 password change protocol (primarily implemented
+ by Active Directory).

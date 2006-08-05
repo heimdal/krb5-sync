@@ -1,0 +1,6 @@
+krb5-passwd-sync (0.1-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Russ Allbery <rra@debian.org>  Fri,  4 Aug 2006 17:05:04 -0700
+
