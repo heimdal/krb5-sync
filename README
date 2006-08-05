@@ -1,0 +1,7 @@
+This plugin is designed to use the new kadmind precommit/postcommit hooks to sync a password change to a foreign realm using the set-password protocol. Active Directory is the most common implementor of this protocol. 
+
+At compile time, it takes a configure switch (--with-foreign-realm=EXAMPLE.COM) to determine what realm password setting will be done in. Passwords are done in a like for like manner, meaning an incoming password change for a user "testuser" would result in the same password being set in the foreign realm for that username, e.g. testuser@EXAMPLE.COM
+
+Said changes need to be done in coordination with the password policy enforced in the foreign realm, so if that realm has a password policy which is more restrictive than the local realm, the change may be denied externally.
+
+It expects to be run with Kerberos tickets for a user with password-setting powers in the foreign realm, and for those to be renewed externally.
