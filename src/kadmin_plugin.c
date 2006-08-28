@@ -84,13 +84,34 @@ int pwupdate_precommit_password(void *context, krb5_principal principal, char *p
 
  ret:
     krb5_free_unparsed_name(fcontext, targpname);
+    krb5_free_context(fcontext);
     return code;
 }
 
 int pwupdate_postcommit_password(void *context, krb5_principal principal, char *password, int pwlen,
 				 char *errstr, int errstrlen)
 {
+  krb5_error_code retval;
+#ifndef KRB5_KRB4_COMPAT
+#define ANAME_SZ 40
+#define INST_SZ  40
+#define REALM_SZ  40
+#endif
+  char aname[ANAME_SZ+1], inst[INST_SZ+1], realm[REALM_SZ+1];
+  krb5_context fcontext;
+
+  retval = krb5_init_context(&fcontext);
+  if (retval) {
     return 0;
+  }
+  retval = krb5_524_conv_principal(fcontext, principal, aname, inst, realm);
+  krb5_free_context(fcontext);
+  if (retval) {
+    return 0;
+  }
+
+  kas_change(aname, inst, AFSREALM, password);
+  return 0;
 }
 
 void pwupdate_close(void *context)

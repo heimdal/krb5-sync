@@ -1,8 +1,8 @@
 AC_PREREQ(2.57)
-AC_INIT([passwd-sync], [0.1], [shadow (at) dementia (dot) org])
+AC_INIT([passwd-sync], [0.2], [shadow (at) dementia (dot) org])
 AC_CONFIG_SRCDIR([src/kadmin_plugin.c])
-AC_CONFIG_HEADERS(config.h)
-AM_INIT_AUTOMAKE([foreign])
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE()
 
 AM_DISABLE_STATIC
 
@@ -20,9 +20,11 @@ AC_SUBST(PACKAGE_URL, [http://www.dementia.org/~shadow/passwd-sync/])
 
 AC_ARG_WITH(foreign-realm, [  --with-foreign-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'); else FOREIGNREALM="$withval"; fi], AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'))
 
-AC_SUBST(FOREIGNREALM)
+AC_SUBST(AFSREALM)
 
-CFLAGS="$CFLAGS -L/lib"
+AC_ARG_WITH(afs-realm, [  --with-afs-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-afs-realm requires a value (the afs realm name)'); else AFSREALM="$withval"; fi], AC_MSG_ERROR('--with-afs-realm requires a value (the afs realm name)'))
+
+AC_SUBST(AFSREALM)
 
 # Checks for libraries.
 
@@ -115,6 +117,51 @@ else
 fi
 fi
 ]) dnl --with-kerberos5=DIR
+
+AC_ARG_WITH(afsdir, AC_HELP_STRING([--with-afsdir=DIR],
+                                      [Directory holding AFS includes/libs]),
+                sg_cv_with_afsdir=$withval)
+ AC_CACHE_CHECK([for location of AFS directory],
+                         sg_cv_with_afsdir, sg_cv_with_afsdir=/usr/afsws)
+
+CFLAGS="-I${sg_cv_with_afsdir}/include $CFLAGS"
+LDFLAGS="-L${sg_cv_with_afsdir}/lib -L${sg_cv_with_afsdir}/lib/afs $LDFLAGS"
+
+dnl Once we specify a directory, we try to link a test program.  If the link
+dnl works, we store the value of the directory in a cache variable.  If not,
+dnl we put _FAILED_ in the cache value.  In this way we don't try to link
+dnl the test program if our afsdir value was cached, as we know it works.
+AC_MSG_CHECKING([whether the specified AFS dir looks valid])
+if test "x${sg_cv_afsdir_link_works:-set}" != "x$sg_cv_with_afsdir"; then
+        save_LIBS="$LIBS"
+        LIBS="$save_LIBS -lcmd -lafsutil"
+        AC_TRY_LINK([#include <afs/param.h>
+	             #include <afs/cmd.h>],
+                [cmd_CreateAlias((struct cmd_syndesc *)0, "foo")],
+                sg_cv_afsdir_link_works=$sg_cv_with_afsdir,
+                sg_cv_afsdir_link_works=_FAILED_)
+        LIBS="$save_LIBS"
+        wasCached=""
+else
+        wasCached="(cached)"
+fi
+if test "x$sg_cv_afsdir_link_works" = "x$sg_cv_with_afsdir"; then
+        AC_MSG_RESULT([${wasCached} yes])
+else
+        AC_MSG_RESULT([no])
+        AC_MSG_ERROR([Unable to link test program....bad AFS dir specified?])
+fi
+
+dnl Much easier to use in XXX.in files
+AFSWS=$sg_cv_with_afsdir
+AC_SUBST(AFSWS)
+
+dnl Linking against AFS always needs these
+AC_CHECK_LIB(socket, getservbyname)
+AC_CHECK_LIB(nsl, gethostbyname)
+
+dnl And it always needs these libs added
+LIBS="$LIBS -lafsauthent -lafsrpc -lpthread"
 
 LIBS="$LIBS -ldl"
 

@@ -1,3 +1,10 @@
+krb5-passwd-sync (0.2-1) unstable; urgency=low
+
+  * New upstream release.
+    - Add support for password synchronization to AFS kaserver as well.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 28 Aug 2006 14:22:30 -0700
+
 krb5-passwd-sync (0.1-1) unstable; urgency=low
 
   * Initial release.
