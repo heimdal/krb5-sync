@@ -21,6 +21,12 @@
 /* Define to 1 if you have the `krb5' library (-lkrb5). */
 #undef HAVE_LIBKRB5
 
+/* Define to 1 if you have the `nsl' library (-lnsl). */
+#undef HAVE_LIBNSL
+
+/* Define to 1 if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #undef HAVE_LIBSSL
 
