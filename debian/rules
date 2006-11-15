@@ -59,7 +59,7 @@ install:
 	    $(TMP)/var/lib/krb5kdc/pwupdate.so
 	install -m 755 src/acct_disable $(TMP)/var/lib/krb5kdc/acct_disable
 	install -m 755 src/ad-modify $(TMP)/usr/bin/ad-modify
-	install -m 644 debian/status-prop /etc/krb5kdc/status-prop
+	install -m 644 debian/status-prop $(TMP)/etc/krb5kdc/status-prop
 
 binary: binary-arch binary-indep
 binary-indep:
