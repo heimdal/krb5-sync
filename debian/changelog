@@ -2,8 +2,9 @@ krb5-passwd-sync (0.2-2) unstable; urgency=low
 
   * Add the acct_disable script and ad-modify binary to propagate
     DISALLOW_ALL_TIX status to Windows AD as well.
+  * Build the update plugin PIC.
 
- -- Russ Allbery <rra@debian.org>  Wed, 15 Nov 2006 12:48:28 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 15 Nov 2006 14:03:51 -0800
 
 krb5-passwd-sync (0.2-1) unstable; urgency=low
 

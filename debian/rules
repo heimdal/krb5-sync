@@ -25,7 +25,7 @@ endif
 
 configure-stamp:
 	dh_testdir
-	CFLAGS="$(CFLAGS)" ./bootstrap.sh --prefix=/usr \
+	CFLAGS="$(CFLAGS) -fPIC" ./bootstrap.sh --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
 	    --with-foreign-realm=WIN.STANFORD.EDU \
 	    --with-afs-realm=IR.STANFORD.EDU --with-afsdir=/usr \
