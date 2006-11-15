@@ -1,0 +1,16 @@
+# This must be a valid shell script and must set the following variables
+# for propagation of account status into AD:
+#
+#     KEYTAB            Location of keytab holding Windows admin key
+#     ADMIN_PRINCIPAL   Fully-qualified Kerberos principal for AD admin
+#     WINDOWS_DOMAIN    Name of the Windows AD realm
+#     ADMIN_SERVER      Domain Controller to contact
+#     LOCAL_REALM       The local Kerberos realm
+#
+# These will have to be modified for test servers.
+
+KEYTAB=/etc/krb5kdc/ad-keytab
+ADMIN_PRINCIPAL=service/k4k5@stanford.edu
+WINDOWS_DOMAIN=WIN.STANFORD.EDU
+ADMIN_SERVER=rodan.win.stanford.edu
+LOCAL_REALM=stanford.edu
