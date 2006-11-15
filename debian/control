@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 4), autoconf, automake1.9, libtool, libkrb5-dev,
- libopenafs-dev
+ libopenafs-dev, libldap2-dev
 Build-Conflicts: autoconf2.13, automake1.4
 Standards-Version: 3.7.2
 
@@ -14,4 +14,6 @@ Recommends: krb5-admin-server
 Description: MIT Kerberos KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign
  realm via the Kerberos v5 password change protocol (primarily implemented
- by Active Directory).
+ by Active Directory) and via AFS calls to a Kerberos v4 kaserver.  Also
+ provided is a script and binary that can propagate changes to the
+ DISALLOW_ALL_TIX flag into Windows AD.

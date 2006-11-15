@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# This script must live in the Kerberos database directory (at least until
+# the patch is made less dumb about paths).  It sources the configuration
+# file /etc/krb5kdc/status-prop, which should set the following variables:
+#
+#     KEYTAB		Location of keytab holding Windows admin key
+#     ADMIN_PRINCIPAL	Fully-qualified Kerberos principal for AD admin
+#     WINDOWS_DOMAIN	Name of the Windows AD realm
+#     ADMIN_SERVER	Domain Controller to contact
+#     LOCAL_REALM	The local Kerberos realm
+#
+# It assumes that the ad-modify binary is in /usr/bin.
+#
+# The first command-line argument should be the fully-qualified principal
+# in the local realm and the second command-line argument will be the flag
+# "enable" or "disable".
+
+set -e
+. /etc/krb5kdc/status-prop
+
+# "user" needs to be the "short" username in your windows realm.  This needs
+# to be converted from the complete principal name we get passed on the
+# command line as the first argument.  You may want to consider something
+# like this.
+user=`echo "$1" | sed -e "s/@$LOCAL_REALM//"`
+
+/usr/bin/ad-modify "$ADMIN_SERVER" "$KEYTAB" "$ADMIN_PRINCIPAL" "$user" \
+    "$WINDOWS_DOMAIN" "$2"
+
+exit 0

@@ -9,9 +9,9 @@ TMP = $(CURDIR)/debian/krb5-passwd-sync
 
 CFLAGS=-g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-    CCOPTS += -O0
+    CFLAGS += -O0
 else
-    CCOPTS += -O2
+    CFLAGS += -O2
 endif
 
 # Tell Autoconf the correct system types.
@@ -38,6 +38,7 @@ build-indep:
 build-stamp:
 	dh_testdir
 	$(MAKE)
+	cd src && gcc $(CFLAGS) -o ad-modify ad-modify.c -lkrb5 -lldap
 	touch build-stamp
 
 clean:
@@ -52,8 +53,13 @@ install:
 	dh_testroot
 	dh_clean -k
 	install -d $(TMP)/var/lib/krb5kdc
+	install -d $(TMP)/usr/bin
+	install -d $(TMP)/etc/krb5kdc
 	install src/.libs/pwupdate.so \
 	    $(TMP)/var/lib/krb5kdc/pwupdate.so
+	install -m 755 src/acct_disable $(TMP)/var/lib/krb5kdc/acct_disable
+	install -m 755 src/ad-modify $(TMP)/usr/bin/ad-modify
+	install -m 644 debian/status-prop /etc/krb5kdc/status-prop
 
 binary: binary-arch binary-indep
 binary-indep:
