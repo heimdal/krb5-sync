@@ -27,8 +27,8 @@ configure-stamp:
 	dh_testdir
 	CFLAGS="$(CFLAGS) -fPIC" ./bootstrap.sh --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	    --with-foreign-realm=WIN.STANFORD.EDU \
-	    --with-afs-realm=IR.STANFORD.EDU --with-afsdir=/usr \
+	    --with-foreign-realm=NT.STANFORD.EDU \
+	    --with-afs-realm=TEST.STANFORD.EDU --with-afsdir=/usr \
 	    $(SYSTEM)
 	touch configure-stamp
 

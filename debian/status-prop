@@ -11,6 +11,6 @@
 
 KEYTAB=/etc/krb5kdc/ad-keytab
 ADMIN_PRINCIPAL=service/k4k5@stanford.edu
-WINDOWS_DOMAIN=WIN.STANFORD.EDU
-ADMIN_SERVER=rodan.win.stanford.edu
+WINDOWS_DOMAIN=NT.STANFORD.EDU
+ADMIN_SERVER=ntdc2.nt.stanford.edu
 LOCAL_REALM=stanford.edu

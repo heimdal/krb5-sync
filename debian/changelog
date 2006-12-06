@@ -1,3 +1,10 @@
+krb5-passwd-sync (0.2-3) unstable; urgency=low
+
+  * Point the compile-time hard-coded realms (ugh) and the configuration
+    file at the test environment for right now.
+
+ -- Russ Allbery <rra@debian.org>  Tue,  5 Dec 2006 21:15:24 -0800
+
 krb5-passwd-sync (0.2-2) unstable; urgency=low
 
   * Add the acct_disable script and ad-modify binary to propagate
