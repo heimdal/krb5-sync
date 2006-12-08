@@ -10,7 +10,7 @@
 #define PWSERV_NAME  "changepw"
 #define KADM_SNAME   "kerberos_master"
 #define KADM_SINST   "kerberos"
-#define SRVTAB_FILE "/etc/srvtab"
+#define SRVTAB_FILE "/etc/krb5kdc/k4-srvtab"
 
 #include <afs/param.h>
 #include <afs/stds.h>

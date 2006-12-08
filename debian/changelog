@@ -2,8 +2,9 @@ krb5-passwd-sync (0.2-3) unstable; urgency=low
 
   * Point the compile-time hard-coded realms (ugh) and the configuration
     file at the test environment for right now.
+  * Hard-code a slightly more useful path to the K4 srvtab.
 
- -- Russ Allbery <rra@debian.org>  Tue,  5 Dec 2006 21:15:24 -0800
+ -- Russ Allbery <rra@debian.org>  Fri,  8 Dec 2006 14:56:32 -0800
 
 krb5-passwd-sync (0.2-2) unstable; urgency=low
 
