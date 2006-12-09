@@ -5,9 +5,10 @@ krb5-passwd-sync (0.2-3) unstable; urgency=low
   * Hard-code a slightly more useful path to the K4 srvtab.
   * When syncing with Kerberos v4, use the kaserver interface.
   * Link against the proper Kerberos v4 libraries.
+  * Fix the build machinery to actually set the foreign realm.
   * Run Autoconf and Automake before building.
 
- -- Russ Allbery <rra@debian.org>  Fri,  8 Dec 2006 16:24:22 -0800
+ -- Russ Allbery <rra@debian.org>  Fri,  8 Dec 2006 16:37:27 -0800
 
 krb5-passwd-sync (0.2-2) unstable; urgency=low
 

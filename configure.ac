@@ -20,7 +20,7 @@ AC_SUBST(PACKAGE_URL, [http://www.dementia.org/~shadow/passwd-sync/])
 
 AC_ARG_WITH(foreign-realm, [  --with-foreign-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'); else FOREIGNREALM="$withval"; fi], AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'))
 
-AC_SUBST(AFSREALM)
+AC_SUBST(FOREIGNREALM)
 
 AC_ARG_WITH(afs-realm, [  --with-afs-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-afs-realm requires a value (the afs realm name)'); else AFSREALM="$withval"; fi], AC_MSG_ERROR('--with-afs-realm requires a value (the afs realm name)'))
 
