@@ -99,7 +99,7 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
 #ifdef KA_INTERFACE
     if (!code) code = ka_ChangePassword (rname, rinstance, conn, 0, newpw);
     if (code)
-        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_ChangePassword");
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_ChangePassword: %s", error_message(code));
 #else
     if (!code) code = ubik_Call (KAM_SetPassword, conn, 0, rname, rinstance, 0, newpw);
     if (code)
