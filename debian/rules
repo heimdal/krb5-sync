@@ -30,7 +30,7 @@ configure-stamp:
 	autoheader
 	automake-1.9 --add-missing --copy
 	autoconf
-	CFLAGS="$(CFLAGS) -fPIC" ./bootstrap.sh --prefix=/usr \
+	CFLAGS="$(CFLAGS) -fPIC -DKA_INTERFACE" ./bootstrap.sh --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
 	    --with-foreign-realm=NT.STANFORD.EDU \
 	    --with-afs-realm=TEST.STANFORD.EDU --with-afsdir=/usr \

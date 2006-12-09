@@ -7,8 +7,8 @@
 
 #include <kerberosIV/krb.h>
 
-#define PWSERV_NAME  "changepw"
-#define KADM_SINST   "kerberos"
+#define PWSERV_NAME  "service"
+#define KADM_SINST   "k4k5"
 #define SRVTAB_FILE "/etc/krb5kdc/k4-srvtab"
 
 #include <afs/param.h>
