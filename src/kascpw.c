@@ -77,7 +77,11 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
         krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_GetAdminToken");
 #else
     if (!code) code = krb_get_svc_in_tkt(PWSERV_NAME, KADM_SINST, realm, KA_ADMIN_NAME, KA_ADMIN_INST, 4, SRVTAB_FILE);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed krb_get_svc_in_tkt");
     if (!code) code = krb_get_cred(KA_ADMIN_NAME, KA_ADMIN_INST, realm, &admincred);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed krb_get_cred");
     if (!code) {
       token.startTime = admincred.issue_date;
       token.endTime = admincred.issue_date + admincred.lifetime;
@@ -98,6 +102,8 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
         krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_ChangePassword");
 #else
     if (!code) code = ubik_Call (KAM_SetPassword, conn, 0, rname, rinstance, 0, newpw);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ubik_Call");
 #endif
 
     /* clean up */
