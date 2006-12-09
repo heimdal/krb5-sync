@@ -3,8 +3,9 @@ krb5-passwd-sync (0.2-3) unstable; urgency=low
   * Point the compile-time hard-coded realms (ugh) and the configuration
     file at the test environment for right now.
   * Hard-code a slightly more useful path to the K4 srvtab.
+  * When syncing with K4, use the kaserver interface.
 
- -- Russ Allbery <rra@debian.org>  Fri,  8 Dec 2006 14:56:32 -0800
+ -- Russ Allbery <rra@debian.org>  Fri,  8 Dec 2006 16:15:47 -0800
 
 krb5-passwd-sync (0.2-2) unstable; urgency=low
 
