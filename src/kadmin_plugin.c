@@ -102,13 +102,13 @@ int pwupdate_postcommit_password(void *context, krb5_principal principal, char *
 
   retval = krb5_init_context(&fcontext);
   if (retval) {
-      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed initializing kerberos library: %d", ret);
+      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed initializing kerberos library: %d", retval);
       snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(retval));
       return (1);
   }
   retval = krb5_524_conv_principal(fcontext, principal, aname, inst, realm);
   if (retval) {
-      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed converting principal to K4: %d", ret);
+      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed converting principal to K4: %d", retval);
       snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(retval));
       return (1);
   }
@@ -120,5 +120,4 @@ int pwupdate_postcommit_password(void *context, krb5_principal principal, char *
 void pwupdate_close(void *context)
 {
     if (l_context.realm) free(l_context.realm);
-    return 0;
 }
