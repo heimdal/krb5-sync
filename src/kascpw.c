@@ -8,7 +8,6 @@
 #include <kerberosIV/krb.h>
 
 #define PWSERV_NAME  "changepw"
-#define KADM_SNAME   "kerberos_master"
 #define KADM_SINST   "kerberos"
 #define SRVTAB_FILE "/etc/krb5kdc/k4-srvtab"
 
@@ -52,23 +51,30 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
 
     if ((ka_Init(0)) ||	!(lcell = ka_LocalCell())) {
       memset(&newpw, 0, sizeof(newpw));
+      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_Init");
       return(1);
     }
     strcpy (realm, lcell);
     if (code = ka_CellToRealm (realm, realm, &local)) {
       memset(&newpw, 0, sizeof(newpw));
+      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_CellToRealm");
       return(1);
     }
     if (strcmp(realm, rrealm)) {
       memset(&newpw, 0, sizeof(newpw));
+      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed realm mismatch");
       return(1);
     }
     lcstring (cell, realm, sizeof(cell));
 
     code = read_service_key(PWSERV_NAME, KADM_SINST, realm, 0, SRVTAB_FILE, &mitkey);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed read_service_key");
 #ifdef KA_INTERFACE
     if (!code) code = ka_GetAdminToken (PWSERV_NAME, KADM_SINST, realm,
 			     &mitkey, 1000, &token, /*!new*/0);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_GetAdminToken");
 #else
     if (!code) code = krb_get_svc_in_tkt(PWSERV_NAME, KADM_SINST, realm, KA_ADMIN_NAME, KA_ADMIN_INST, 4, SRVTAB_FILE);
     if (!code) code = krb_get_cred(KA_ADMIN_NAME, KA_ADMIN_INST, realm, &admincred);
@@ -84,8 +90,12 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
     
     memset(&mitkey, 0, sizeof(mitkey));
     if (!code) code = ka_AuthServerConn (realm, KA_MAINTENANCE_SERVICE, &token, &conn);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_AuthServerConn");
 #ifdef KA_INTERFACE
     if (!code) code = ka_ChangePassword (rname, rinstance, conn, 0, newpw);
+    if (code)
+        krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_ChangePassword");
 #else
     if (!code) code = ubik_Call (KAM_SetPassword, conn, 0, rname, rinstance, 0, newpw);
 #endif
@@ -98,7 +108,13 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
       memset(&newpw, 0, sizeof(newpw));
     }
 
-#ifndef NOT_MY_KEY
+    if (!code) {
+      krb5_klog_syslog(LOG_INFO, "pwupdate: '%s.%s@%s' password changed", rname, rinstance, rrealm);
+    }
+
+    return(code);
+
+#ifdef NOT_MY_KEY
 #ifdef KA_INTERFACE
     if (!code) code = ka_GetAdminToken (rname, rinstance, realm,
 			     &newpw, 1000, &token, /*!new*/0);
@@ -117,18 +133,12 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
     if (!code) code = ka_AuthServerConn (realm, KA_MAINTENANCE_SERVICE, &token, &conn);
     if (!code) code = ubik_Call (KAM_GetEntry, conn, 0, rname, rinstance, KAMAJORVERSION, &tentry);
     if (!code) code = ubik_Call (KAM_SetPassword, conn, 0, rname, rinstance, tentry.key_version, newpw);
-#endif
 
     /* clean up */
     memset(&newpw, 0, sizeof(newpw));
     ubik_ClientDestroy(conn);
     rx_Finalize();
-
-    if (!code) {
-      krb5_klog_syslog(LOG_INFO, "pwupdate: '%s.%s@%s' password changed", rname, rinstance, rrealm);
-    }
-
-    return(code);
+#endif
 }
 
 /* From this call we process AFS error codes into MIT Kerberos errors */

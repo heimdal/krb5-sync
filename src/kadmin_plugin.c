@@ -100,6 +100,8 @@ int pwupdate_postcommit_password(void *context, krb5_principal principal, char *
   char aname[ANAME_SZ+1], inst[INST_SZ+1], realm[REALM_SZ+1];
   krb5_context fcontext;
 
+  *errstr = '\0';
+
   retval = krb5_init_context(&fcontext);
   if (retval) {
       krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed initializing kerberos library: %d", retval);
