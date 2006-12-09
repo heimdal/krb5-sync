@@ -25,6 +25,11 @@ endif
 
 configure-stamp:
 	dh_testdir
+	aclocal-1.9
+	libtoolize --force --copy
+	autoheader
+	automake-1.9 --add-missing --copy
+	autoconf
 	CFLAGS="$(CFLAGS) -fPIC -DKA_INTERFACE" ./bootstrap.sh --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
 	    --with-foreign-realm=NT.STANFORD.EDU \
