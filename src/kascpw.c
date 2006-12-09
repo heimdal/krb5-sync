@@ -43,6 +43,7 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
 
     struct ubik_client *conn;
     struct ktc_encryptionKey mitkey;
+    struct ktc_encryptionKey newkey;
     struct ktc_token    token;
 #ifndef KA_INTERFACE
     CREDENTIALS admincred;
@@ -97,7 +98,10 @@ kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
     if (code)
         krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_AuthServerConn");
 #ifdef KA_INTERFACE
-    if (!code) code = ka_ChangePassword (rname, rinstance, conn, 0, newpw);
+    if (!code) {
+        ka_StringToKey(newpw, realm, &newkey);
+        code = ka_ChangePassword (rname, rinstance, conn, 0, &newkey);
+    }
     if (code)
         krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed ka_ChangePassword: %s", error_message(code));
 #else
