@@ -4,8 +4,10 @@ krb5-passwd-sync (0.2-4) unstable; urgency=low
     the LDAP libraries doesn't just use the default cache.
   * Our AD stores accounts under ou=Accounts, not cn=Users.
   * Log a message to syslog when we propagate status.
+  * Report error messages to syslog rather than standard error so that we
+    can see what's going on.
 
- -- Russ Allbery <rra@debian.org>  Mon, 11 Dec 2006 14:05:53 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 11 Dec 2006 14:15:14 -0800
 
 krb5-passwd-sync (0.2-3) unstable; urgency=low
 

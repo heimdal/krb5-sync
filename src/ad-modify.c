@@ -40,10 +40,7 @@ int main(int argc, char *argv[])
         openlog("ad-modify", LOG_PID, LOG_AUTHPRIV);
 
 	if (argc != 7) {
-		fprintf(stderr, "Usage: %s \\\n\tldap-server keytab "
-			"client-principal username windows-domain \\\n\t"
-			"enable|disable\n",
-			argv[0]);
+                syslog(LOG_ERR, "incorrect argc (%d != 7)", argc);
 		exit(1);
 	}
 
@@ -52,15 +49,13 @@ int main(int argc, char *argv[])
 	} else if (strcmp(argv[6], "disable") == 0) {
 		enable = 0;
 	} else {
-		fprintf(stderr, "Final argument must be one of \"enable\" "
-			"or \"disable\"\n");
+                syslog(LOG_ERR, "incorrect final argument: %s", argv[6]);
 		exit(1);
 	}
 
 	/* Point SASL at the memory cache we're about to create. */
 	if (putenv("KRB5CCNAME=" CACHE_NAME) != 0) {
-		fprintf(stderr, "putenv of KRB5CCNAME failed: %s\n",
-			strerror(errno));
+                syslog(LOG_ERR, "putenv of KRB5CCNAME failed: %m");
 		exit(1);
 	}
 
@@ -70,8 +65,8 @@ int main(int argc, char *argv[])
 	 */
 
 	if ((retval = krb5_init_context(&context))) {
-		fprintf(stderr, "init_context failed: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "init_context failed: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
@@ -79,14 +74,14 @@ int main(int argc, char *argv[])
 	ktname[sizeof(ktname) - 1] = '\0';
 
 	if ((retval = krb5_kt_resolve(context, ktname, &kt))) {
-		fprintf(stderr, "Unable to resolve keytab: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to resolve keytab: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
 	if ((retval = krb5_parse_name(context, argv[3], &client))) {
-		fprintf(stderr, "Unable to parse client name: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to parse client name: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
@@ -95,38 +90,38 @@ int main(int argc, char *argv[])
 
 	if ((retval = krb5_get_init_creds_keytab(context, &creds, client,
 						 kt, 0, NULL, &options))) {
-		fprintf(stderr, "Unable to get initial credentials: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to get initial credentials: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
 	if ((retval = krb5_cc_resolve(context, CACHE_NAME, &cc))) {
-		fprintf(stderr, "Unable to resolve memory cache: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to resolve memory cache: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
 	if ((retval = krb5_cc_initialize(context, cc, client))) {
-		fprintf(stderr, "Unable to initialize memory cache: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to initialize memory cache: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
 	if ((retval = krb5_cc_store_cred(context, cc, &creds))) {
-		fprintf(stderr, "Unable to store credentials in cache: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to store credentials in cache: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
 	if ((retval = krb5_cc_close(context, cc))) {
-		fprintf(stderr, "Unable to close memory cache: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to close memory cache: %s",
+                       error_message(retval));
 		exit(1);
 	}
 
 	if ((retval = krb5_kt_close(context, kt))) {
-		fprintf(stderr, "Unable to close keytab: %s\n",
-			error_message(retval));
+		syslog(LOG_ERR, "Unable to close keytab: %s",
+                       error_message(retval));
 		exit(1);
 	}
 	
@@ -141,16 +136,16 @@ int main(int argc, char *argv[])
 	ldapuri[sizeof(ldapuri) - 1] = '\0';
 
 	if ((retval = ldap_initialize(&ld, ldapuri)) != LDAP_SUCCESS) {
-		fprintf(stderr, "ldap initialization failed: %s\n",
-			ldap_err2string(retval));
+		syslog(LOG_ERR, "ldap initialization failed: %s",
+                       ldap_err2string(retval));
 		exit(1);
 	}
 
 	option = LDAP_VERSION3;
 	if ((retval = ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION,
 				      &option)) != LDAP_SUCCESS) {
-		fprintf(stderr, "ldap protocol selection failed: %s\n",
-			ldap_err2string(retval));
+		syslog(LOG_ERR, "ldap protocol selection failed: %s",
+                       ldap_err2string(retval));
 		exit(1);
 	}
 
@@ -158,7 +153,9 @@ int main(int argc, char *argv[])
 						    NULL, LDAP_SASL_QUIET,
 						    ad_interact_sasl,
 						    NULL)) != LDAP_SUCCESS) {
-		ldap_perror(ld, "sasl_interactive_bind");
+		syslog(LOG_ERR, "ldap bind failed: %s",
+                       ldap_err2string(retval));
+                ldap_perror(ld, "sasl_interactive_bind");
 		exit(1);
 	}
 
@@ -193,13 +190,13 @@ int main(int argc, char *argv[])
 			       ldapdn, attrs, 0, &res);
 
 	if (retval != LDAP_SUCCESS) {
-		fprintf(stderr, "ldap search on \"%s\" failed: %s\n",
+                syslog(LOG_ERR, "ldap search on \"%s\" failed: %s",
 			ldapdn, ldap_err2string(retval));
 		exit(1);
 	}
 
 	if (ldap_count_entries(ld, res) == 0) {
-		fprintf(stderr, "No such user \"%s\" found.\n", argv[4]);
+                syslog(LOG_ERR, "No such user \"%s\" found", argv[4]);
 		exit(1);
 	}
 
@@ -208,8 +205,8 @@ int main(int argc, char *argv[])
 	dn = ldap_get_dn(ld, res);
 
 	if (ldap_msgtype(res) != LDAP_RES_SEARCH_ENTRY) {
-		fprintf(stderr, "Expected msgtype of RES_SEARCH_ENTRY (0x61), "
-			"but got type %x instead\n", ldap_msgtype(res));
+                syslog(LOG_ERR, "Expected msgtype of RES_SEARCH_ENTRY (0x61), "
+			"but got type %x instead", ldap_msgtype(res));
 		exit(1);
 	}
 
@@ -217,14 +214,14 @@ int main(int argc, char *argv[])
 	ldap_msgfree(res);
 
 	if (ldap_count_values(vals) != 1) {
-		fprintf(stderr, "We expected 1 value for userAccoutControl, "
-			"and we got %d.  Aborting!\n",
+                syslog(LOG_ERR, "We expected 1 value for userAccoutControl, "
+			"and we got %d.  Aborting!",
 			ldap_count_values(vals));
 		exit(1);
 	}
 
 	if (sscanf(vals[0], "%u", &acctcontrol) != 1) {
-		fprintf(stderr, "Unable to parse userAccountControl (%s)\n",
+                syslog(LOG_ERR, "Unable to parse userAccountControl (%s)",
 			vals[0]);
 		exit(1);
 	}
@@ -251,8 +248,8 @@ int main(int argc, char *argv[])
 	mod_array[1] = NULL;
 
 	if ((retval = ldap_modify_s(ld, dn, mod_array)) != LDAP_SUCCESS) {
-		fprintf(stderr, "LDAP database modification failed: %s\n",
-			ldap_err2string(retval));
+		syslog(LOG_ERR, "LDAP database modification failed: %s",
+                       ldap_err2string(retval));
 		exit(1);
 	}
 
