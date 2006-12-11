@@ -1,3 +1,10 @@
+krb5-passwd-sync (0.2-4) unstable; urgency=low
+
+  * In ad-modify, set the ticket cache appropriately so that SASL inside
+    the LDAP libraries doesn't just use the default cache.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 11 Dec 2006 13:35:42 -0800
+
 krb5-passwd-sync (0.2-3) unstable; urgency=low
 
   * Point the compile-time hard-coded realms (ugh) and the configuration

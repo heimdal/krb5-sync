@@ -2,6 +2,7 @@
  * Modify an account on an AD server to enable or disable it
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -50,6 +51,13 @@ int main(int argc, char *argv[])
 	} else {
 		fprintf(stderr, "Final argument must be one of \"enable\" "
 			"or \"disable\"\n");
+		exit(1);
+	}
+
+	/* Point SASL at the memory cache we're about to create. */
+	if (putenv("KRB5CCNAME=" CACHE_NAME) != 0) {
+		fprintf(stderr, "putenv of KRB5CCNAME failed: %s\n",
+			strerror(errno));
 		exit(1);
 	}
 
