@@ -3,6 +3,7 @@
  */
 
 #include <errno.h>
+#include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,6 +36,8 @@ int main(int argc, char *argv[])
 	char **vals;
 	int option, enable;
 	unsigned int acctcontrol;
+
+        openlog("ad-modify", LOG_PID, LOG_AUTHPRIV);
 
 	if (argc != 7) {
 		fprintf(stderr, "Usage: %s \\\n\tldap-server keytab "
@@ -252,6 +255,9 @@ int main(int argc, char *argv[])
 			ldap_err2string(retval));
 		exit(1);
 	}
+
+        syslog(LOG_INFO, "successfully set account %s to %s", argv[4],
+               argv[6]);
 
 	ldap_unbind_s(ld);
 	exit(0);
