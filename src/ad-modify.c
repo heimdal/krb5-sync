@@ -38,6 +38,7 @@ int main(int argc, char *argv[])
 	unsigned int acctcontrol;
 
         openlog("ad-modify", LOG_PID, LOG_AUTHPRIV);
+        syslog(LOG_INFO, "running ad-modify to %s %s", argv[6], argv[4]);
 
 	if (argc != 7) {
                 syslog(LOG_ERR, "incorrect argc (%d != 7)", argc);
