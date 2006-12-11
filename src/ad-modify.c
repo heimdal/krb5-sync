@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 	 */
 
 	memset(ldapbase, 0, sizeof(ldapbase));
-	strcpy(ldapbase, "cn=Users,dc=");
+	strcpy(ldapbase, "ou=Accounts,dc=");
 	lb = ldapbase + strlen(ldapbase);
 
 	for (dname = argv[5]; *dname; dname++) {
