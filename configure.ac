@@ -1,22 +1,24 @@
-AC_PREREQ(2.57)
-AC_INIT([passwd-sync], [0.2], [shadow (at) dementia (dot) org])
-AC_CONFIG_SRCDIR([src/kadmin_plugin.c])
-AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE()
+dnl Process this file with autoconf to produce a configure script.
+dnl $Id: configure.ac 2823 2006-12-07 03:58:51Z rra $
+dnl
+dnl Copyright 2006 Board of Trustees, Leland Stanford Jr. University.
+dnl See README for licensing terms.
 
+AC_REVISION([$Revision$])
+AC_PREREQ([2.60])
+AC_INIT([krb5-sync], [0.4], [rra@stanford.edu])
+AC_CONFIG_AUX_DIR([tools])
+AM_INIT_AUTOMAKE([1.10 -Wall -Werror ])
+
+AC_PROG_CC
+AM_PROG_CC_C_O
+AC_PROG_LIBTOOL
 AM_DISABLE_STATIC
 
-# Checks for programs.
-AC_PROG_CC
-AC_PROG_LIBTOOL
-AC_PROG_CXX
-
-# If using GCC specifiy some additional parameters
+# Crank up the warnings if we're using GCC.
 if test "x$GCC" = "xyes" ; then
-   CFLAGS="$CFLAGS -pipe"
+   CFLAGS="-Wall $CFLAGS"
 fi
-
-AC_SUBST(PACKAGE_URL, [http://www.dementia.org/~shadow/passwd-sync/])
 
 AC_ARG_WITH(foreign-realm, [  --with-foreign-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'); else FOREIGNREALM="$withval"; fi], AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'))
 
@@ -165,24 +167,6 @@ LIBS="$LIBS -lafsauthent -lafsrpc -lpthread"
 
 LIBS="$LIBS -ldl"
 
-# Checks for header files.
-
-AC_CHECK_FUNCS([strdup])
-AC_FUNC_FORK
-AC_FUNC_LSTAT
-AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
-AC_FUNC_VPRINTF
-
-AC_CHECK_HEADERS([fcntl.h limits.h syslog.h termios.h])
-AC_HEADER_STDC
-AC_HEADER_SYS_WAIT
-
-AC_C_CONST
-
-AC_TYPE_MODE_T
-AC_TYPE_PID_T
-AC_TYPE_SIGNAL
-AC_TYPE_UID_T
-
-AC_CONFIG_FILES([src/Makefile Makefile])
+AC_CONFIG_FILES([Makefile])
+AC_CONFIG_HEADER([config.h])
 AC_OUTPUT
