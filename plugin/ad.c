@@ -124,7 +124,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         snprintf(errstr, errstrlen, "password change failed for %s in %s: %s",
                  target, config->ad_realm, error_message(ret));
         code = 1;
-        goto ret;
+        goto done;
     }
     if (result_code != 0) {
         snprintf(errstr, errstrlen, "password change failed for %s in %s:"
@@ -133,7 +133,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
                  result_string.length ? ": " : "", 
                  result_string.length, result_string.data); 
         code = 2;
-        goto ret;
+        goto done;
     }
     free(result_string.data);
     free(result_code_string.data);
@@ -141,7 +141,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
            config->ad_realm);
     snprintf(errstr, errstrlen, "Password changed");
 
- ret:
+done:
     krb5_free_unparsed_name(ctx, target);
     krb5_cc_destroy(ctx, ccache);
     return code;
