@@ -23,15 +23,6 @@ if test "x$GCC" = "xyes" ; then
    CFLAGS="-Wall $CFLAGS"
 fi
 
-AC_ARG_WITH(foreign-realm, [  --with-foreign-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'); else FOREIGNREALM="$withval"; fi], AC_MSG_ERROR('--with-foreign-realm requires a value (the foreign realm name)'))
-
-AC_SUBST(FOREIGNREALM)
-
-AC_ARG_WITH(afs-realm, [  --with-afs-realm=EXAMPLE.COM		set realm for password propagation],[if test "x$withval" = "xyes"; then AC_MSG_ERROR('--with-afs-realm requires a value (the afs realm name)'); else AFSREALM="$withval"; fi], AC_MSG_ERROR('--with-afs-realm requires a value (the afs realm name)'))
-
-AC_SUBST(AFSREALM)
-
-
 AC_ARG_WITH(afsdir, AC_HELP_STRING([--with-afsdir=DIR],
                                       [Directory holding AFS includes/libs]),
                 sg_cv_with_afsdir=$withval)
