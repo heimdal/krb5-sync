@@ -103,10 +103,8 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
 
     ret = krb5_init_context(ctx);
     if (ret != 0) {
-        syslog(LOG_ERR, "password synchronization failure initializing"
-               " Kerberos library: %s", error_message(ret));
-        snprintf(errstr, errstrlen, "password synchronization failure"
-                 " initializing Kerberos library: %s", error_message(ret));
+        snprintf(errstr, errstrlen, "failure initializing Kerberos library:"
+                 " %s", error_message(ret));
         return 1;
     }
     return 0;
@@ -127,11 +125,12 @@ principal_allowed(krb5_context ctx, krb5_principal principal)
         krb5_error_code ret;
 
         ret = krb5_unparse_name(ctx, principal, &display);
-        if (ret != 0 || display == NULL)
-            display = strdup("-UNKNOWN-");
+        if (ret != 0)
+            display = NULL;
         syslog(LOG_DEBUG, "password synchronization skipping principal \"%s\""
-               " with non-null instance", display);
-        free(display);
+               " with non-null instance", display != NULL ? display : "???");
+        if (display != NULL)
+            free(display);
         return 0;
     }
     return 1;
