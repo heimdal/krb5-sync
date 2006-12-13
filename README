@@ -1,7 +1,209 @@
-This plugin is designed to use the new kadmind precommit/postcommit hooks to sync a password change to a foreign realm using the set-password protocol. Active Directory is the most common implementor of this protocol. 
+                              krb5-sync 0.3
+                 (kadmind account synchronization plugin)
 
-At compile time, it takes a configure switch (--with-foreign-realm=EXAMPLE.COM) to determine what realm password setting will be done in. Passwords are done in a like for like manner, meaning an incoming password change for a user "testuser" would result in the same password being set in the foreign realm for that username, e.g. testuser@EXAMPLE.COM
+              Maintained by Russ Allbery <rra@stanford.edu>
 
-Said changes need to be done in coordination with the password policy enforced in the foreign realm, so if that realm has a password policy which is more restrictive than the local realm, the change may be denied externally.
+  Copyright 2006 Board of Trustees, Leland Stanford Jr. University.  This
+  software is distributed under a BSD-style license.  Please see the
+  section LICENSE for more information.
 
-It expects to be run with Kerberos tickets for a user with password-setting powers in the foreign realm, and for those to be renewed externally.
+  This should be considered alpha-quality code.  It is not currently
+  running anywhere in production and will likely require modifications to
+  fit any environment other than Stanford's.  Feedback and improvements
+  will be gratefully accepted.
+
+BLURB
+
+  krb5-sync is a toolkit for updating passwords and account status from an
+  MIT Kerberos master KDC to Active Directory and/or an AFS kaserver.  It
+  is implemented as a patch to kadmind and a plugin module that will push
+  password changes and selected account flag changes to Active Directory
+  or to a kaserver at the same time as they are made to the local KDC
+  database.
+
+DESCRIPTION
+
+  Large organizations may not have the luxury of running a single Kerberos
+  KDC, or may need to maintain an AFS kaserver and MIT Kerberos
+  environment in parallel during a transition.  This toolkit allows one to
+  run an MIT Kerberos KDC as the master password store, create separate
+  user accounts in independent Active Directory or AFS kaserver KDCs, and
+  synchronize password updates and some account flag updates automatically
+  between the environments.  It assumes that the MIT Kerberos KDC is the
+  only place changes will be made and those changes will be replicated to
+  the other environments.  Bidirectional replication is outside the scope
+  of this toolkit.
+
+  This toolkit consists of three basic pieces:
+
+   * A patch to MIT Kerberos to add a plugin system for password changes
+     and account status updates.  This patch just adds hooks that are run
+     prior to a password change, after a password change, and after a
+     change to an account's flags.  The code in kadmind is independent of
+     what that plugin might do.
+
+   * A kadmind plugin that uses that system to push password changes to
+     Active Directory or to an AFS kaserver or that pushes selected
+     account flag changes to Active Directory.  This is done using a
+     separate keytab or srvtab to authenticate to Active Directory or to
+     the AFS kaserver.  Active Directory password updates are done via the
+     Kerberos set-password protocol and status updates are done via LDAP.
+     AFS kaserver password changes are done via AFS ka_* calls.
+
+   * A set of command-line utilities that can perform the same password
+     and status updates as the plugin but from the command-line.  These
+     can be used to process failed synchronizations later, to test the
+     system, or to make manual changes as required.
+
+  The plugin and system are designed so that operations done in the hook
+  prior to the password change can abort the password change if they
+  fail.  The plugin provided here changes passwords in Active Directory
+  prior to the password change in the local KDC database and changes
+  passwords in Kerberos v4 after the local KDC database change.  This
+  means that if Active Directory is unreachable or rejects the password
+  change for some reason, the whole operation will be rejected and the
+  user's password will not be changed in MIT Kerberos as well.  The same
+  is not true of AFS kaserver password changes; if they fail, the password
+  will still be changed in the local KDC database and in Active Directory
+  (if configured).  This matches the desired migration behavior for
+  Stanford University; you may wish to modify it for your site.
+
+  Currently, only one Active Directory realm and only one AFS kaserver
+  cell is supported for updates.
+
+REQUIREMENTS
+
+  The utilities provided in this package will work without any
+  modifications to your KDC or kadmind, but to use this entire system, you
+  will have to apply the patch in the patches directory to MIT Kerberos
+  and rebuild.  Due to how kadmind is constructed, the changes are
+  actually in the libkadm5srv library, not the kadmind binary, so you'll
+  need to install the modified libraries.  It is my hope that eventually
+  an interface like this will be incorporated into the MIT Kerberos
+  distribution and patching will not be necessary.
+
+  To build the account status update code, you will need OpenLDAP
+  installed.  To authenticate to Active Directory, you will also need
+  Cyrus SASL installed including the Kerberos GSSAPI modules.  The plugin
+  or command-line utilities will need access to a keytab with
+  administrative privileges in Active Directory, a srvtab with
+  administrative privileges in the AFS kaserver, or both, depending on
+  which synchronizations you intend to perform.  To configure status
+  updates, you will also need to know the server to which to do LDAP
+  queries (generally, this is one of the Domain Controllers).
+
+  To build the AFS kaserver update code, you will need the AFS libraries
+  available.  Several of the static AFS libraries are required, so the AFS
+  libraries must either be built PIC (using, for instance, the gcc -fPIC
+  option) or you will need to be using a platform where non-PIC code can
+  be linked into a dynamically loaded object.  This will work on x86 Linux
+  but not on x86_64 (AMD64) Linux, for instance.
+
+  If updating an AFS kaserver, the system on which kadmind is running must
+  have as its default AFS cell the cell in which updates should be made.
+
+COMPILING AND INSTALLING
+
+  First, patch MIT Kerberos with the patch provided in the patches
+  directory and install the new libkadm5srv library.  See patches/README
+  for more information about the patch.  If you're using a different
+  version of MIT Kerberos, you may need to adjust the patch accordingly.
+
+  Then, you can build and install the plugin and command-line utilities
+  with the standard commands:
+
+      ./configure
+      make
+      make install
+
+  The last step will probably have to be done as root.  By default, the
+  plugin is installed as /usr/local/lib/kadmind/passwd_update.so and the
+  utilities are installed in /usr/local/bin.  You can change those paths
+  with the --prefix, --libdir, and --bindir options to configure.
+
+  Normally, configure will use krb5-config to determine the flags to use
+  to compile with your Kerberos libraries.  If krb5-config isn't found, it
+  will look for the standard Kerberos libraries in locations already
+  searched by your compiler.  If the the krb5-config script first in your
+  path is not the one corresponding to the Kerberos libraries you want to
+  use or if your Kerberos libraries and includes aren't in a location
+  searched by default by your compiler, you need to specify
+  --with-kerberos=PATH:
+
+      ./configure --with-kerberos=/usr/pubsw
+
+  To specify a particular krb5-config script to use, either set the
+  KRB5_CONFIG environment variable or pass it to configure like:
+
+      ./configure KRB5_CONFIG=/path/to/krb5-config
+
+  You can pass the --enable-reduced-depends flag to configure to try to
+  minimize the shared library dependencies encoded in the binaries.  This
+  omits from the link line all the libraries included solely because the
+  Kerberos libraries depend on them and instead links the programs only
+  against libraries whose APIs are called directly.  This will only work
+  with shared Kerberos libraries and will only work on platforms where
+  shared libraries properly encode their own dependencies (such as Linux).
+  It is intended primarily for building packages for Linux distributions
+  to avoid encoding unnecessary shared library dependencies that make
+  shared library migrations more difficult.  If none of the above made any
+  sense to you, don't bother with this flag.
+
+CONFIGURATION
+
+  Additional configuration is required to tell the plugin and command-line
+  tools what to do.  The basic operations are configured by adding a
+  krb5-sync sub-section to the [appdefaults] section of /etc/krb5.conf (or
+  wherever your Kerberos libraries look for krb5.conf).  Here's an
+  example:
+
+      krb5-sync = {
+          afs_srvtab      = /etc/krb5kdc/afs-srvtab
+          afs_principal   = service.sync
+          afs_realm       = AFS.EXAMPLE.COM
+
+          ad_keytab       = /etc/krb5kdc/ad-keytab
+          ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
+          ad_realm        = WINDOWS.EXAMPLE.COM
+          ad_admin_server = dc1.windows.example.com
+      }
+
+  The afs_* configuration is only required if you want to synchronize
+  passwords to an AFS kaserver.  Similarly, the ad_* configuration is only
+  required if you want to synchronize passwords or account status to
+  Active Directory.  The *_srvtab or *_keytab option specifies the
+  location of a srvtab or keytab for authenticating to the other realm,
+  the *_principal options specify the principal to authenticate as (using
+  the key in the srvtab or keytab), and the *_realm options specify the
+  foreign realm.  ad_admin_server is the host to contact via LDAP to push
+  account status changes.
+
+  The kadmind patch adds a configuration option for the kdc.conf file
+  specifying the path to the plugin.  If this option is not set, the
+  plugin will not be loaded and none of the hooks will be run.  Therefore,
+  to use the plugin, add a line like:
+
+      pwupdate_plugin = /usr/local/lib/kadmind/passwd_update.so
+
+  to the local realm sub-section of the [realms] section.  Update the path
+  for wherever the password update plugin is located.
+
+LICENSE
+
+  Copyright 2006 Board of Trustees, Leland Stanford Jr. University.  All
+  rights reserved.
+    
+  Permission to use, copy, modify, and distribute this software and its
+  documentation for any purpose and without fee is hereby granted,
+  provided that the above copyright notice appear in all copies and that
+  both that copyright notice and this permission notice appear in
+  supporting documentation, and that the name of Stanford University not
+  be used in advertising or publicity pertaining to distribution of the
+  software without specific, written prior permission.  Stanford
+  University makes no representations about the suitability of this
+  software for any purpose.  It is provided "as is" without express or
+  implied warranty.
+
+  THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
