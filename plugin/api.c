@@ -1,125 +1,197 @@
+/*
+ * api.c
+ *
+ * The public APIs of the password update kadmind plugin.
+ *
+ * Provides the public pwupdate_init, pwupdate_close,
+ * pwupdate_precommit_password, and pwupdate_postcommit_password APIs for the
+ * kadmind plugin.  These APIs can also be called by command-line utilities.
+ *
+ * Active Directory synchronization is done in precommit and AFS kaserver
+ * synchronization is done in postcommit.  The implication is that if Active
+ * Directory synchronization fails, the update fails, but if AFS kaserver
+ * synchronization fails, everything else still succeeds.
+ */
+
+#include <com_err.h>
+#include <errno.h>
+#include <krb5.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <string.h>
 #include <syslog.h>
 
-#include <krb5.h>
-#include <com_err.h>
+#include <plugin/internal.h>
 
-static struct lctx {
-    char *realm;
-    /* server, port */
-} l_context;
-
-int pwupdate_init(krb5_context context, void **pwcontext)
+/*
+ * Load a string option from Kerberos appdefaults, setting the default to NULL
+ * if the setting was not found.  This requires an annoying workaround because
+ * one cannot specify a default value of NULL.
+ */
+static void
+config_string(krb5_context ctx, const char *opt, char **result)
 {
-    *pwcontext = &l_context;
-    l_context.realm = strdup(FOREIGNREALM);
+    const char *defval = "";
+
+    krb5_appdefault_string(ctx, "krb5-sync", NULL, opt, defval, result);
+    if (*result != NULL && (*result)[0] == '\0') {
+        free(*result);
+        *result = NULL;
+    }
+}
+
+/*
+ * Initialize the module.  This consists solely of loading our configuration
+ * options from krb5.conf into a newly allocated struct stored in the second
+ * argument to this function.  Returns 0 on success, non-zero on failre.  This
+ * function returns failure only if it could not allocate memory.
+ */
+int
+pwupdate_init(krb5_context ctx, void **data)
+{
+    struct plugin_config *config;
+
+    config = malloc(sizeof(struct plugin_config));
+    if (config == NULL)
+        return 1;
+    config_string(ctx, "afs_srvtab", &config->afs_srvtab);
+    config_string(ctx, "afs_principal", &config->afs_principal);
+    config_string(ctx, "afs_realm", &config->afs_realm);
+    config_string(ctx, "ad_keytab", &config->ad_keytab);
+    config_string(ctx, "ad_principal", &config->ad_principal);
+    config_string(ctx, "ad_realm", &config->ad_realm);
+    config_string(ctx, "ad_admin_server", &config->ad_admin_server);
+    *data = config;
     return 0;
 }
 
-int pwupdate_precommit_password(void *context, krb5_principal principal, char *password, int pwlen,
-				char *errstr, int errstrlen)
+/*
+ * Shut down the module.  This just means freeing our configuration struct,
+ * since we don't store any other local state.
+ */
+void
+pwupdate_close(void *data)
+{
+    struct plugin_config *config = data;
+
+    if (config->afs_srvtab != NULL)
+        free(config->afs_srvtab);
+    if (config->afs_principal != NULL)
+        free(config->afs_principal);
+    if (config->afs_realm != NULL)
+        free(config->afs_realm);
+    if (config->ad_keytab != NULL)
+        free(config->ad_keytab);
+    if (config->ad_principal != NULL)
+        free(config->ad_principal);
+    if (config->ad_realm != NULL)
+        free(config->ad_realm);
+    if (config->ad_admin_server != NULL)
+        free(config->ad_admin_server);
+    free(config);
+}
+
+/*
+ * Create a local Kerberos context and set the error appropriately if this
+ * fails.  Return true on success, false otherwise.  Puts the error message in
+ * errstr on failure.
+ */
+static int
+create_context(krb5_context *ctx, char *errstr, int errstrlen)
 {
     krb5_error_code ret;
-    krb5_context fcontext;
-    char *pname = NULL;
-    char *targpname = NULL;
-    krb5_ccache ccache;
-    int result_code;
-    krb5_data result_code_string, result_string;
-    int code = 0;
 
-    if (ret = krb5_init_context(&fcontext)) {
-	krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed initializing kerberos library: %d", ret);
-	snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(ret));
-	return (1);
+    ret = krb5_init_context(ctx);
+    if (ret != 0) {
+        syslog(LOG_ERR, "password synchronization failure initializing"
+               " Kerberos library: %s", error_message(ret));
+        snprintf(errstr, errstrlen, "password synchronization failure"
+                 " initializing Kerberos library: %s", error_message(ret));
+        return 1;
     }
-
-    if (ret = krb5_cc_default(fcontext, &ccache)) {
-        if (ret == KRB5_CC_NOTFOUND)
-	    krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed: no kerberos credentials");
-        else 
-	    krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed opening kerberos ccache: %d", ret);
-	snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(ret));
-	return (1);
-    }
-
-    if (ret = krb5_unparse_name(fcontext, principal, &targpname)) {
-	krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed parsing target kerberos principal: %d", ret);
-	snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(ret));
-	return (1);
-    }
-
-    krb5_set_principal_realm(fcontext, principal, ((struct lctx *)context)->realm);
-    /* If a more comprehensive rewrite function is needed, it goes here. */
-
-    if (ret = krb5_set_password_using_ccache(fcontext, ccache, password, principal,
-                                &result_code, &result_code_string,
-                                &result_string)) {
-	krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed changing password for %s: %d", targpname, ret);
-	snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(ret));
-	code = 1;
-	goto ret;
-    }
-    if (result_code) {
-	krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate error changing password for %s: %.*s%s%.*s\n", targpname,
-               result_code_string.length, result_code_string.data,
-               result_string.length?": ":"",
-               result_string.length, result_string.data);
-	code = 2;
-	snprintf(errstr, errstrlen, "%.*s%s%.*s", result_code_string.length, 
-		 result_code_string.data, 
-		 result_string.length?": ":"", 
-		 result_string.length, result_string.data); 
-
-	goto ret;
-    }
-
-    free(result_string.data);
-    free(result_code_string.data);
-
-    krb5_klog_syslog(LOG_INFO, "pwupdate: %s: password changed", targpname);
-    snprintf(errstr, errstrlen, "Password changed");
-
- ret:
-    krb5_free_unparsed_name(fcontext, targpname);
-    krb5_free_context(fcontext);
-    return code;
+    return 0;
 }
 
-int pwupdate_postcommit_password(void *context, krb5_principal principal, char *password, int pwlen,
+/*
+ * Check the principal for which we're changing a password.  If it contains a
+ * non-null instance, we don't want to propagate the change; we only want to
+ * change passwords for regular users.  Returns true if we should proceed,
+ * false otherwise.  If we shouldn't proceed, logs a debug-level message to
+ * syslog.
+ */
+static int
+principal_allowed(krb5_context ctx, krb5_principal principal)
+{
+    if (krb5_princ_size(ctx, principal) > 1) {
+        char *display;
+        krb5_error_code ret;
+
+        ret = krb5_unparse_name(ctx, principal, &display);
+        if (ret != 0 || display == NULL)
+            display = strdup("-UNKNOWN-");
+        syslog(LOG_DEBUG, "password synchronization skipping principal \"%s\""
+               " with non-null instance", display);
+        free(display);
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * Actions to take before the password is changed in the local database.
+ *
+ * Push the new password to Active Directory if we have the necessary
+ * configuration information and return any error it returns, but skip any
+ * principals with a non-NULL instance since those are kept separately in each
+ * realm.
+ */
+int
+pwupdate_precommit_password(void *data, krb5_principal principal,
+                            char *password, int pwlen,
+                            char *errstr, int errstrlen)
+{
+    struct plugin_config *config = data;
+    krb5_context ctx;
+    int status;
+
+    if (config->ad_realm == NULL)
+        return 0;
+    if (!create_context(&ctx, errstr, errstrlen))
+        return 1;
+    if (!principal_allowed(ctx, principal))
+        return 0;
+    status = pwupdate_ad_change(config, ctx, principal, password, pwlen,
+                                errstr, errstrlen);
+    krb5_free_context(ctx);
+    return status;
+}
+
+/*
+ * Actions to take after the password is changed in the local database.
+ *
+ * Push the new password to the AFS kaserver if we have the necessary
+ * configuration information and return any error it returns, but skip any
+ * principals with a non-NULL instance since those are kept separately in each
+ * realm.
+ */
+int pwupdate_postcommit_password(void *data, krb5_principal principal,
+                                 char *password, int pwlen,
 				 char *errstr, int errstrlen)
 {
-  krb5_error_code retval;
-#ifndef KRB5_KRB4_COMPAT
-#define ANAME_SZ 40
-#define INST_SZ  40
-#define REALM_SZ  40
-#endif
-  char aname[ANAME_SZ+1], inst[INST_SZ+1], realm[REALM_SZ+1];
-  krb5_context fcontext;
+    struct plugin_config *config = data;
+    krb5_context ctx;
+    int status;
 
-  *errstr = '\0';
-
-  retval = krb5_init_context(&fcontext);
-  if (retval) {
-      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed initializing kerberos library: %d", retval);
-      snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(retval));
-      return (1);
-  }
-  retval = krb5_524_conv_principal(fcontext, principal, aname, inst, realm);
-  if (retval) {
-      krb5_klog_syslog(LOG_ERR, "WARNING: pwupdate failed converting principal to K4: %d", retval);
-      snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(retval));
-      return (1);
-  }
-  krb5_free_context(fcontext);
-
-  return kas_change(aname, inst, AFSREALM, password);
-}
-
-void pwupdate_close(void *context)
-{
-    if (l_context.realm) free(l_context.realm);
+    if (config->afs_realm == NULL
+        || config->afs_srvtab == NULL
+        || config->afs_principal == NULL)
+        return 0;
+    if (!create_context(&ctx, errstr, errstrlen))
+        return 1;
+    if (!principal_allowed(ctx, principal))
+        return 0;
+    status = pwupdate_afs_change(config, ctx, principal, password, pwlen,
+                                 errstr, errstrlen);
+    krb5_free_context(ctx);
+    return status;
 }
