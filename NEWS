@@ -1,0 +1,10 @@
+                      User-Visible krb5-sync Changes
+
+krb5-sync 0.3 (unreleased)
+
+    First publicly released version.  Includes a patch for MIT Kerberos
+    1.4.4, a plugin that can synchronize passwords to one Active Directory
+    realm and/or one AFS kaserver realm and enabled flag changes to one
+    Active Directory realm, and command-line utilities to perform the same
+    actions as the plugin.
+
