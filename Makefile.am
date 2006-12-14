@@ -13,8 +13,7 @@ EXTRA_DIST = autogen
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 	configure
 
-# Put the module into the KDC database directory for now.  This too needs to
-# become configurable, this time in the patch.
+# Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
 moduledir = $(libdir)/kadmind
 
 # Rules for building the password synchronization plugin.
