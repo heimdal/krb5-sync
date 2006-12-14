@@ -34,6 +34,8 @@ int pwupdate_precommit_password(void *data, krb5_principal principal,
 int pwupdate_postcommit_password(void *data, krb5_principal principal,
                                  char *password, int pwlen,
 				 char *errstr, int errstrlen);
+int pwupdate_postcommit_status(void *data, krb5_principal principal,
+                               int enabled, char *errstr, int errstrlen);
 
 /* Password changing. */
 int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
@@ -44,7 +46,8 @@ int pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                         char *errstr, int errstrlen);
 
 /* Account status update. */
-int pwupdate_ad_status(struct plugin_config *config, krb5_principal principal,
-                       int enabled);
+int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
+                       krb5_principal principal, int enabled, char *errstr,
+                       int errstrlen);
 
 #endif /* !INTERNAL_H */

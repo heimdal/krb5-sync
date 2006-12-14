@@ -194,3 +194,32 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
     krb5_free_context(ctx);
     return status;
 }
+
+/*
+ * Actions to take after the account status is changed in the local database.
+ *
+ * Push the new account status to Active Directory if so configured, but skip
+ * principals with non-NULL instances.  Return any error that it returns.
+ */
+int
+pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
+                           char *errstr, int errstrlen)
+{
+    struct plugin_config *config = data;
+    krb5_context ctx;
+    int status;
+
+    if (config->ad_admin_server == NULL
+        || config->ad_keytab == NULL
+        || config->ad_principal == NULL
+        || config->ad_realm == NULL)
+        return 0;
+    if (!create_context(&ctx, errstr, errstrlen))
+        return 1;
+    if (!principal_allowed(ctx, principal))
+        return 0;
+    status = pwupdate_ad_status(config, ctx, principal, enabled, errstr,
+                                errstrlen);
+    krb5_free_context(ctx);
+    return status;
+}
