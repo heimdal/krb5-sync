@@ -97,7 +97,10 @@ REQUIREMENTS
   libraries must either be built PIC (using, for instance, the gcc -fPIC
   option) or you will need to be using a platform where non-PIC code can
   be linked into a dynamically loaded object.  This will work on x86 Linux
-  but not on x86_64 (AMD64) Linux, for instance.
+  but not on x86_64 (AMD64) Linux, for instance.  This could be fixed (by
+  using only calls available in the libafsauthent and libafsrpc libraries,
+  for instance), but it's probably more trouble than it's worth given that
+  the AFS kaserver is becoming quickly obsolete.
 
   If updating an AFS kaserver, the system on which kadmind is running must
   have as its default AFS cell the cell in which updates should be made.
@@ -177,6 +180,10 @@ CONFIGURATION
   the key in the srvtab or keytab), and the *_realm options specify the
   foreign realm.  ad_admin_server is the host to contact via LDAP to push
   account status changes.
+
+  If afs_realm is not set, the plugin will not attempt to push changes to
+  an AFS kaserver.  Similarly, if ad_realm is not set, the plugin will not
+  attempt to push changes to Active Directory.
 
   The kadmind patch adds a configuration option for the kdc.conf file
   specifying the path to the plugin.  If this option is not set, the
