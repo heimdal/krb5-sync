@@ -21,7 +21,11 @@ module_LTLIBRARIES = plugin/passwd_update.la
 plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/afs.c plugin/api.c
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 
-# Rules for building the ad-modify utility.
-bin_PROGRAMS = util/ad-modify
-util_ad_modify_SOURCES = util/ad-modify.c
-util_ad_modify_LDADD = -lldap
+# Rules for building the krb5-sync utility.  We specify the CFLAGS to work
+# around Automake's inability to link libtool objects into a program that
+# isn't otherwise using libtool.  Per the Automake manual, specifying CFLAGS
+# will cause the sources to be built twice, once with a prefix for this
+# program.
+bin_PROGRAMS = util/krb5-sync
+util_krb5_sync_SOURCES = util/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
+util_krb5_sync_CFLAGS = $(AM_CFLAGS)
