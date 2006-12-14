@@ -17,6 +17,7 @@ AC_PROG_INSTALL
 AM_DISABLE_STATIC
 AC_PROG_LIBTOOL
 RRA_LIB_KRB5([krb4], [true])
+AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
 # Crank up the warnings if we're using GCC.
 if test "x$GCC" = "xyes" ; then
