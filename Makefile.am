@@ -8,6 +8,11 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = autogen
 
+# Handle the standard stuff that make maintainer-clean should probably remove
+# but doesn't.
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
+	configure
+
 # Put the module into the KDC database directory for now.  This too needs to
 # become configurable, this time in the patch.
 moduledir = $(libdir)/kadmind
