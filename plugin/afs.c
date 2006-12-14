@@ -16,7 +16,13 @@
 #include <string.h>
 #include <syslog.h>
 
-#include <kerberosIV/krb.h>
+#ifdef HAVE_KERBEROSIV_KRB_H
+# include <kerberosIV/krb.h>
+# include <kerberosIV/des.h>
+#else
+# include <krb.h>
+# include <des.h>
+#endif
 
 /* FIXME: These should come from the configuration. */
 #define PWSERV_NAME  "service"
@@ -41,174 +47,120 @@
 
 #include <plugin/internal.h>
 
-static int
-use_key(user, instance, realm, key, returned_key)
-des_cblock key, returned_key;
-{
-  memcpy(returned_key, key, sizeof(des_cblock));
-  return 0;
-}
-
-static int 
-kas_change2(char *rname, char *rinstance, char *rrealm, des_cblock newpw)
-{
-    char  name[MAXKTCNAMELEN];
-    char  instance[MAXKTCNAMELEN];
-    char  cell[MAXKTCREALMLEN];
-    char  realm[MAXKTCREALMLEN];
-    char *lcell;			/* local cellname */
-    int	  code;
-#ifndef NOT_MY_KEY
-    struct kaentryinfo tentry;
-#endif
-    struct ubik_client *conn;
-    struct ktc_encryptionKey mitkey;
-    struct ktc_encryptionKey newkey;
-    struct ktc_token    token;
-#ifndef KA_INTERFACE
-    CREDENTIALS admincred;
-#endif
-    int local=0;	       
-
-    if ((ka_Init(0)) ||	!(lcell = ka_LocalCell())) {
-      memset(&newpw, 0, sizeof(newpw));
-      syslog(LOG_ERR, "WARNING: pwupdate failed ka_Init");
-      return(1);
-    }
-    strcpy (realm, lcell);
-    code = ka_CellToRealm (realm, realm, &local);
-    if (code != 0) {
-      memset(&newpw, 0, sizeof(newpw));
-      syslog(LOG_ERR, "WARNING: pwupdate failed ka_CellToRealm");
-      return(1);
-    }
-    if (strcmp(realm, rrealm)) {
-      memset(&newpw, 0, sizeof(newpw));
-      syslog(LOG_ERR, "WARNING: pwupdate failed realm mismatch");
-      return(1);
-    }
-    lcstring (cell, realm, sizeof(cell));
-
-    code = read_service_key(PWSERV_NAME, KADM_SINST, realm, 0, SRVTAB_FILE, &mitkey);
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed read_service_key");
-#ifdef KA_INTERFACE
-    if (!code) code = ka_GetAdminToken (PWSERV_NAME, KADM_SINST, realm,
-			     &mitkey, 1000, &token, /*!new*/0);
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed ka_GetAdminToken");
-#else
-    if (!code) code = krb_get_svc_in_tkt(PWSERV_NAME, KADM_SINST, realm, KA_ADMIN_NAME, KA_ADMIN_INST, 4, SRVTAB_FILE);
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed krb_get_svc_in_tkt");
-    if (!code) code = krb_get_cred(KA_ADMIN_NAME, KA_ADMIN_INST, realm, &admincred);
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed krb_get_cred");
-    if (!code) {
-      token.startTime = admincred.issue_date;
-      token.endTime = admincred.issue_date + admincred.lifetime;
-      token.kvno = admincred.kvno;
-      token.ticketLen = admincred.ticket_st.length;
-      memcpy(token.ticket, admincred.ticket_st.dat, token.ticketLen);
-      memcpy(&token.sessionKey, admincred.session, 8);
-    }
-#endif
-    
-    memset(&mitkey, 0, sizeof(mitkey));
-    if (!code) code = ka_AuthServerConn (realm, KA_MAINTENANCE_SERVICE, &token, &conn);
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed ka_AuthServerConn");
-#ifdef KA_INTERFACE
-    if (!code) {
-        ka_StringToKey(newpw, realm, &newkey);
-        code = ka_ChangePassword (rname, rinstance, conn, 0, &newkey);
-    }
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed ka_ChangePassword: %s", error_message(code));
-#else
-    if (!code) code = ubik_Call (KAM_SetPassword, conn, 0, rname, rinstance, 0, newpw);
-    if (code)
-        syslog(LOG_ERR, "WARNING: pwupdate failed ubik_Call");
-#endif
-
-    /* clean up */
-    ubik_ClientDestroy(conn);
-    rx_Finalize();
-
-    if (code != 0) {
-      memset(&newpw, 0, sizeof(newpw));
-    }
-
-    if (!code) {
-      syslog(LOG_INFO, "pwupdate: '%s.%s@%s' password changed", rname, rinstance, rrealm);
-    }
-
-    return(code);
-
-#ifdef NOT_MY_KEY
-#ifdef KA_INTERFACE
-    if (!code) code = ka_GetAdminToken (rname, rinstance, realm,
-			     &newpw, 1000, &token, /*!new*/0);
-#else
-    if (!code) code = krb_get_in_tkt(rname, rinstance, realm, KA_ADMIN_NAME, KA_ADMIN_INST, 1, use_key, NULL, newpw);
-    if (!code) code = krb_get_cred(KA_ADMIN_NAME, KA_ADMIN_INST, realm, &admincred);
-    if (!code) {
-      token.startTime = admincred.issue_date;
-      token.endTime = admincred.issue_date + admincred.lifetime;
-      token.kvno = admincred.kvno;
-      token.ticketLen = admincred.ticket_st.length;
-      memcpy(token.ticket, admincred.ticket_st.dat, token.ticketLen);
-      memcpy(&token.sessionKey, admincred.session, 8);
-    }
-#endif
-    if (!code) code = ka_AuthServerConn (realm, KA_MAINTENANCE_SERVICE, &token, &conn);
-    if (!code) code = ubik_Call (KAM_GetEntry, conn, 0, rname, rinstance, KAMAJORVERSION, &tentry);
-    if (!code) code = ubik_Call (KAM_SetPassword, conn, 0, rname, rinstance, tentry.key_version, newpw);
-
-    /* clean up */
-    memset(&newpw, 0, sizeof(newpw));
-    ubik_ClientDestroy(conn);
-    rx_Finalize();
-#endif
-}
-
-/* From this call we process AFS error codes into MIT Kerberos errors */
-static int 
-kas_change(char *rname, char *rinstance, char *rrealm, char * newpw)
-{
-  int retval;
-  des_cblock newkey;
-
-  des_string_to_key(newpw, newkey);
-
-  retval = kas_change2(rname, rinstance, rrealm, newpw);
-    
-  switch (retval) 
-    {
-    case 0:
-      return 0; /* If we got a zero, no parsing needed! */
-      break;
-    default:
-      return 1;
-    }
-  return 1;
-}
-
 int
 pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                     krb5_principal principal, char *password, int pwlen,
                     char *errstr, int errstrlen)
 {
-    krb5_error_code retval;
-    char aname[ANAME_SZ+1], inst[INST_SZ+1], realm[REALM_SZ+1];
+    krb5_error_code ret;
+    char aname[ANAME_SZ + 1], admin_aname[ANAME_SZ + 1];
+    char inst[INST_SZ + 1], admin_inst[INST_SZ + 1];
+    char realm[REALM_SZ + 1], admin_realm[REALM_SZ + 1];
+    char cell[MAXKTCREALMLEN];
+    char *local_cell;
+    char local_realm[MAXKTCREALMLEN];
+    int local = 0;
+    int code = 0;
+    struct ubik_client *conn;
+    struct ktc_encryptionKey mitkey, newkey;
+    struct ktc_token token;
 
-    *errstr = '\0';
-
-    retval = krb5_524_conv_principal(ctx, principal, aname, inst, realm);
-    if (retval) {
-        syslog(LOG_ERR, "WARNING: pwupdate failed converting principal to K4: %d", retval);
-        snprintf(errstr, errstrlen, "Password synchronization failure: %s", error_message(retval));
-        return (1);
+    /*
+     * First, figure out what principal we're dealing with and then check that
+     * the realms are sane.  The original code required that the realm in
+     * which we're changing passwords matches the local realm from AFS's
+     * perspective.  I'm not sure if that's actually required, but preserve
+     * that check for right now just in case.
+     */
+    ret = krb5_524_conv_principal(ctx, principal, aname, inst, realm);
+    if (ret != 0) {
+        snprintf(errstr, errstrlen, "failed converting principal to K4: %s",
+                 error_message(ret));
+        return 1;
     }
-    return kas_change(aname, inst, config->afs_realm, password);
+    if (strlen(config->afs_realm) > sizeof(realm) - 1) {
+        snprintf(errstr, errstrlen, "AFS realm %s longer than maximum length"
+                 " of %ld", config->afs_realm, (long) sizeof(realm));
+        return 1;
+    }
+    strcpy(realm, config->afs_realm);
+    if (ka_Init(0) != 0) {
+        snprintf(errstr, errstrlen, "ka_Init failed");
+        return 1;
+    }
+    local_cell = ka_LocalCell();
+    if (local_cell == NULL || strlen(local_cell) > sizeof(local_realm) - 1) {
+        snprintf(errstr, errstrlen, "cannot obtain local cell");
+        return 1;
+    }
+    strcpy(local_realm, local_cell);
+    code = ka_CellToRealm(local_realm, local_realm, &local);
+    if (code != 0) {
+        snprintf(errstr, errstrlen, "cannot obtain local realm");
+        return 1;
+    }
+    if (strcmp(local_realm, realm) != 0) {
+        snprintf(errstr, errstrlen, "realm mismatch: local AFS realm (%s)"
+                 " must match principal realm (%s)", local_realm, realm);
+        return 1;
+    }
+    lcstring(cell, realm, sizeof(cell));
+
+    /*
+     * Okay, annoying setup done.  Now we obtain an admin token from our
+     * srvtab.  This is kind of ugly since we're acquiring a new token for the
+     * whole PAG in which kadmind is running.  It's tempting to call lsetpag
+     * here.
+     */
+    code = kname_parse(admin_aname, admin_inst, admin_realm,
+                       config->afs_principal);
+    if (code != 0) {
+        snprintf(errstr, errstrlen, "cannot parse AFS principal \"%s\"",
+                 config->afs_principal);
+        return 1;
+    }
+    code = read_service_key(admin_aname, admin_inst, admin_realm, 0,
+                            config->afs_srvtab, (char *) &mitkey);
+    if (code != 0) {
+        snprintf(errstr, errstrlen, "unable to get key from srvtab \"%s\" for"
+                 " principal \"%s\"", config->afs_srvtab,
+                 config->afs_principal);
+        return 1;
+    }
+    code = ka_GetAdminToken(admin_aname, admin_inst, admin_realm, &mitkey,
+                            1000, &token, 0);
+    if (code != 0) {
+        snprintf(errstr, errstrlen, "ka_GetAdminToken failed: %s",
+                 error_message(code));
+        return 1;
+    }
+    memset(&mitkey, 0, sizeof(mitkey));
+
+    /*
+     * Finally, we can open a connection to the kaserver and change the
+     * password.
+     */
+    code = ka_AuthServerConn(realm, KA_MAINTENANCE_SERVICE, &token, &conn);
+    if (code != 0) {
+        snprintf(errstr, errstrlen, "ka_AuthServerConn failed: %s",
+                 error_message(code));
+        return 1;
+    }
+    ka_StringToKey(password, realm, &newkey);
+    code = ka_ChangePassword(aname, inst, conn, 0, &newkey);
+    if (code != 0) {
+        snprintf(errstr, errstrlen, "ka_ChangePassword failed: %s",
+                 error_message(code));
+        memset(&newkey, 0, sizeof(newkey));
+        ubik_ClientDestroy(conn);
+        rx_Finalize();
+        return 1;
+    }
+
+    /* Success.  Log success, clean up, and return. */
+    syslog(LOG_INFO, "pwupdate: %s.%s@%s password changed", aname, inst,
+           realm);
+    ubik_ClientDestroy(conn);
+    rx_Finalize();
+    return 0;
 }
