@@ -24,11 +24,6 @@
 # include <des.h>
 #endif
 
-/* FIXME: These should come from the configuration. */
-#define PWSERV_NAME  "service"
-#define KADM_SINST   "k4k5"
-#define SRVTAB_FILE "/etc/krb5kdc/k4-srvtab"
-
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <sys/types.h>
