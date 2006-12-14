@@ -94,30 +94,32 @@ main(int argc, char *argv[])
 
     /* Password changes first. */
     if (password != NULL) {
-        status = pwupdate_precommit_password(data, principal, password,
-                                             strlen(password), errbuf,
-                                             sizeof(errbuf));
+        status = pwupdate_ad_change(data, ctx, principal, password,
+                                    strlen(password), errbuf, sizeof(errbuf));
         if (status != 0) {
-            fprintf(stderr, "Precommit failed (%d): %s\n", status, errbuf);
+            fprintf(stderr, "AD password change failed (%d): %s\n", status,
+                    errbuf);
             exit(1);
         }
-        printf("Password precommit succeeded\n");
-        status = pwupdate_postcommit_password(data, principal, password,
-                                              strlen(password), errbuf,
-                                              sizeof(errbuf));
+        printf("AD password change succeeded\n");
+        status = pwupdate_afs_change(data, ctx, principal, password,
+                                     strlen(password), errbuf,
+                                     sizeof(errbuf));
         if (status != 0) {
-            fprintf(stderr, "Postcommit failed (%d): %s\n", status, errbuf);
+            fprintf(stderr, "AFS password change failed (%d): %s\n", status,
+                    errbuf);
             exit(1);
         }
-        printf("Password postcommit succeeded\n");
+        printf("AFS password change succeeded\n");
     }
 
     /* Now, enable or disable. */
     if (enable || disable) {
-        status = pwupdate_postcommit_status(data, principal, enable, errbuf,
-                                            sizeof(errbuf));
+        status = pwupdate_ad_status(data, ctx, principal, enable, errbuf,
+                                    sizeof(errbuf));
         if (status != 0) {
-            fprintf(stderr, "Status failed (%d): %s\n", status, errbuf);
+            fprintf(stderr, "Status change failed (%d): %s\n", status,
+                    errbuf);
             exit(1);
         }
         printf("Status change succeeded\n");
