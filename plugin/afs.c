@@ -42,6 +42,13 @@
 
 #include <plugin/internal.h>
 
+/*
+ * Change a password in Active Directory.  Takes the module configuration, a
+ * Kerberos context, the principal whose password is being changed (we will
+ * derive the AFS principal with krb5_524_conv_principal and then changing its
+ * realm), the new password and its length, and a buffer into which to write
+ * error messages and its length.
+ */
 int
 pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                     krb5_principal principal, char *password, int pwlen,
@@ -103,9 +110,11 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
 
     /*
      * Okay, annoying setup done.  Now we obtain an admin token from our
-     * srvtab.  This is kind of ugly since we're acquiring a new token for the
-     * whole PAG in which kadmind is running.  It's tempting to call lsetpag
-     * here.
+     * srvtab.  This principal will have to have the ADMIN flag set in the
+     * kaserver database.
+     *
+     * If a ktc_encryptionKey is never not the right size or format to take
+     * the results of read_service_key, we will be sad.  Yay, type checking.
      */
     code = kname_parse(admin_aname, admin_inst, admin_realm,
                        config->afs_principal);

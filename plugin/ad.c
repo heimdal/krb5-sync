@@ -86,6 +86,12 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     return 0;
 }
 
+/*
+ * Push a password change to Active Directory.  Takes the module
+ * configuration, a Kerberos context, the principal whose password is being
+ * changed (we will have to change the realm), the new password and its
+ * length, and a buffer into which to put error messages and its length.
+ */
 int
 pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
                    krb5_principal principal, char *password, int pwlen,
