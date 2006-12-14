@@ -1,5 +1,11 @@
                            krb5-sync To-Do List
 
+ * The AFS code currently builds unconditionally, so if the AFS libraries
+   weren't found at configure time, the build just fails.  It should
+   instead all be protected by #ifdef and not built if the AFS libraries
+   aren't found, since most people aren't going to care about AFS kaserver
+   synchronization.
+
  * The base DN for finding users in Active Directory probably has to be
    configurable.  I think that ou=Accounts may be a local peculiarity, and
    even if not, I can see people putting accounts in different trees.
