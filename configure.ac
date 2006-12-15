@@ -28,9 +28,11 @@ AC_ARG_WITH(afsdir, AC_HELP_STRING([--with-afsdir=DIR],
                                       [Directory holding AFS includes/libs]),
                 sg_cv_with_afsdir=$withval)
  AC_CACHE_CHECK([for location of AFS directory],
-                         sg_cv_with_afsdir, sg_cv_with_afsdir=/usr/afsws)
+                         sg_cv_with_afsdir, sg_cv_with_afsdir=/usr)
 
-CFLAGS="-I${sg_cv_with_afsdir}/include $CFLAGS"
+if test x"$sg_cv_with_afsdir" != x/usr ; then
+    CFLAGS="-I${sg_cv_with_afsdir}/include $CFLAGS"
+fi
 LDFLAGS="-L${sg_cv_with_afsdir}/lib -L${sg_cv_with_afsdir}/lib/afs $LDFLAGS"
 
 dnl Once we specify a directory, we try to link a test program.  If the link
