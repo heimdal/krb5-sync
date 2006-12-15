@@ -25,15 +25,8 @@ endif
 
 configure-stamp:
 	dh_testdir
-	aclocal-1.9
-	libtoolize --force --copy
-	autoheader
-	automake-1.9 --add-missing --copy
-	autoconf
-	CFLAGS="$(CFLAGS) -fPIC -DKA_INTERFACE" ./bootstrap.sh --prefix=/usr \
-	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-	    --with-foreign-realm=NT.STANFORD.EDU \
-	    --with-afs-realm=TEST.STANFORD.EDU --with-afsdir=/usr \
+	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr \
+	    --mandir=\$${prefix}/share/man --with-afsdir=/usr \
 	    $(SYSTEM)
 	touch configure-stamp
 
@@ -43,7 +36,6 @@ build-indep:
 build-stamp:
 	dh_testdir
 	$(MAKE)
-	cd src && gcc $(CFLAGS) -o ad-modify ad-modify.c -lkrb5 -lldap
 	touch build-stamp
 
 clean:
@@ -57,22 +49,16 @@ install:
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	install -d $(TMP)/var/lib/krb5kdc
-	install -d $(TMP)/usr/bin
-	install -d $(TMP)/etc/krb5kdc
-	install src/.libs/pwupdate.so \
-	    $(TMP)/var/lib/krb5kdc/pwupdate.so
-	install -m 755 src/acct_disable $(TMP)/var/lib/krb5kdc/acct_disable
-	install -m 755 src/ad-modify $(TMP)/usr/bin/ad-modify
-	install -m 644 debian/status-prop $(TMP)/etc/krb5kdc/status-prop
+	$(MAKE) install DESTDIR=$(TMP)
+	rm -f $(TMP)/usr/lib/kadmind/passwd_update.la
 
 binary: binary-arch binary-indep
 binary-indep:
 binary-arch: install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
-	dh_installdocs README
+	dh_installchangelogs NEWS
+	dh_installdocs README TODO
 	dh_link
 	dh_strip
 	dh_compress

@@ -3,11 +3,11 @@ krb5-passwd-sync for Debian
 
 This plugin requires a patched kadmind that loads plugins for password
 propagation.  This code will hopefully be in a future official release
-of MIT Kerberos.  It also expects to have KRB5CCNAME pointing to an
-externally-maintained ticket cache with tickets for the remote realm
-in which passwords are being synced.
+of MIT Kerberos.  It also requires krb5.conf additions as described in
+README.gz and the addition of:
 
-Currently, this plugin has to be installed in the same directory as the
-Kerberos database.  This will be changed down the road.
+    pwupdate_plugin = /usr/lib/kadmind/passwd_update.so
 
- -- Russ Allbery <rra@debian.org> Fri, 04 Aug 2006 16:53:28 -0700
+to the kdc.conf configuration section for the local realm.
+
+ -- Russ Allbery <rra@debian.org>, Thu, 14 Dec 2006 16:06:36 z
