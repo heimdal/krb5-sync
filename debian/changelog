@@ -1,12 +1,14 @@
-krb5-passwd-sync (0.3-1) unstable; urgency=low
+krb5-sync (0.3-1) unstable; urgency=low
 
   * New, significantly different upstream release.
     - Now installs into /usr/lib/kadmind instead of the KDC directory.
     - New krb5-sync command-line utility.
     - ad-modify and acct_disable are gone, as is their config file.
+  * Change package name for the new upstream distribution name.
+  * We no longer need to run Automake at build time.
   * Update debian/copyright to reflect the new upstream location.
 
- -- Russ Allbery <rra@debian.org>  Thu, 14 Dec 2006 16:15:29 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 14 Dec 2006 16:20:00 -0800
 
 krb5-passwd-sync (0.2-4) unstable; urgency=low
 

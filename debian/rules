@@ -5,7 +5,7 @@
 # Uncomment this to turn on verbose mode. 
 #export DH_VERBOSE=1
 
-TMP = $(CURDIR)/debian/krb5-passwd-sync
+TMP = $(CURDIR)/debian/krb5-sync
 
 CFLAGS=-g -Wall
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))

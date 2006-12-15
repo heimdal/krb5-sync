@@ -1,19 +1,16 @@
-Source: krb5-passwd-sync
+Source: krb5-sync
 Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
-Build-Depends: debhelper (>= 4), autoconf, automake1.9, libtool, libkrb5-dev,
- libopenafs-dev, libldap2-dev
-Build-Conflicts: autoconf2.13, automake1.4
+Build-Depends: debhelper (>= 4), libkrb5-dev, libopenafs-dev, libldap2-dev
 Standards-Version: 3.7.2
 
-Package: krb5-passwd-sync
+Package: krb5-sync
 Architecture: any
 Depends: ${shlibs:Depends}
 Recommends: krb5-admin-server
 Description: MIT Kerberos KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign
  realm via the Kerberos v5 password change protocol (primarily implemented
- by Active Directory) and via AFS calls to a Kerberos v4 kaserver.  Also
- provided is a script and binary that can propagate changes to the
- DISALLOW_ALL_TIX flag into Windows AD.
+ by Active Directory) and via AFS calls to a Kerberos v4 kaserver.  It can
+ also propagate changes to DISALLOW_ALL_TIX flag to Windows AD.
