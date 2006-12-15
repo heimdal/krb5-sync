@@ -1,11 +1,13 @@
 Debianized by Russ Allbery <rra@debian.org>                     2006-08-04
 
-The source was provided by Sine Nomine and is not currently publicly
-available, although will be in the future.
+It was downloaded from:
+
+    <http://www.eyrie.org/~eagle/software/krb5-sync/>
 
 Upstream authors:
 
-    Derrick Brashear <shadow@dementia.org>.
+    Originally written by Derrick Brashear <shadow@dementia.org>.  The
+    current maintainer is Russ Allbery <rra@stanford.edu>.
 
 Debian packaging copyright:
 
@@ -31,7 +33,3 @@ Copyright:
     THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
     WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
     MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
-
-Ignore the COPYING file included in the distribution for right now.  A lot
-of work still needs to be done before this is suitable for a general
-public release.
