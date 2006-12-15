@@ -109,6 +109,13 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (get_creds(config, ctx, &ccache, errstr, errstrlen) != 0)
         return 1;
 
+    /*
+     * Change the principal over to the AD realm.  Right now, this is all the
+     * rewriting or mapping that we do.  If later we need to do more
+     * comprehensive mapping, this is where we'd do it.
+     */
+    krb5_set_principal_realm(ctx, principal, config->ad_realm);
+
     /* This is just for logging purposes. */
     ret = krb5_unparse_name(ctx, principal, &target);
     if (ret != 0) {
@@ -116,13 +123,6 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
                  error_message(ret));
         return 1;
     }
-
-    /*
-     * Change the principal over to the AD realm.  Right now, this is all the
-     * rewriting or mapping that we do.  If later we need to do more
-     * comprehensive mapping, this is where we'd do it.
-     */
-    krb5_set_principal_realm(ctx, principal, config->ad_realm);
 
     /* Do the actual password change. */
     ret = krb5_set_password_using_ccache(ctx, ccache, password, principal,
@@ -145,8 +145,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     }
     free(result_string.data);
     free(result_code_string.data);
-    syslog(LOG_INFO, "pwupdate: %s password changed in %s", target,
-           config->ad_realm);
+    syslog(LOG_INFO, "pwupdate: %s password changed", target);
     snprintf(errstr, errstrlen, "Password changed");
 
 done:
