@@ -11,7 +11,7 @@ EXTRA_DIST = autogen
 # Handle the standard stuff that make maintainer-clean should probably remove
 # but doesn't.
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
-	configure util/krb5-sync.pod
+	configure util/krb5-sync.8
 
 # Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
 moduledir = $(libdir)/kadmind
