@@ -18,7 +18,8 @@ moduledir = $(libdir)/kadmind
 
 # Rules for building the password synchronization plugin.
 module_LTLIBRARIES = plugin/passwd_update.la
-plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/afs.c plugin/api.c
+plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/afs.c plugin/api.c \
+	plugin/internal.h
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 
 # Rules for building the krb5-sync utility.  We specify the CFLAGS to work
