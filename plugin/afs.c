@@ -123,16 +123,16 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                  config->afs_principal);
         return 1;
     }
-    code = read_service_key(admin_aname, admin_inst, admin_realm, 0,
+    code = read_service_key(admin_aname, admin_inst, config->afs_realm, 0,
                             config->afs_srvtab, (char *) &mitkey);
     if (code != 0) {
         snprintf(errstr, errstrlen, "unable to get key from srvtab \"%s\" for"
-                 " principal \"%s\"", config->afs_srvtab,
-                 config->afs_principal);
+                 " principal \"%s.%s@%s\"", config->afs_srvtab, admin_aname,
+                 admin_inst, config->afs_realm);
         return 1;
     }
-    code = ka_GetAdminToken(admin_aname, admin_inst, admin_realm, &mitkey,
-                            1000, &token, 0);
+    code = ka_GetAdminToken(admin_aname, admin_inst, config->afs_realm,
+                            &mitkey, 1000, &token, 0);
     if (code != 0) {
         snprintf(errstr, errstrlen, "ka_GetAdminToken failed: %s",
                  error_message(code));
