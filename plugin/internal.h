@@ -28,6 +28,7 @@ struct plugin_config {
 
 /* General public API. */
 int pwupdate_init(krb5_context ctx, void **data);
+void pwupdate_close(void *data);
 int pwupdate_precommit_password(void *data, krb5_principal principal,
                                 char *password, int pwlen,
 				char *errstr, int errstrlen);
