@@ -1,0 +1,114 @@
+The patches in this directory apply to MIT Kerberos and add to kadmind a
+plugin API for performing actions before and after a password change is
+committed to the KDC database and after a change is made to the attributes
+of a principal (specifically, a change to DISALLOW_ALL_TIX).
+
+Currently, there is only one patch available:
+
+    mit-krb5-1.4.4      Built against Stanford-patched MIT Kerberos 1.4.4
+
+More patches against other, or cleaner, source trees may be provided in
+the future.  Please let me know if there is a specific version you wish to
+see a patch for (and even better, let me know if you have a tested patch
+for a different version).
+
+This patch adds to kadmind a configuration option which should be set in
+the local realm section of kdc.conf.  That configuration option is in the
+form:
+
+    pwupdate_plugin = /usr/local/lib/kadmind/passwd_update.so
+
+where the value is the full path to the plugin that you want to load.  If
+this option is not present, kadmind will not load a plugin and the changes
+from the patch will be inactive.  If this option is given and the plugin
+cannot be loaded, kadmind startup will abort with a (hopefully useful)
+error message in syslog.
+
+
+Any plugin used with this patch must implement the following two
+interfaces:
+
+int pwupdate_init(krb5_context ctx, void **data)
+
+    Initialize the plugin.  Takes a Kerberos context from kadmind and a
+    pointer to a pointer.  Whatever value is stored in the second argument
+    will then be passed to all the other plugin functions, so this
+    interface can be used to load options and allocate any necessary
+    internal state.
+
+    Returns 0 on success, non-zero on failure.  The numerical code
+    returned on failure will be logged by kadmind, so it can be used for
+    debugging (to track down just what is failing).  If this function
+    fails, it will abort kadmind startup.
+
+void pwupdate_close(void *data)
+
+    Shut down the plugin.  This function is responsible for freeing any
+    memory or other resources allocated by pwupdate_init.  It is passed
+    the pointer that pwupdate_init stored in its second argument (like all
+    of the other plugin functions).
+
+
+Finally, any plugin must implement one or more of the following
+interfaces.  If it implemented none of them, it would do nothing and would
+therefore be pointless, so that is treated as an error.  If the plugin
+does not implement one of these interfaces, the resulting portion of the
+kadmind patch will be deactivated and that hook will not be called.
+
+int pwupdate_precommit_password(void *data, krb5_principal principal,
+        char *password, int pwlen, char *errstr, int errstrlen)
+
+    Called immediately before a password change is committed to the KDC
+    database.  All necessary authentication and authorization has already
+    been done.  This function is called for any password change, including
+    password changes of service principals, but is not called for key
+    randomization (-randkey).
+
+    The arguments passed in are the pointer set by the initialization
+    function, the principal whose password is being changed, the new
+    password, the length of the new password, a buffer into which error
+    messages should be written, and the length of the buffer.
+
+    This function should return 0 for success and non-zero for failure.
+    On failure, some appropriate error message should be written into the
+    errstr buffer (being careful to nul-terminate and not exceed errstrlen
+    bytes including the terminating nul).  The return code and the error
+    message will be logged by kadmind but not passed back to the client.
+
+    If this call fails (returns a non-zero status), the password change is
+    aborted and is not changed in the local KDC database.
+
+int pwupdate_postcommit_password(void *data, krb5_principal principal,
+        char *password, int pwlen, char *errstr, int errstrlen)
+
+    Identical in arguments and meaning of return status to
+    pwupdate_precommit_password, this function is called immediately after
+    a password change is committed to the local KDC database.  If this
+    call fails (returns a non-zero status), the password change is *not*
+    aborted and is *not* rolled back.  The only effect of a non-zero
+    status return is that kadmind will log the status code and error
+    message.
+
+int pwupdate_postcommit_status(void *data, krb5_principal principal,
+        int enabled, char *errstr, int errstrlen)
+
+    Called immediately after a change to the DISALLOW_ALL_TIX attribute of
+    a principal.  This function is only called if the status changes, not
+    if the attribute is being set to the same as its current value.
+
+    The arguments passed in are the pointer set by the initialization
+    function, the principal whose attributes are being changed, a flag
+    that's set to 1 if DISALLOW_ALL_TIX was just cleared and set to 0 if
+    DISALLOW_ALL_TIX was just set, a buffer into which error messages
+    should be written, and the length of the buffer.
+
+    This function should return 0 for success and non-zero for failure.
+    On failure, some appropriate error message should be written into the
+    errstr buffer (being careful to nul-terminate and not exceed errstrlen
+    bytes including the terminating nul).  The return code and the error
+    message will be logged by kadmind but not passed back to the client.
+
+    The only effect of failing (returning a non-zero status) is that
+    kadmind will log an error with the return status and the error message
+    from the errstr buffer.  The change will not be aborted or rolled
+    back.

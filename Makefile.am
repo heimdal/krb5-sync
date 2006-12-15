@@ -6,7 +6,8 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = autogen util/krb5-sync.8 util/krb5-sync.pod
+EXTRA_DIST = autogen patches/README patches/mit-krb5-1.4.4 \
+	util/krb5-sync.8 util/krb5-sync.pod
 
 # Handle the standard stuff that make maintainer-clean should probably remove
 # but doesn't.
