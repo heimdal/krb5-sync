@@ -11,7 +11,7 @@ EXTRA_DIST = autogen
 # Handle the standard stuff that make maintainer-clean should probably remove
 # but doesn't.
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
-	configure
+	configure util/krb5-sync.pod
 
 # Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
 moduledir = $(libdir)/kadmind
@@ -26,6 +26,12 @@ plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 # isn't otherwise using libtool.  Per the Automake manual, specifying CFLAGS
 # will cause the sources to be built twice, once with a prefix for this
 # program.
-bin_PROGRAMS = util/krb5-sync
+sbin_PROGRAMS = util/krb5-sync
 util_krb5_sync_SOURCES = util/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
 util_krb5_sync_CFLAGS = $(AM_CFLAGS)
+
+man_MANS = util/krb5-sync.8
+
+$(srcdir)/util/krb5-sync.8: $(srcdir)/util/krb5-sync.pod
+	pod2man --release=$(VERSION) --center="Administrative Commands" \
+	    --section=8 $(srcdir)/util/krb5-sync.pod > $@

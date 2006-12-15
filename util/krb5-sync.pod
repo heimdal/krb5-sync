@@ -1,0 +1,116 @@
+=head1 NAME
+
+krb5-sync - Synchronize passwords and status with AD or AFS kaserver
+
+=head1 SYNOPSIS
+
+B<krb5-sync> [B<-d> | B<-e>] [B<-p> I<password>] I<user>
+
+=head1 DESCRIPTION
+
+B<krb5-sync> provides a command-line interface to the same functions
+provided by the password and status synchronization plugin.  It can push a
+new password to Active Directory (actually, to any password store that
+supports the Kerberos set-password protocol) or to an AFS kaserver, or
+activate or deactivate an account in Active Directory.
+
+To synchronize passwords, provide the B<-p> option and specify the
+password.  Note that the password is given on the command line and must be
+quoted if it contains special characters, and the password will be exposed
+to any other users on the system where this command is run.  This is
+useful primarily for testing and should not be used with production
+passwords.  Synchronization to both Active Directory and to an AFS
+kaserver will be attempted based on the configuration in F<krb5.conf> (see
+below).
+
+To enable or disable an account, provide the B<-e> or B<-d> option
+respectively.  These options can also be provided in conjunction with the
+B<-p> option to take both actions at once.
+
+In either case, I<user> should be the principal name for which these
+actions should be taken.  I<user> may be either unqualified or in the
+local realm; either way, the Active Directory and AFS kaserver realms in
+which to make changes will be taken from the F<krb5.conf> configuration.
+
+The configuration block in F<krb5.conf> should look something like this:
+
+    krb5-sync = {
+        afs_srvtab      = /etc/krb5kdc/afs-srvtab
+        afs_principal   = service.sync
+        afs_realm       = AFS.EXAMPLE.COM
+
+        ad_keytab       = /etc/krb5kdc/ad-keytab
+        ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
+        ad_realm        = WINDOWS.EXAMPLE.COM
+        ad_admin_server = dc1.windows.example.com
+    }
+
+The afs_* configuration is only required if you want to synchronize
+passwords to an AFS kaserver.  Similarly, the ad_* configuration is only
+required if you want to synchronize passwords or account status to Active
+Directory.  If the configuration required for an action is not given, that
+action will not be performed but will apparently succeed from the
+perspective of the B<krb5-sync> utility.  Therefore, if this utility
+reports success but no change is happening, double-check the configuration
+to ensure that all required options are present.
+
+The *_srvtab or *_keytab option specifies the location of a srvtab or
+keytab for authenticating to the other realm, the *_principal options
+specify the principal to authenticate as (using the key in the srvtab or
+keytab), and the *_realm options specify the foreign realm.
+ad_admin_server is the host to contact via LDAP to push account status
+changes.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-d>
+
+Disable the specified user in Active Directory.  Requires that all of the
+ad_* options be set in F<krb5.conf>.  This option may not be specified at
+the same time as B<-e>.
+
+=item B<-e>
+
+Enable the specified user in Active Directory.  Requires that all of the
+ad_* options be set in F<krb5.conf>.  This option may not be specified at
+the same time as B<-e>.
+
+=item B<-p> I<password>
+
+Change the user's password to I<password>.  This will be done in either or
+both the Active Directory and the AFS kaserver, depending on what
+configuration is set in F<krb5.conf>.
+
+=back
+
+=head1 EXAMPLES
+
+Disable the account "jdoe" in Active Directory (using the AD configuration
+found in F<krb5.conf>):
+
+    krb5-sync -d jdoe
+
+Change the password of the account "testuser" in both Active Directory and
+the AFS kaserver (based on the F<krb5.conf> configuration) to "changeme":
+
+    krb5-sync -p changeme testuser@EXAMPLE.COM
+
+The same, except also enable the account in Active Directory:
+
+    krb5-sync -e -p changeme testuser
+
+Note that the realm for the user given on the command line is optional and
+ignored.
+
+=head1 SEE ALSO
+
+The current version of this program is available from its web page at
+L<http://www.eyrie.org/~eagle/software/krb5-sync/>.
+
+=head1 AUTHOR
+
+Russ Allbery <rra@stanford.edu>
+
+=cut
