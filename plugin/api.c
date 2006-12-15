@@ -105,9 +105,9 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
     if (ret != 0) {
         snprintf(errstr, errstrlen, "failure initializing Kerberos library:"
                  " %s", error_message(ret));
-        return 1;
+        return 0;
     }
-    return 0;
+    return 1;
 }
 
 /*
