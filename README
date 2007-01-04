@@ -3,8 +3,11 @@
 
               Maintained by Russ Allbery <rra@stanford.edu>
 
-  Copyright 2006 Board of Trustees, Leland Stanford Jr. University.  This
-  software is distributed under a BSD-style license.  Please see the
+  Copyright 2006 Board of Trustees, Leland Stanford Jr. University.
+  Developed by Derrick Brashear and Ken Hornstein of Sine Nomine
+  Associates, on behalf of Stanford University.
+
+  This software is distributed under a BSD-style license.  Please see the
   section LICENSE for more information.
 
   This should be considered alpha-quality code.  It is not currently
