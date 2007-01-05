@@ -3,7 +3,7 @@
 
               Maintained by Russ Allbery <rra@stanford.edu>
 
-  Copyright 2006 Board of Trustees, Leland Stanford Jr. University.
+  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.
   Developed by Derrick Brashear and Ken Hornstein of Sine Nomine
   Associates, on behalf of Stanford University.
 
@@ -200,8 +200,8 @@ CONFIGURATION
 
 LICENSE
 
-  Copyright 2006 Board of Trustees, Leland Stanford Jr. University.  All
-  rights reserved.
+  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.
+  All rights reserved.
     
   Permission to use, copy, modify, and distribute this software and its
   documentation for any purpose and without fee is hereby granted,

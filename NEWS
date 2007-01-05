@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 0.3 (unreleased)
+krb5-sync 0.3 (2007-01-05)
 
     First publicly released version.  Includes a patch for MIT Kerberos
     1.4.4, a plugin that can synchronize passwords to one Active Directory
