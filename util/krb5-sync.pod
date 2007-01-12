@@ -6,6 +6,8 @@ krb5-sync - Synchronize passwords and status with AD or AFS kaserver
 
 B<krb5-sync> [B<-d> | B<-e>] [B<-p> I<password>] I<user>
 
+B<krb5-sync> B<-f> I<file>
+
 =head1 DESCRIPTION
 
 B<krb5-sync> provides a command-line interface to the same functions
@@ -31,6 +33,32 @@ In either case, I<user> should be the principal name for which these
 actions should be taken.  I<user> may be either unqualified or in the
 local realm; either way, the Active Directory and AFS kaserver realms in
 which to make changes will be taken from the F<krb5.conf> configuration.
+
+Alternately, B<krb5-sync> also supports processing actions from a file.
+To do this, use the B<-f> flag and give the file on the command line.  The
+format of the file should be as follows:
+
+    <account>
+    afs | ad
+    password | enable | disable
+    <password>
+
+where the fourth line is present only if the <action> is C<password>.
+<account> should be the unqualified name of the account.  The second line
+should be either the string C<afs> to push the change to the AFS kaserver,
+or the string C<ad> to push the change to Windows Active Directory.  The
+third line should be one of C<password>, C<enable>, or C<disable>,
+corresponding to the B<-p>, B<-e>, and B<-d> options respectively.  The
+C<enable> and C<disable> actions are only supported for AD.
+
+The file format is not particularly forgiving.  In particular, all of the
+keywords are case-sensitive and there must not be any whitespace at the
+beginning or end of the lines (except in the password, and only if that
+whitespace is part of the password), just a single newline terminating
+each line.
+
+When the B<-f> option is given, the file will be deleted if the action was
+successful but left alone if the action failed.
 
 The configuration block in F<krb5.conf> should look something like this:
 
@@ -77,6 +105,13 @@ Enable the specified user in Active Directory.  Requires that all of the
 ad_* options be set in F<krb5.conf>.  This option may not be specified at
 the same time as B<-e>.
 
+=item B<-f> I<file>
+
+Rather than perform a particular action based on a username given on the
+command line, read a queue file and take action based on it.  The format
+of the queue file is described above.  If the action fails, the file will
+be left alone.  If the action succeeds, the file will be deleted.
+
 =item B<-p> I<password>
 
 Change the user's password to I<password>.  This will be done in either or
@@ -92,8 +127,8 @@ found in F<krb5.conf>):
 
     krb5-sync -d jdoe
 
-Change the password of the account "testuser" in both Active Directory and
-the AFS kaserver (based on the F<krb5.conf> configuration) to "changeme":
+Change the password of the account C<testuser> in both Active Directory and
+the AFS kaserver (based on the F<krb5.conf> configuration) to C<changeme>:
 
     krb5-sync -p changeme testuser@EXAMPLE.COM
 
@@ -103,6 +138,20 @@ The same, except also enable the account in Active Directory:
 
 Note that the realm for the user given on the command line is optional and
 ignored.
+
+Given a file named F<jdoe-ad-1168560492> containing:
+
+    jdoe
+    ad
+    password
+    changeme
+
+the command:
+
+    krb5-sync -f jdoe-ad-1168560492
+
+will change jdoe's password to C<changeme> in Active Directory and then
+delete the file.
 
 =head1 SEE ALSO
 

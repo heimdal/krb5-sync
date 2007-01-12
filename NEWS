@@ -1,5 +1,12 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 0.4 (unreleased)
+
+    The krb5-sync command-line utility now supports taking its actions
+    from a file instead of the command-line.  Those queue files can also
+    specify changing the password only in Active Directory or only in an
+    AFS kaserver.
+
 krb5-sync 0.3 (2007-01-05)
 
     First publicly released version.  Includes a patch for MIT Kerberos
