@@ -1,0 +1,177 @@
+#!/usr/bin/perl
+our $ID = q$Id$;
+#
+# krb5-sync-backend -- Manipulate K5 password and status change queue.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2007 Board of Trustees, Leland Stanford Jr. University
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose and without fee is hereby granted, provided
+# that the above copyright notice appear in all copies and that both that
+# copyright notice and this permission notice appear in supporting
+# documentation, and that the name of Stanford University not be used in
+# advertising or publicity pertaining to distribution of the software without
+# specific, written prior permission.  Stanford University makes no
+# representations about the suitability of this software for any purpose.  It
+# is provided "as is" without express or implied warranty.
+#
+# THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+##############################################################################
+# Declarations and site configuration
+##############################################################################
+
+use strict;
+use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
+use POSIX qw(EEXIST);
+
+# Path to the krb5-sync binary.
+our $SYNC = '/usr/sbin/krb5-sync';
+
+# Path to the directory that contains queued changes.
+our $QUEUE = '/var/spool/krb5-sync';
+
+##############################################################################
+# Writing queue files
+##############################################################################
+
+# Generate a timestamp from the current time.  We want something that sorts
+# even if time_t adds another digit (okay, this code won't last that long, but
+# anyway...).
+sub timestamp {
+    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime;
+    $mon++;
+    $year += 1900;
+    return sprintf("%04d%02d%02dT%02d%02d%02dZ", $year, $mon, $mday, $hour,
+                   $min, $sec);
+}
+
+# Write out a new queue file.  Takes the username affected, a timestamp, and a
+# list of lines for the file.
+sub queue {
+    my ($username, $timestamp, @lines) = @_;
+    my $base = "$QUEUE/$username-$timestamp";
+    my $count = 0;
+    my $file;
+    do {
+        $file = "$base-$count";
+        if (sysopen (QUEUE, $file, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
+            last;
+        }
+        die "$0: cannot create $file: $!\n" unless $! == EEXIST;
+        $count++;
+    } while (1);
+    for (@lines) {
+        print QUEUE "$_";
+        print QUEUE "\n" if $_ !~ /\n/;
+    }
+    close QUEUE or die "$0: cannot flush $file: $!\n";
+}
+
+# Queue a password change.  Takes the username, password, and system (ad or
+# afs).
+sub queue_password {
+    my ($username, $system, $password) = @_;
+    if ($system ne 'afs' && $system ne 'ad') {
+        die "$0: invalid password change destination $system\n";
+    }
+    queue ($username, timestamp, $username, $system, 'password', $password);
+}
+
+# Queue an account enable.  Takes the username.
+sub queue_enable {
+    my ($username) = @_;
+    queue ($username, timestamp, $username, 'ad', 'enable');
+}
+
+# Queue an account disable.  Takes the username.
+sub queue_disable {
+    my ($username) = @_;
+    queue ($username, timestamp, $username, 'ad', 'disable');
+}
+
+##############################################################################
+# Queue listing
+##############################################################################
+
+# List the current queue.  Displays the user, the type of event, the
+# destination service, and the timestamp.  Sort the events the same way
+# they're read when processing the queue.
+sub list {
+    opendir (QUEUE, $QUEUE) or die "$0: cannot open $QUEUE: $!\n";
+    my @files = sort map { !/^\./ } readdir QUEUE;
+    closedir QUEUE;
+    for (@files) {
+        my ($user, $timestamp) = split '-';
+        $timestamp =~ s{^(\d\d\d\d)(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z\z}
+                       {$1-$2-$3 $4:$5:$6 UTC};
+        open (FILE, '<', "$QUEUE/$_") or next;
+        my @data = <FILE>;
+        close FILE;
+        next unless @data >= 3;
+        printf "%-8s  %-8s  %-4s  %s\n", $user, $data[2], $data[1],
+            $timestamp;
+    }
+}
+
+##############################################################################
+# Queue processing
+##############################################################################
+
+# Go through the queue and process each pending event using krb5-sync.
+# krb5-sync will remove the files when the processing is successful.
+sub process {
+    chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
+    opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
+    my @files = sort map { !/^\./ } readdir QUEUE;
+    closedir QUEUE;
+    for (@files) {
+        system ($SYNC, '-f', $_) == 0
+            or warn "$0: krb5-sync failed on $_\n";
+    }
+}
+
+##############################################################################
+# Main routine
+##############################################################################
+
+# Clean up the program name for error reporting.
+$0 =~ s%.*/%%;
+
+# Read command-line options.
+my ($function, @args) = @ARGV;
+die "$0: no function specified\n" unless $function;
+
+# Take the appropriate action.
+if ($function eq 'disable') {
+    die "Usage: sync disable <username>\n" unless @args == 1;
+    queue_disable (@args);
+} elsif ($function eq 'enable') {
+    die "Usage: sync enable <username>\n" unless @args == 1;
+    queue_enable (@args);
+} elsif ($function eq 'help') {
+    print <<'EOH';
+Kerberos status synchronization help:
+  sync disable <user>                   Queue disable of <user> in AD
+  sync enable <user>                    Queue enable of <user> in AD
+  sync help                             This text
+  sync list                             List pending queued actions
+  sync password <user> ad <password>    Queue <user> password change in AD
+  sync password <user> afs <password>   Queue <user> password change in AFS K4
+  sync process                          Process pending queued actions
+EOH
+} elsif ($function eq 'list') {
+    die "Usage: sync list\n" unless @args == 0;
+    list;
+} elsif ($function eq 'process') {
+    die "Usage: sync process\n" unless @args == 0;
+    process;
+} elsif ($function eq 'password') {
+    die "Usage: sync password <user> <system> <password>\n" unless @args == 3;
+    queue_password (@args);
+} else {
+    die "$0: unknown function $function\n";
+}
