@@ -6,13 +6,10 @@
    aren't found, since most people aren't going to care about AFS kaserver
    synchronization.
 
- * Support queuing of changes and replaying the queue.  This will require
-   modifying krb5-sync to support reading actions from a queue file and
-   then modifications to the AFS kaserver update code and the Active
-   Directory status code to queue if the update fails for some reason.
-   I'll probably also add a utility to show the current queue, remove
-   specific queued actions, queue new actions, or run all queued actions.
-
  * The base DN for finding users in Active Directory probably has to be
    configurable.  I think that ou=Accounts may be a local peculiarity, and
    even if not, I can see people putting accounts in different trees.
+
+ * After remctl has been modified to allow passing of some parameters on
+   standard input, change krb5-sync-backend to accept the password on
+   standard input to avoid exposing it on the command line.
