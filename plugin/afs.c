@@ -51,8 +51,8 @@
  */
 int
 pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
-                    krb5_principal principal, char *password, int pwlen,
-                    char *errstr, int errstrlen)
+                    krb5_principal principal, char *password,
+                    int pwlen UNUSED, char *errstr, int errstrlen)
 {
     krb5_error_code ret;
     char aname[ANAME_SZ + 1], admin_aname[ANAME_SZ + 1];

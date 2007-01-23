@@ -9,6 +9,9 @@
 
 #include <krb5.h>
 
+/* Used for unused parameters to silence gcc warnings. */
+#define UNUSED  __attribute__((__unused__))
+
 /*
  * Local configuration information for the module.  This contains all the
  * parameters that are read from the krb5-sync sub-section of the appdefaults

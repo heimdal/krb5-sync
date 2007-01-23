@@ -96,8 +96,8 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
  */
 int
 pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
-                   krb5_principal principal, char *password, int pwlen,
-                   char *errstr, int errstrlen)
+                   krb5_principal principal, char *password,
+                   int pwlen UNUSED, char *errstr, int errstrlen)
 {
     krb5_error_code ret;
     char *target = NULL;
@@ -159,7 +159,8 @@ done:
  * bind interface.  Hopefully it won't need anything.
  */
 static int
-ad_interact_sasl(LDAP *ld, unsigned flags, void *defaults, void *interact)
+ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
+                 void *defaults UNUSED, void *interact UNUSED)
 {
     return 0;
 }
@@ -182,7 +183,8 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *dn, *p;
     char *target = NULL;
     char **vals = NULL;
-    char *attrs[] = { "userAccountControl", NULL }, *strvals[2];
+    const char *attrs[] = { "userAccountControl", NULL };
+    char *strvals[2];
     int option, ret;
     unsigned int acctcontrol;
     int code = 1;
@@ -197,7 +199,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      * of calling through to Cyrus SASL to set the ticket cache, but that's
      * hard.
      */
-    if (putenv("KRB5CCNAME=" CACHE_NAME) != 0) {
+    if (putenv((char *) "KRB5CCNAME=" CACHE_NAME) != 0) {
         snprintf(errstr, errstrlen, "putenv of KRB5CCNAME failed: %s",
                  strerror(errno));
         return 1;
@@ -261,8 +263,8 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     if (p != NULL)
         *p = '\0';
     snprintf(ldapdn, sizeof(ldapdn), "(sAMAccountName=%s)", target);
-    ret = ldap_search_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn, attrs, 0,
-                        &res);
+    ret = ldap_search_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn,
+                        (char **) attrs, 0, &res);
     if (ret != LDAP_SUCCESS) {
         snprintf(errstr, errstrlen, "LDAP search on \"%s\" failed: %s",
                  ldapdn, ldap_err2string(ret));
@@ -305,7 +307,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     }
     memset(&mod, 0, sizeof(mod));
     mod.mod_op = LDAP_MOD_REPLACE;
-    mod.mod_type = "userAccountControl";
+    mod.mod_type = (char *) "userAccountControl";
     snprintf(ldapdn, sizeof(ldapdn), "%u", acctcontrol);
     strvals[0] = ldapdn;
     strvals[1] = NULL;

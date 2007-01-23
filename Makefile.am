@@ -45,3 +45,13 @@ $(srcdir)/util/krb5-sync.8: $(srcdir)/util/krb5-sync.pod
 $(srcdir)/util/krb5-sync-backend.8: $(srcdir)/util/krb5-sync-backend
 	pod2man --release=$(VERSION) --center="Administrative Commands" \
 	    --section=8 $(srcdir)/util/krb5-sync-backend > $@
+
+# A set of flags for warnings.  Add -O because gcc won't find some warnings
+# without optimization turned on, and add -DDEBUG=1 so we'll also compile all
+# debugging code and test it.
+WARNINGS = -g -O -DDEBUG=1 -Wall -W -Wendif-labels -Wpointer-arith \
+	-Wbad-function-cast -Wcast-align -Wwrite-strings -Wstrict-prototypes \
+	-Wmissing-prototypes -Wnested-externs -Werror
+
+warnings:
+	$(MAKE) CFLAGS='$(WARNINGS)'

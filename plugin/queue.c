@@ -31,6 +31,15 @@
 #define MAX_QUEUE     100
 #define MAX_QUEUE_STR "99"
 
+/* Write out a string, checking that all of it was written. */
+#define WRITE_CHECK(fd, s)                              \
+    do {                                                \
+        ssize_t status;                                 \
+        status = write((fd), (s), strlen(s));           \
+        if (status < 0 || (size_t) status != strlen(s)) \
+            goto fail;                                  \
+    } while (0)
+
 /*
  * Lock the queue directory.  Returns a file handle to the lock file, which
  * must then be passed into unlock_queue when the queue should be unlocked, or
@@ -252,23 +261,15 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
     *p = '\0';
 
     /* Write out the queue data. */
-    if (write(fd, prefix, strlen(prefix)) != strlen(prefix))
-        goto fail;
-    if (write(fd, "\n", 1) != 1)
-        goto fail;
-    if (write(fd, domain, strlen(domain)) != strlen(domain))
-        goto fail;
-    if (write(fd, "\n", 1) != 1)
-        goto fail;
-    if (write(fd, operation, strlen(operation)) != strlen(operation))
-        goto fail;
-    if (write(fd, "\n", 1) != 1)
-        goto fail;
+    WRITE_CHECK(fd, prefix);
+    WRITE_CHECK(fd, "\n");
+    WRITE_CHECK(fd, domain);
+    WRITE_CHECK(fd, "\n");
+    WRITE_CHECK(fd, operation);
+    WRITE_CHECK(fd, "\n");
     if (password != NULL) {
-        if (write(fd, password, strlen(password)) != strlen(password))
-            goto fail;
-        if (write(fd, "\n", 1) != 1)
-            goto fail;
+        WRITE_CHECK(fd, password);
+        WRITE_CHECK(fd, "\n");
     }
 
     /* We're done. */
