@@ -13,3 +13,5 @@
  * After remctl has been modified to allow passing of some parameters on
    standard input, change krb5-sync-backend to accept the password on
    standard input to avoid exposing it on the command line.
+
+ * krb5-sync-backend should get the path to Perl from configure.
