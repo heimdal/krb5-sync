@@ -25,7 +25,7 @@ our $ID = q$Id$;
 ##############################################################################
 
 use strict;
-use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
+use Fcntl qw(LOCK_EX O_WRONLY O_CREAT O_EXCL);
 use POSIX qw(EEXIST);
 
 # Path to the krb5-sync binary.
@@ -38,6 +38,20 @@ our $QUEUE = '/var/spool/krb5-sync';
 # Writing queue files
 ##############################################################################
 
+# Lock the queue.  We have to do this around any change to the queue or any
+# place where we need a consistent snapshot of the queue.  Note that we use
+# flock locking; other callers will have to match.
+sub lock_queue {
+    open (LOCK, '+<', "$QUEUE/.lock")
+        or die "$0: cannot open $QUEUE/.lock: $!\n";
+    flock (LOCK, LOCK_EX);
+}
+
+# Unlock the queue.
+sub unlock_queue {
+    close LOCK;
+}
+
 # Generate a timestamp from the current time.  We want something that sorts
 # even if time_t adds another digit (okay, this code won't last that long, but
 # anyway...).
@@ -49,26 +63,29 @@ sub timestamp {
                    $min, $sec);
 }
 
-# Write out a new queue file.  Takes the username affected, a timestamp, and a
-# list of lines for the file.
+# Write out a new queue file.  Takes the username affected, the system, the
+# action, a timestamp, and a list of additional lines.
 sub queue {
-    my ($username, $timestamp, @lines) = @_;
-    my $base = "$QUEUE/$username-$timestamp";
-    my $count = 0;
+    my ($username, $system, $action, $timestamp, @data) = @_;
+    my $type = $action;
+    $type = 'enable' if $type eq 'disable';
+    my $base = "$QUEUE/$username-$system-$type-$timestamp";
     my $file;
-    do {
-        $file = "$base-$count";
+    lock_queue;
+    for (my $count = 0; $count < 100; $count++) {
+        $file = "$base-" . sprintf ("%0d", $count);
         if (sysopen (QUEUE, $file, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
             last;
         }
         die "$0: cannot create $file: $!\n" unless $! == EEXIST;
-        $count++;
-    } while (1);
-    for (@lines) {
+    }
+    print QUEUE "$username\n$system\n$action\n";
+    for (@data) {
         print QUEUE "$_";
         print QUEUE "\n" if $_ !~ /\n/;
     }
     close QUEUE or die "$0: cannot flush $file: $!\n";
+    unlock_queue;
 }
 
 # Queue a password change.  Takes the username, password, and system (ad or
@@ -78,19 +95,19 @@ sub queue_password {
     if ($system ne 'afs' && $system ne 'ad') {
         die "$0: invalid password change destination $system\n";
     }
-    queue ($username, timestamp, $username, $system, 'password', $password);
+    queue ($username, $system, 'password', timestamp, $password);
 }
 
 # Queue an account enable.  Takes the username.
 sub queue_enable {
     my ($username) = @_;
-    queue ($username, timestamp, $username, 'ad', 'enable');
+    queue ($username, 'ad', 'enable', timestamp);
 }
 
 # Queue an account disable.  Takes the username.
 sub queue_disable {
     my ($username) = @_;
-    queue ($username, timestamp, $username, 'ad', 'disable');
+    queue ($username, 'ad', 'disable', timestamp);
 }
 
 ##############################################################################
@@ -101,11 +118,13 @@ sub queue_disable {
 # destination service, and the timestamp.  Sort the events the same way
 # they're read when processing the queue.
 sub list {
+    lock_queue;
     opendir (QUEUE, $QUEUE) or die "$0: cannot open $QUEUE: $!\n";
     my @files = sort map { !/^\./ } readdir QUEUE;
     closedir QUEUE;
+    unlock_queue;
     for (@files) {
-        my ($user, $timestamp) = split '-';
+        my ($user, undef, undef, $timestamp) = split '-';
         $timestamp =~ s{^(\d\d\d\d)(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z\z}
                        {$1-$2-$3 $4:$5:$6 UTC};
         open (FILE, '<', "$QUEUE/$_") or next;
@@ -122,15 +141,25 @@ sub list {
 ##############################################################################
 
 # Go through the queue and process each pending event using krb5-sync.
-# krb5-sync will remove the files when the processing is successful.
+# krb5-sync will remove the files when the processing is successful.  If
+# processing any of the queue files of a particular type fails, we skip all
+# subsequent queue files of the same type.
 sub process {
     chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
+    lock_queue;
     opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
     my @files = sort map { !/^\./ } readdir QUEUE;
     closedir QUEUE;
+    unlock_queue;
+    my %skipped;
     for (@files) {
-        system ($SYNC, '-f', $_) == 0
-            or warn "$0: krb5-sync failed on $_\n";
+        my ($id) = /^([^-]+-[^-]+-[^-]+)-/;
+        $id ||= 'UNKNOWN';
+        next if $skipped{$id};
+        if (system ($SYNC, '-f', $_) != 0) {
+            warn "$0: krb5-sync failed on $_\n";
+            $skipped{$id} = 1;
+        }
     }
 }
 
