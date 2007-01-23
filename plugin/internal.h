@@ -24,6 +24,7 @@ struct plugin_config {
     char *ad_principal;
     char *ad_realm;
     char *ad_admin_server;
+    char *queue_dir;
 };
 
 /* General public API. */
@@ -50,5 +51,14 @@ int pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
 int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
                        krb5_principal principal, int enabled, char *errstr,
                        int errstrlen);
+
+/* Queuing */
+int pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,
+                            krb5_principal principal, const char *domain,
+                            const char *operation);
+int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
+                         krb5_principal principal, const char *domain,
+                         const char *operation, const char *password);
+
 
 #endif /* !INTERNAL_H */

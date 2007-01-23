@@ -1,0 +1,297 @@
+/*
+ * queue.c
+ *
+ * Change queuing and queue checking.
+ *
+ * For some of the changes done by this plugin, we want to queue the change if
+ * it failed rather than simply failing the operation.  These functions
+ * implement that queuing.  Before making a change, we also need to check
+ * whether conflicting changes are already queued, and if so, either queue our
+ * operation as well or fail our operation so that correct changes won't be
+ * undone.
+ */
+
+#include <dirent.h>
+#include <fcntl.h>
+#include <krb5.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/file.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+
+#include <plugin/internal.h>
+
+/*
+ * Maximum number of queue files we will permit for a given user and action
+ * within a given timestamp, and longest string representation of the count.
+ */
+#define MAX_QUEUE     100
+#define MAX_QUEUE_STR "99"
+
+/*
+ * Lock the queue directory.  Returns a file handle to the lock file, which
+ * must then be passed into unlock_queue when the queue should be unlocked, or
+ * -1 on failure to lock.
+ *
+ * We have to use flock for compatibility with the Perl krb5-sync-backend
+ * script.  Perl makes it very annoying to use fcntl locking on Linux.
+ */
+static int
+lock_queue(struct plugin_config *config)
+{
+    char *lockpath = NULL;
+    size_t length;
+    int fd = -1;
+
+    length = strlen(config->queue_dir) + 1 + strlen(".lock") + 1;
+    lockpath = malloc(length);
+    if (lockpath == NULL)
+        return -1;
+    snprintf(lockpath, length, "%s/.lock", config->queue_dir);
+    fd = open(lockpath, O_RDWR | O_CREAT, 0644);
+    if (fd < 0)
+        goto fail;
+    free(lockpath);
+    lockpath = NULL;
+    if (flock(fd, LOCK_EX) < 0)
+        goto fail;
+    return fd;
+
+fail:
+    if (lockpath != NULL)
+        free(lockpath);
+    if (fd >= 0)
+        close(fd);
+    return -1;
+}
+
+
+/*
+ * Unlock the queue directory.  Takes the file descriptor of the open lock
+ * file, returned by lock_queue.  We assume that this function will never
+ * fail.
+ */
+static void
+unlock_queue(int fd)
+{
+    close(fd);
+}
+
+
+/*
+ * Given a Kerberos principal, a context, a domain, and an operation, generate
+ * the prefix for queue files as a newly allocated string.  Returns NULL on
+ * failure.
+ */
+static char *
+queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
+             const char *operation)
+{
+    char *user = NULL, *prefix = NULL;
+    char *p;
+    size_t length;
+    krb5_error_code retval;
+
+    /* Enable and disable should go into the same queue. */
+    if (strcmp(operation, "disable") == 0)
+        operation = "enable";
+    retval = krb5_unparse_name(ctx, principal, &user);
+    if (retval != 0)
+        return NULL;
+    p = strchr(user, '@');
+    if (p != NULL)
+        *p = '\0';
+    p = strchr(user, '/');
+    if (p != NULL) {
+        krb5_free_unparsed_name(ctx, user);
+        return NULL;
+    }
+    length = strlen(user) + strlen(domain) + strlen(operation) + 4;
+    prefix = malloc(length);
+    if (prefix == NULL) {
+        krb5_free_unparsed_name(ctx, user);
+        return NULL;
+    }
+    snprintf(prefix, length, "%s-%s-%s-", user, domain, operation);
+    krb5_free_unparsed_name(ctx, user);
+    return prefix;
+}
+
+
+/*
+ * Generate a timestamp from the current date and return it as a newly
+ * allocated string, or NULL on failure.  Uses the ISO timestamp format.
+ */
+static char *
+queue_timestamp(void)
+{
+    struct tm now;
+    time_t seconds;
+    size_t length;
+    char *timestamp;
+
+    seconds = time(NULL);
+    if (seconds == (time_t) -1)
+        return NULL;
+    if (gmtime_r(&seconds, &now) == NULL)
+        return NULL;
+    now.tm_mon++;
+    now.tm_year += 1900;
+    length = strlen("YYYYMMDDTHHMMSSZ") + 1;
+    timestamp = malloc(length);
+    if (timestamp == NULL)
+        return NULL;
+    snprintf(timestamp, length, "%04d%02d%02dT%02d%02d%02dZ", now.tm_year,
+             now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
+    return timestamp;
+}
+
+
+/*
+ * Given a Kerberos context, a principal (assumed to have no instance), a
+ * domain (afs or ad), and an operation, check whether there are any existing
+ * queued actions for that combination.  Returns 1 if there are, 0 otherwise.
+ * On failure, return -1 (still true but distinguished).
+ */
+int
+pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,
+                        krb5_principal principal, const char *domain,
+                        const char *operation)
+{
+    int lock = -1;
+    char *prefix = NULL;
+    DIR *queue = NULL;
+    struct dirent *entry;
+    int found = 0;
+
+    if (config->queue_dir == NULL)
+        return -1;
+    prefix = queue_prefix(ctx, principal, domain, operation);
+    if (prefix == NULL)
+        return -1;
+    lock = lock_queue(config);
+    if (lock < 0)
+        goto fail;
+    queue = opendir(config->queue_dir);
+    if (queue == NULL)
+        goto fail;
+    while ((entry = readdir(queue)) != NULL) {
+        if (strncmp(prefix, entry->d_name, strlen(prefix)) == 0) {
+            found = 1;
+            break;
+        }
+    }
+    unlock_queue(lock);
+    closedir(queue);
+    free(prefix);
+    return found;
+
+fail:
+    if (lock >= 0)
+        unlock_queue(lock);
+    if (queue != NULL)
+        closedir(queue);
+    if (prefix != NULL)
+        free(prefix);
+    return -1;
+}
+
+
+/*
+ * Queue an action.  Takes the plugin configuration, the Kerberos context, the
+ * principal, the domain, the operation, and a password (which may be NULL for
+ * enable and disable).  Returns true on success, false on failure.
+ */
+int
+pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
+                     krb5_principal principal, const char *domain,
+                     const char *operation, const char *password)
+{
+    char *prefix = NULL, *timestamp = NULL, *path = NULL;
+    char *p;
+    size_t length;
+    unsigned int i;
+    int lock = -1, fd = -1;
+
+    if (config->queue_dir == NULL)
+        return 0;
+    prefix = queue_prefix(ctx, principal, domain, operation);
+    if (prefix == NULL)
+        return 0;
+
+    /*
+     * Lock the queue before the timestamp so that another writer coming up
+     * at the same time can't get an earlier timestamp.
+     */
+    lock = lock_queue(config);
+    timestamp = queue_timestamp();
+    if (timestamp == NULL)
+        goto fail;
+
+    /* Find a unique filename for the queue file. */
+    length = strlen(config->queue_dir) + 1 + strlen(prefix)
+        + strlen(timestamp) + 1 + strlen(MAX_QUEUE_STR) + 1;
+    path = malloc(length);
+    if (path == NULL)
+        goto fail;
+    for (i = 0; i < MAX_QUEUE; i++) {
+        snprintf(path, length, "%s/%s%s-%02d", config->queue_dir, prefix,
+                 timestamp, i);
+        fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
+        if (fd >= 0)
+            break;
+    }
+
+    /* This is a bit of a hack.  Get the username from the prefix. */
+    p = strchr(prefix, '-');
+    if (p == NULL)
+        goto fail;
+    *p = '\0';
+
+    /* Write out the queue data. */
+    if (write(fd, prefix, strlen(prefix)) != strlen(prefix))
+        goto fail;
+    if (write(fd, "\n", 1) != 1)
+        goto fail;
+    if (write(fd, domain, strlen(domain)) != strlen(domain))
+        goto fail;
+    if (write(fd, "\n", 1) != 1)
+        goto fail;
+    if (write(fd, operation, strlen(operation)) != strlen(operation))
+        goto fail;
+    if (write(fd, "\n", 1) != 1)
+        goto fail;
+    if (password != NULL) {
+        if (write(fd, password, strlen(password)) != strlen(password))
+            goto fail;
+        if (write(fd, "\n", 1) != 1)
+            goto fail;
+    }
+
+    /* We're done. */
+    close(fd);
+    unlock_queue(lock);
+    free(prefix);
+    free(timestamp);
+    free(path);
+    return 1;
+
+fail:
+    if (fd >= 0) {
+        if (path != NULL)
+            unlink(path);
+        close(fd);
+    }
+    if (lock >= 0)
+        unlock_queue(lock);
+    if (prefix != NULL)
+        free(prefix);
+    if (timestamp != NULL)
+        free(timestamp);
+    if (path != NULL)
+        free(path);
+    return 0;
+}

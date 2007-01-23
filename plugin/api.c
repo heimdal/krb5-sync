@@ -61,6 +61,7 @@ pwupdate_init(krb5_context ctx, void **data)
     config_string(ctx, "ad_principal", &config->ad_principal);
     config_string(ctx, "ad_realm", &config->ad_realm);
     config_string(ctx, "ad_admin_server", &config->ad_admin_server);
+    config_string(ctx, "queue_dir", &config->queue_dir);
     *data = config;
     return 0;
 }
@@ -88,6 +89,8 @@ pwupdate_close(void *data)
         free(config->ad_realm);
     if (config->ad_admin_server != NULL)
         free(config->ad_admin_server);
+    if (config->queue_dir != NULL)
+        free(config->queue_dir);
     free(config);
 }
 
@@ -143,6 +146,8 @@ principal_allowed(krb5_context ctx, krb5_principal principal)
  * configuration information and return any error it returns, but skip any
  * principals with a non-NULL instance since those are kept separately in each
  * realm.
+ *
+ * If a password change is already queued for this user, fail the change.
  */
 int
 pwupdate_precommit_password(void *data, krb5_principal principal,
@@ -159,6 +164,11 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
         return 1;
     if (!principal_allowed(ctx, principal))
         return 0;
+    if (pwupdate_queue_conflict(config, ctx, principal, "ad", "password")) {
+        snprintf(errstr, errstrlen, "AD password change already queued");
+        krb5_free_context(ctx);
+        return 1;
+    }
     status = pwupdate_ad_change(config, ctx, principal, password, pwlen,
                                 errstr, errstrlen);
     krb5_free_context(ctx);
@@ -172,6 +182,9 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
  * configuration information and return any error it returns, but skip any
  * principals with a non-NULL instance since those are kept separately in each
  * realm.
+ *
+ * If the change fails or if a password change in AFS were already queued for
+ * this user, queue the password change.  Only fail if we can't even do that.
  */
 int pwupdate_postcommit_password(void *data, krb5_principal principal,
                                  char *password, int pwlen,
@@ -189,10 +202,25 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
         return 1;
     if (!principal_allowed(ctx, principal))
         return 0;
+    if (pwupdate_queue_conflict(config, ctx, principal, "afs", "password"))
+        goto queue;
     status = pwupdate_afs_change(config, ctx, principal, password, pwlen,
                                  errstr, errstrlen);
+    if (status != 0)
+        goto queue;
     krb5_free_context(ctx);
     return status;
+
+queue:
+    status = pwupdate_queue_write(config, ctx, principal, "afs", "password",
+                                  password);
+    krb5_free_context(ctx);
+    if (status)
+        return 0;
+    else {
+        snprintf(errstr, errstrlen, "queueing AFS password change failed");
+        return 1;
+    }
 }
 
 /*
@@ -200,6 +228,9 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
  *
  * Push the new account status to Active Directory if so configured, but skip
  * principals with non-NULL instances.  Return any error that it returns.
+ *
+ * If a status change is already queued, or if making the status change fails,
+ * queue it for later processing.
  */
 int
 pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
@@ -218,8 +249,23 @@ pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
         return 1;
     if (!principal_allowed(ctx, principal))
         return 0;
+    if (pwupdate_queue_conflict(config, ctx, principal, "ad", "enable"))
+        goto queue;
     status = pwupdate_ad_status(config, ctx, principal, enabled, errstr,
                                 errstrlen);
+    if (status != 0)
+        goto queue;
     krb5_free_context(ctx);
     return status;
+
+queue:
+    status = pwupdate_queue_write(config, ctx, principal, "afs",
+                                  enabled ? "enable" : "disable", NULL);
+    krb5_free_context(ctx);
+    if (status)
+        return 0;
+    else {
+        snprintf(errstr, errstrlen, "queueing AD status change failed");
+        return 1;
+    }
 }
