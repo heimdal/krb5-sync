@@ -7,6 +7,13 @@ krb5-sync 0.4 (unreleased)
     specify changing the password only in Active Directory or only in an
     AFS kaserver.
 
+    The plugin will now queue account status changes and AFS password
+    changes if making the change fails or if a change of that type is
+    already queued for that account.
+
+    Add a new Perl script, krb5-sync-backend, which supports listing and
+    processing the queue and queuing particular changes.
+
 krb5-sync 0.3 (2007-01-05)
 
     First publicly released version.  Includes a patch for MIT Kerberos
