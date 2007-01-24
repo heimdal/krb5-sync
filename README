@@ -124,8 +124,13 @@ COMPILING AND INSTALLING
 
   The last step will probably have to be done as root.  By default, the
   plugin is installed as /usr/local/lib/kadmind/passwd_update.so and the
-  utilities are installed in /usr/local/bin.  You can change those paths
-  with the --prefix, --libdir, and --bindir options to configure.
+  utilities are installed in /usr/local/sbin.  You can change those paths
+  with the --prefix, --libdir, and --sbindir options to configure.
+
+  If /usr/bin/perl is not the path to Perl on your system, you will need
+  to change the first line of krb5-sync-backend.  You will also need to
+  change the path to the krb5-sync utility in that script unless you
+  install krb5-sync in /usr/sbin.
 
   Normally, configure will use krb5-config to determine the flags to use
   to compile with your Kerberos libraries.  If krb5-config isn't found, it
@@ -172,6 +177,8 @@ CONFIGURATION
           ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
           ad_realm        = WINDOWS.EXAMPLE.COM
           ad_admin_server = dc1.windows.example.com
+
+          queue_dir       = /var/spool/krb5-sync
       }
 
   The afs_* configuration is only required if you want to synchronize
@@ -187,6 +194,16 @@ CONFIGURATION
   If afs_realm is not set, the plugin will not attempt to push changes to
   an AFS kaserver.  Similarly, if ad_realm is not set, the plugin will not
   attempt to push changes to Active Directory.
+
+  The queue_dir setting specifies where to queue changes that couldn't be
+  made.  If password changes fail in AD, the whole password change is
+  failed, but status changes are done before synchronization with AD is
+  attempted and password changes are done before AFS kaserver changes are
+  attempted.  The queuing mechanism is used to be sure that failed changes
+  aren't lost and can be investigated further.  For more information, see
+  the man page for krb5-sync and krb5-sync-backend.  If you use a queue
+  directory other than the one given, you will need to change the
+  beginning of the krb5-sync-backend script as well.
 
   The kadmind patch adds a configuration option for the kdc.conf file
   specifying the path to the plugin.  If this option is not set, the

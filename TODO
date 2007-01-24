@@ -14,4 +14,9 @@
    standard input, change krb5-sync-backend to accept the password on
    standard input to avoid exposing it on the command line.
 
- * krb5-sync-backend should get the path to Perl from configure.
+ * krb5-sync-backend should get the path to Perl and krb5-sync from
+   configure.
+
+ * Currently, the queue path is hard-coded in krb5-sync-backend even
+   though for the plugin it's configurable in krb5.conf.
+   krb5-sync-backend needs to be able to read the krb5.conf value somehow.

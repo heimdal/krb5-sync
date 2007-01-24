@@ -204,3 +204,121 @@ EOH
 } else {
     die "$0: unknown function $function\n";
 }
+
+##############################################################################
+# Documentation
+##############################################################################
+
+=head1 NAME
+
+krb5-sync-backend - Manipulate K5 password and status change queue
+
+=head1 SYNOPSIS
+
+B<krb5-sync-backend> (disable|enable) I<user>
+
+B<krb5-sync-backend> (help|list|process)
+
+B<krb5-sync-backend> password I<user> (ad|afs) I<password>
+
+=head1 DESCRIPTION
+
+B<krb5-sync-backend> provides an interface to the queue of pending password
+and account status changes written by either this utility or by the
+synchronization plugin after failures.  It can queue account enables,
+disables, or password changes for either the AFS kaserver or AD, list the
+queued actions, or process the queued actions with B<krb5-sync> (telling it
+to take its action from a file).
+
+The queue directory will contain files with names in the format:
+
+    <username>-<domain>-<action>-<timestamp>-<count>
+
+where <username> is the name of the affected account (no instances allowed,
+and with the realm removed), <domain> is either C<ad> or C<afs>, <action> is
+either C<enable> (used for both enabling and disabling accounts) or
+C<password>, <timestamp> is a ISO 8601 timestamp in UTC, and <count> is a
+two-digit zero-padded number between 0 and 99 (so that we can handle
+multiple changes that arrive in the same second).  Each file contains a
+queued change in the format described in krb5-sync(8).
+
+Supported arguments to B<krb5-sync-backend> are:
+
+=over 4
+
+=item disable I<user>
+
+Queue a disable action (in Active Directory, as that's the only system
+currently supported for enable and disable) for I<user>.
+
+=item enable I<user>
+
+Queue an enable action (in Active Directory, as that's the only system
+currently supported for enable and disable) for I<user>.
+
+=item help
+
+List the supported commands.
+
+=item list
+
+List the current contents of the queue.
+
+=item process
+
+Process the queue.  All queued actions will be sorted alphanumerically
+(which due to the timestamp means that all changes for a particular user of
+a particular type will be done in the order queued).  B<krb5-sync> will be
+called for each queued action, as long as it continues to succeed.  If it
+fails for a queued action, all other actions sharing the same username,
+domain, and action will be skipped and queue processing will continue with
+the next action that differs in one of those three parameters.
+
+=item password I<user> (ad|afs) I<password>
+
+Queue a password change for I<user> in either AD or AFS kaserver, setting
+their password to I<password>.  Note that I<password> appears on the command
+line, so you don't want to invoke this command in any environment where an
+untrusted user would be in a position to see the command-line arguments of
+processes (which are generally readable to anyone on the system).
+
+=back
+
+B<krb5-sync-backend> takes no traditional command-line options.
+
+=head1 FILES
+
+=over 4
+
+=item F</usr/sbin/krb5-sync>
+
+The path to the B<krb5-sync> utility.  This may be changed at the top of
+this script.
+
+=item F</var/spool/krb5-sync>
+
+The default path to the queue.  This must match the queue_dir parameter in
+F<krb5.conf> used by the plugin.  It can be changed at the top of this
+script.
+
+=item F</var/spool/krb5-sync/.lock>
+
+An empty file used for locking the queue.  When writing to or querying the
+queue, B<krb5-sync-backend> will open and lock this file with the Perl flock
+function, which normally calls flock(2).  Any other queue writers need to
+use the same locking mechanism for safe operation.
+
+=back
+
+=head1 SEE ALSO
+
+krb5-sync(8)
+
+The current version of this program is available from its web page at
+L<http://www.eyrie.org/~eagle/software/krb5-sync/>.
+
+=head1 AUTHOR
+
+Russ Allbery <rra@stanford.edu>
+
+=cut
