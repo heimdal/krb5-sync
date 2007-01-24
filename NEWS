@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 0.4 (unreleased)
+krb5-sync 0.4 (2007-01-23)
 
     The krb5-sync command-line utility now supports taking its actions
     from a file instead of the command-line.  Those queue files can also
