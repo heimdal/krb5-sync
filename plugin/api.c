@@ -259,7 +259,7 @@ pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
     return status;
 
 queue:
-    status = pwupdate_queue_write(config, ctx, principal, "afs",
+    status = pwupdate_queue_write(config, ctx, principal, "ad",
                                   enabled ? "enable" : "disable", NULL);
     krb5_free_context(ctx);
     if (status)

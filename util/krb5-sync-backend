@@ -73,7 +73,7 @@ sub queue {
     my $file;
     lock_queue;
     for (my $count = 0; $count < 100; $count++) {
-        $file = "$base-" . sprintf ("%0d", $count);
+        $file = "$base-" . sprintf ("%02d", $count);
         if (sysopen (QUEUE, $file, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
             last;
         }
@@ -120,16 +120,17 @@ sub queue_disable {
 sub list {
     lock_queue;
     opendir (QUEUE, $QUEUE) or die "$0: cannot open $QUEUE: $!\n";
-    my @files = sort map { !/^\./ } readdir QUEUE;
+    my @files = sort grep { !/^\./ } readdir QUEUE;
     closedir QUEUE;
     unlock_queue;
-    for (@files) {
-        my ($user, undef, undef, $timestamp) = split '-';
+    for my $file (@files) {
+        my ($user, undef, undef, $timestamp) = split ('-', $file);
         $timestamp =~ s{^(\d\d\d\d)(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z\z}
                        {$1-$2-$3 $4:$5:$6 UTC};
-        open (FILE, '<', "$QUEUE/$_") or next;
+        open (FILE, '<', "$QUEUE/$file") or next;
         my @data = <FILE>;
         close FILE;
+        chomp @data;
         next unless @data >= 3;
         printf "%-8s  %-8s  %-4s  %s\n", $user, $data[2], $data[1],
             $timestamp;
@@ -148,16 +149,16 @@ sub process {
     chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
     lock_queue;
     opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
-    my @files = sort map { !/^\./ } readdir QUEUE;
+    my @files = sort grep { !/^\./ } readdir QUEUE;
     closedir QUEUE;
     unlock_queue;
     my %skipped;
-    for (@files) {
-        my ($id) = /^([^-]+-[^-]+-[^-]+)-/;
+    for my $file (@files) {
+        my ($id) = ($file =~ /^([^-]+-[^-]+-[^-]+)-/);
         $id ||= 'UNKNOWN';
         next if $skipped{$id};
-        if (system ($SYNC, '-f', $_) != 0) {
-            warn "$0: krb5-sync failed on $_\n";
+        if (system ($SYNC, '-f', $file) != 0) {
+            warn "$0: krb5-sync failed on $file\n";
             $skipped{$id} = 1;
         }
     }
