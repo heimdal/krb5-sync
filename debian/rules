@@ -51,6 +51,7 @@ install:
 	dh_clean -k
 	$(MAKE) install DESTDIR=$(TMP)
 	rm -f $(TMP)/usr/lib/kadmind/passwd_update.la
+	install -d $(TMP)/var/spool/krb5-sync
 
 binary: binary-arch binary-indep
 binary-indep:
@@ -63,6 +64,7 @@ binary-arch: install
 	dh_strip
 	dh_compress
 	dh_fixperms
+	dh_perl
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol

@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: krb5-sync
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${perl:Depends}
 Recommends: krb5-admin-server
 Description: MIT Kerberos KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign

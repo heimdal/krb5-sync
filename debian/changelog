@@ -1,3 +1,13 @@
+krb5-sync (0.4-1) unstable; urgency=low
+
+  * New upstream release.
+    - Added queuing of status and AFS password changes on failure.
+    - Fail/queue if a change is already queued for that user and action.
+    - Added krb5-sync-backend to manage the queue.
+  * Update upstream authorship information.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 23 Jan 2007 16:27:44 -0800
+
 krb5-sync (0.3-1) unstable; urgency=low
 
   * New, significantly different upstream release.

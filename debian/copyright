@@ -6,8 +6,9 @@ It was downloaded from:
 
 Upstream authors:
 
-    Originally written by Derrick Brashear <shadow@dementia.org>.  The
-    current maintainer is Russ Allbery <rra@stanford.edu>.
+    Developed by Derrick Brashear and Ken Hornstein of Sine Nomine
+    Associates, on behalf of Stanford University.  The current maintainer
+    is Russ Allbery <rra@stanford.edu>.
 
 Debian packaging copyright:
 
@@ -16,8 +17,8 @@ Debian packaging copyright:
 
 Copyright:
 
-    Copyright 2006 Board of Trustees, Leland Stanford Jr. University.  All
-    rights reserved.
+    Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr.
+    University.  All rights reserved.
     
     Permission to use, copy, modify, and distribute this software and its
     documentation for any purpose and without fee is hereby granted,
