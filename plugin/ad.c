@@ -93,6 +93,10 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
  * configuration, a Kerberos context, the principal whose password is being
  * changed (we will have to change the realm), the new password and its
  * length, and a buffer into which to put error messages and its length.
+ *
+ * Returns 1 for any general failure, 2 if the password change was rejected by
+ * the remote system, and 3 if the password change was rejected for a reason
+ * that may mean that the user doesn't exist.
  */
 int
 pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
@@ -136,11 +140,11 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     }
     if (result_code != 0) {
         snprintf(errstr, errstrlen, "password change failed for %s in %s:"
-                 " %.*s%s%.*s", target, config->ad_realm,
+                 " (%d) %.*s%s%.*s", target, config->ad_realm, result_code,
                  result_code_string.length, result_code_string.data, 
                  result_string.length ? ": " : "", 
                  result_string.length, result_string.data); 
-        code = 2;
+        code = 3;
         goto done;
     }
     free(result_string.data);

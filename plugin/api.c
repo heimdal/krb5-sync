@@ -147,7 +147,9 @@ principal_allowed(krb5_context ctx, krb5_principal principal)
  * principals with a non-NULL instance since those are kept separately in each
  * realm.
  *
- * If a password change is already queued for this user, fail the change.
+ * If a password change is already queued for this usequeue this password
+ * change as well.  If the password change fails for a reason that may mean
+ * that the user doesn't already exist, also queue this change.
  */
 int
 pwupdate_precommit_password(void *data, krb5_principal principal,
@@ -164,15 +166,25 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
         return 1;
     if (!principal_allowed(ctx, principal))
         return 0;
-    if (pwupdate_queue_conflict(config, ctx, principal, "ad", "password")) {
-        snprintf(errstr, errstrlen, "AD password change already queued");
-        krb5_free_context(ctx);
-        return 1;
-    }
+    if (pwupdate_queue_conflict(config, ctx, principal, "ad", "password"))
+        goto queue;
     status = pwupdate_ad_change(config, ctx, principal, password, pwlen,
                                 errstr, errstrlen);
+    if (status == 3)
+        goto queue;
     krb5_free_context(ctx);
     return status;
+
+queue:
+    status = pwupdate_queue_write(config, ctx, principal, "ad", "password",
+                                  password);
+    krb5_free_context(ctx);
+    if (status)
+        return 0;
+    else {
+        snprintf(errstr, errstrlen, "queueing AFS password change failed");
+        return 1;
+    }
 }
 
 /*
