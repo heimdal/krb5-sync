@@ -26,7 +26,7 @@
  */
 static void
 ad_password(void *data, krb5_context ctx, krb5_principal principal,
-            char *password)
+            char *password, const char *user)
 {
     char errbuf[BUFSIZ];
     int status;
@@ -34,11 +34,11 @@ ad_password(void *data, krb5_context ctx, krb5_principal principal,
     status = pwupdate_ad_change(data, ctx, principal, password,
                                 strlen(password), errbuf, sizeof(errbuf));
     if (status != 0) {
-        fprintf(stderr, "AD password change failed (%d): %s\n", status,
-                errbuf);
+        fprintf(stderr, "AD password change for %s failed (%d): %s\n", user,
+                status, errbuf);
         exit(1);
     }
-    printf("AD password change succeeded\n");
+    printf("AD password change for %s succeeded\n", user);
 }
 
 /*
@@ -46,7 +46,8 @@ ad_password(void *data, krb5_context ctx, krb5_principal principal,
  * we were successful, and exit with an error message if we weren't.
  */
 static void
-ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable)
+ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
+          const char *user)
 {
     char errbuf[BUFSIZ];
     int status;
@@ -54,11 +55,11 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable)
     status = pwupdate_ad_status(data, ctx, principal, enable, errbuf,
                                 sizeof(errbuf));
     if (status != 0) {
-        fprintf(stderr, "Status change failed (%d): %s\n", status,
-                errbuf);
+        fprintf(stderr, "AD status change for %s failed (%d): %s\n", user,
+                status, errbuf);
         exit(1);
     }
-    printf("Status change succeeded\n");
+    printf("AD status change for %s succeeded\n", user);
 }
 
 /*
@@ -67,7 +68,7 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable)
  */
 static void
 afs_password(void *data, krb5_context ctx, krb5_principal principal,
-             char *password)
+             char *password, const char *user)
 {
     char errbuf[BUFSIZ];
     int status;
@@ -75,11 +76,11 @@ afs_password(void *data, krb5_context ctx, krb5_principal principal,
     status = pwupdate_afs_change(data, ctx, principal, password,
                                  strlen(password), errbuf, sizeof(errbuf));
     if (status != 0) {
-        fprintf(stderr, "AFS password change failed (%d): %s\n", status,
-                errbuf);
+        fprintf(stderr, "AFS password change for %s failed (%d): %s\n", user,
+                status, errbuf);
         exit(1);
     }
-    printf("AFS password change succeeded\n");
+    printf("AFS password change for %s succeeded\n", user);
 }
 
 /*
@@ -119,6 +120,7 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
 {
     FILE *queue;
     char buffer[BUFSIZ];
+    char *user;
     krb5_principal principal;
     krb5_error_code ret;
     int afs = 0;
@@ -136,6 +138,7 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
 
     /* Get user and convert into a principal. */
     read_line(queue, filename, buffer, sizeof(buffer));
+    user = strdup(buffer);
     ret = krb5_parse_name(ctx, buffer, &principal);
     if (ret != 0) {
         fprintf(stderr, "Cannot parse user %s into principal: %s\n", buffer,
@@ -176,11 +179,11 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     if (password) {
         read_line(queue, filename, buffer, sizeof(buffer));
         if (ad)
-            ad_password(data, ctx, principal, buffer);
+            ad_password(data, ctx, principal, buffer, user);
         else if (afs)
-            afs_password(data, ctx, principal, buffer);
+            afs_password(data, ctx, principal, buffer, user);
     } else if (enable || disable) {
-        ad_status(data, ctx, principal, enable);
+        ad_status(data, ctx, principal, enable, user);
     }
 
     /* If we got here, we were successful.  Close the file and delete it. */
@@ -190,6 +193,7 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
                 strerror(errno));
         exit(1);
     }
+    free(user);
 }
 
 int
@@ -278,11 +282,11 @@ main(int argc, char *argv[])
             exit(1);
         }
         if (password != NULL) {
-            ad_password(data, ctx, principal, password);
-            afs_password(data, ctx, principal, password);
+            ad_password(data, ctx, principal, password, user);
+            afs_password(data, ctx, principal, password, user);
         }
         if (enable || disable)
-            ad_status(data, ctx, principal, enable);
+            ad_status(data, ctx, principal, enable, user);
     }
 
     exit(0);

@@ -9,6 +9,9 @@ krb5-sync 0.5 (unreleased)
     Queue AD password changes if there is already an AD password change
     queued rather than rejecting the change.
 
+    Include the username in status messages from the krb5-sync
+    command-line utility.
+
 krb5-sync 0.4 (2007-01-23)
 
     The krb5-sync command-line utility now supports taking its actions
