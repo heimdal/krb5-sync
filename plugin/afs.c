@@ -43,7 +43,7 @@
 #include <plugin/internal.h>
 
 /*
- * Change a password in Active Directory.  Takes the module configuration, a
+ * Change a password in the AFS kaserver.  Takes the module configuration, a
  * Kerberos context, the principal whose password is being changed (we will
  * derive the AFS principal with krb5_524_conv_principal and then changing its
  * realm), the new password and its length, and a buffer into which to write
