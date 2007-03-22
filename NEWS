@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 0.5 (unreleased)
+krb5-sync 0.5 (2007-03-22)
 
     Obtain new AFS tokens for each operation rather than reusing the
     existing token since ka_GetAdminToken isn't smart enough to realize
