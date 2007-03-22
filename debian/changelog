@@ -1,3 +1,13 @@
+krb5-sync (0.5-1) unstable; urgency=low
+
+  * New upstream release.
+    - Obtain new AFS tokens for each operation to avoid expiration.
+    - Queue AD changes rather than rejecting for non-existent users.
+    - Queue AD changes if there's already a queued change.
+    - Include the username in krb5-sync status messages.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 22 Mar 2007 16:54:39 -0700
+
 krb5-sync (0.4-1) unstable; urgency=low
 
   * New upstream release.
