@@ -1,5 +1,10 @@
                            krb5-sync To-Do List
 
+ * The AFS tokens obtained by the kadmin plugin appear to expire and for
+   some reason new ones are not obtained, meaning that AFS password
+   synchronization starts failing after the server has been running for
+   a while.
+
  * The AFS code currently builds unconditionally, so if the AFS libraries
    weren't found at configure time, the build just fails.  It should
    instead all be protected by #ifdef and not built if the AFS libraries
