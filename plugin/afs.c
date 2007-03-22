@@ -132,7 +132,7 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
         return 1;
     }
     code = ka_GetAdminToken(admin_aname, admin_inst, config->afs_realm,
-                            &mitkey, 1000, &token, 0);
+                            &mitkey, 1000, &token, 1);
     if (code != 0) {
         snprintf(errstr, errstrlen, "ka_GetAdminToken failed: %s",
                  error_message(code));

@@ -2,6 +2,10 @@
 
 krb5-sync 0.5 (unreleased)
 
+    Obtain new AFS tokens for each operation rather than reusing the
+    existing token since ka_GetAdminToken isn't smart enough to realize
+    that the old token has expired.
+
     Queue AD password changes rather than rejecting the change if the
     error message from the password change may indicate that the user
     doesn't exist in AD.
