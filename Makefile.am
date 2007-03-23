@@ -1,4 +1,4 @@
-# Makefile.am -- Top-level Automake makefile for krb5-passwd-sync.
+# Makefile.am -- Automake makefile for krb5-sync.
 # $Id$
 #
 # Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University

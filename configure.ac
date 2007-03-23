@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.ac 2823 2006-12-07 03:58:51Z rra $
+dnl $Id$
 dnl
 dnl Copyright 2006 Board of Trustees, Leland Stanford Jr. University.
 dnl See README for licensing terms.
