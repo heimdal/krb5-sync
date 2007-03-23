@@ -6,6 +6,10 @@ a clean patch against a virgin source tarball for a later release.
 This patch may apply to earlier or later versions but may not and will
 require verification.
 
+Note that this patch modifies configure.in and hence will require running
+util/reconf from the src directory of the MIT Kerberos distribution before
+running configure and rebuilding.
+
 
 Index: krb5/src/lib/kadm5/server_internal.h
 ===================================================================
