@@ -215,6 +215,41 @@ CONFIGURATION
   to the local realm sub-section of the [realms] section.  Update the path
   for wherever the password update plugin is located.
 
+ACTIVE DIRECTORY SETUP
+
+  You need to create an Active Directory user account to be used by the
+  krb5-sync software.  (In Windows 2003 Active Directory, user accounts
+  can be objects of type "user" or "inetOrgPerson".)  To be able to set
+  passwords, this account needs to be granted the Extended Right "Reset
+  Password" on user account objects in the Active Directory.  To be able
+  to do account enabling and disabling, this account must be able to
+  locate the user object, usually done by granting "Read" access, and
+  write the userAccountControl attribute on user account objects.
+
+  If you have a cross-realm trust in place with your MIT Kerberos realm,
+  the AD account can be mapped to an account in the MIT realm by setting
+  the altSecurityIdentities property on the AD user account object.  This
+  can be set using the "Name Mappings" feature in Active Directory Users
+  and Computers to add a Kerberos name.
+
+  From AD Users & Computers:
+
+  * Select "View" and make sure that "Advanced Features" is checked.
+
+  * Right-Click on the action account and select "Name Mappings".
+
+  * Under "Kerberos Names", add the principal name of the MIT account that
+    maps to this account.
+
+  If you do not have a cross-realm trust or want to use the AD account
+  directly instead of through a mapping, then you can export the account
+  using the ktpass command from the Windows support tools:
+
+      ktpass.exe -out <filename> -princ <principal name> -pass <AD password>
+          -mapuser <AD user account name>
+
+  Thanks to Ross Wilper for this setup information.
+
 LICENSE
 
   Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.

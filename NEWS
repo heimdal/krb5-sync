@@ -1,5 +1,10 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 0.6 (unreleased)
+
+    Add Active Directory configuration instructions.  Thanks, Ross
+    Wilper.
+
 krb5-sync 0.5 (2007-03-22)
 
     Obtain new AFS tokens for each operation rather than reusing the
