@@ -52,6 +52,7 @@ install:
 	$(MAKE) install DESTDIR=$(TMP)
 	rm -f $(TMP)/usr/lib/kadmind/passwd_update.la
 	install -d $(TMP)/var/spool/krb5-sync
+	touch $(TMP)/var/spool/krb5-sync/.lock
 
 binary: binary-arch binary-indep
 binary-indep:

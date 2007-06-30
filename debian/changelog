@@ -1,3 +1,10 @@
+krb5-sync (0.5-2) unstable; urgency=low
+
+  * Create /var/spool/krb5-sync/.lock as part of package installation
+    since krb5-sync-backend requires that it exist.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 29 Jun 2007 18:33:14 -0700
+
 krb5-sync (0.5-1) unstable; urgency=low
 
   * New upstream release.
