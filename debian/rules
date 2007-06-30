@@ -52,7 +52,9 @@ install:
 	$(MAKE) install DESTDIR=$(TMP)
 	rm -f $(TMP)/usr/lib/kadmind/passwd_update.la
 	install -d $(TMP)/var/spool/krb5-sync
-	touch $(TMP)/var/spool/krb5-sync/.lock
+	install -d $(TMP)/usr/share/lintian/overrides
+	install -m 644 debian/lintian \
+	    $(TMP)/usr/share/lintian/overrides/krb5-sync
 
 binary: binary-arch binary-indep
 binary-indep:
