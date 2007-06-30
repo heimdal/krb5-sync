@@ -6,7 +6,7 @@
 
 set -e
 
-if [ "$1" = "configure" ] && [ -z "$2" ] ; then
+if [ "$1" = "configure" ] || [ "$1" = "reconfigure" ] ; then
     if [ ! -f /var/spool/krb5-sync/.lock ] ; then
         touch /var/spool/krb5-sync/.lock
         chmod 600 /var/spool/krb5-sync/.lock
