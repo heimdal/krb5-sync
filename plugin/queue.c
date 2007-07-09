@@ -216,11 +216,12 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
                      krb5_principal principal, const char *domain,
                      const char *operation, const char *password)
 {
-    char *prefix = NULL, *timestamp = NULL, *path = NULL;
+    char *prefix = NULL, *timestamp = NULL, *path = NULL, *user = NULL;
     char *p;
     size_t length;
     unsigned int i;
     int lock = -1, fd = -1;
+    krb5_error_code retval;
 
     if (config->queue_dir == NULL)
         return 0;
@@ -252,13 +253,15 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
     }
 
     /* This is a bit of a hack.  Get the username from the prefix. */
-    p = strchr(prefix, '-');
-    if (p == NULL)
+    retval = krb5_unparse_name(ctx, principal, &user);
+    if (retval != 0)
         goto fail;
-    *p = '\0';
+    p = strchr(prefix, '@');
+    if (p != NULL)
+        *p = '\0';
 
     /* Write out the queue data. */
-    WRITE_CHECK(fd, prefix);
+    WRITE_CHECK(fd, user);
     WRITE_CHECK(fd, "\n");
     WRITE_CHECK(fd, domain);
     WRITE_CHECK(fd, "\n");
@@ -272,6 +275,7 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
     /* We're done. */
     close(fd);
     unlock_queue(lock);
+    free(user);
     free(prefix);
     free(timestamp);
     free(path);
@@ -285,6 +289,8 @@ fail:
     }
     if (lock >= 0)
         unlock_queue(lock);
+    if (user != NULL)
+        free(user);
     if (prefix != NULL)
         free(prefix);
     if (timestamp != NULL)
