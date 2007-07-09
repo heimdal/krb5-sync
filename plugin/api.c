@@ -162,8 +162,10 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
         ret = krb5_unparse_name(ctx, principal, &display);
         if (ret != 0)
             display = NULL;
-        syslog(LOG_DEBUG, "password synchronization skipping principal \"%s\""
-               " with non-null instance", display != NULL ? display : "???");
+        syslog(LOG_DEBUG, "account synchronization skipping principal \"%s\""
+               " with non-null instance for %s",
+               display != NULL ? display : "???",
+               ad ? "Active Directory" : "AFS");
         if (display != NULL)
             free(display);
         return 0;
