@@ -172,11 +172,13 @@ CONFIGURATION
           afs_srvtab      = /etc/krb5kdc/afs-srvtab
           afs_principal   = service.sync
           afs_realm       = AFS.EXAMPLE.COM
+          afs_instances   = root
 
           ad_keytab       = /etc/krb5kdc/ad-keytab
           ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
           ad_realm        = WINDOWS.EXAMPLE.COM
           ad_admin_server = dc1.windows.example.com
+          ad_instances    = root ipass
 
           queue_dir       = /var/spool/krb5-sync
       }
@@ -190,6 +192,15 @@ CONFIGURATION
   the key in the srvtab or keytab), and the *_realm options specify the
   foreign realm.  ad_admin_server is the host to contact via LDAP to push
   account status changes.
+
+  The *_instances option specifies which instances have passwords and
+  account status propagated to that environment.  By default, all
+  principals with non-empty instances are not propagated.  You can list a
+  specific set of instances (space-separated) which are propagated to the
+  AD environment and to the AFS environment.  They don't have to match.
+  The *_instances options are only used by the plugin and are not used by
+  the command-line utility.  Any principals passed to the command-line
+  utility will be acted on, even if they have non-empty instances.
 
   If afs_realm is not set, the plugin will not attempt to push changes to
   an AFS kaserver.  Similarly, if ad_realm is not set, the plugin will not

@@ -23,10 +23,12 @@ struct plugin_config {
     char *afs_srvtab;
     char *afs_principal;
     char *afs_realm;
+    char *afs_instances;
     char *ad_keytab;
     char *ad_principal;
     char *ad_realm;
     char *ad_admin_server;
+    char *ad_instances;
     char *queue_dir;
 };
 

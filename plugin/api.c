@@ -57,10 +57,12 @@ pwupdate_init(krb5_context ctx, void **data)
     config_string(ctx, "afs_srvtab", &config->afs_srvtab);
     config_string(ctx, "afs_principal", &config->afs_principal);
     config_string(ctx, "afs_realm", &config->afs_realm);
+    config_string(ctx, "afs_instances", &config->afs_instances);
     config_string(ctx, "ad_keytab", &config->ad_keytab);
     config_string(ctx, "ad_principal", &config->ad_principal);
     config_string(ctx, "ad_realm", &config->ad_realm);
     config_string(ctx, "ad_admin_server", &config->ad_admin_server);
+    config_string(ctx, "ad_instances", &config->ad_instances);
     config_string(ctx, "queue_dir", &config->queue_dir);
     *data = config;
     return 0;
@@ -114,6 +116,29 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
 }
 
 /*
+ * Given the list of allowed principals as a space-delimited string and the
+ * instance of a principal, returns true if that instance is allowed and false
+ * otherwise.
+ */
+static int
+instance_allowed(const char *allowed, const krb5_data *instance)
+{
+    const char *p, *i;
+
+    if (allowed == NULL || instance == NULL)
+        return 0;
+    i = instance->data;
+    p = strstr(allowed, i);
+    if (p == NULL)
+        return 0;
+    if (p != allowed && p[-1] != ' ')
+        return 0;
+    if (p[strlen(i)] != ' ' && p[strlen(i)] != '\0')
+        return 0;
+    return 1;
+}
+
+/*
  * Check the principal for which we're changing a password.  If it contains a
  * non-null instance, we don't want to propagate the change; we only want to
  * change passwords for regular users.  Returns true if we should proceed,
@@ -121,12 +146,19 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
  * syslog.
  */
 static int
-principal_allowed(krb5_context ctx, krb5_principal principal)
+principal_allowed(struct plugin_config *config, krb5_context ctx,
+                  krb5_principal principal, int ad)
 {
     if (krb5_princ_size(ctx, principal) > 1) {
         char *display;
         krb5_error_code ret;
+        const krb5_data *instance;
 
+        instance = krb5_princ_component(ctx, principal, 1);
+        if (ad && instance_allowed(config->ad_instances, instance))
+            return 1;
+        else if (!ad && instance_allowed(config->afs_instances, instance))
+            return 1;
         ret = krb5_unparse_name(ctx, principal, &display);
         if (ret != 0)
             display = NULL;
@@ -164,7 +196,7 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
         return 0;
     if (!create_context(&ctx, errstr, errstrlen))
         return 1;
-    if (!principal_allowed(ctx, principal))
+    if (!principal_allowed(config, ctx, principal, 1))
         return 0;
     if (pwupdate_queue_conflict(config, ctx, principal, "ad", "password"))
         goto queue;
@@ -212,7 +244,7 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
         return 0;
     if (!create_context(&ctx, errstr, errstrlen))
         return 1;
-    if (!principal_allowed(ctx, principal))
+    if (!principal_allowed(config, ctx, principal, 0))
         return 0;
     if (pwupdate_queue_conflict(config, ctx, principal, "afs", "password"))
         goto queue;
@@ -259,7 +291,7 @@ pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
         return 0;
     if (!create_context(&ctx, errstr, errstrlen))
         return 1;
-    if (!principal_allowed(ctx, principal))
+    if (!principal_allowed(config, ctx, principal, 1))
         return 0;
     if (pwupdate_queue_conflict(config, ctx, principal, "ad", "enable"))
         goto queue;

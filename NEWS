@@ -2,6 +2,10 @@
 
 krb5-sync 0.6 (unreleased)
 
+    Add support for propagating selected non-empty instances into the AFS
+    and Active Directory environments rather than ignoring all principals
+    with non-empty instances.
+
     Add Active Directory configuration instructions.  Thanks, Ross
     Wilper.
 
