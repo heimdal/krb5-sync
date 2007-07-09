@@ -67,6 +67,8 @@ sub timestamp {
 # action, a timestamp, and a list of additional lines.
 sub queue {
     my ($username, $system, $action, $timestamp, @data) = @_;
+    my $baseuser = $username;
+    $baseuser =~ s%/%.%;
     my $type = $action;
     $type = 'enable' if $type eq 'disable';
     my $base = "$QUEUE/$username-$system-$type-$timestamp";

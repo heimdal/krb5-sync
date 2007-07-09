@@ -113,11 +113,8 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
     p = strchr(user, '@');
     if (p != NULL)
         *p = '\0';
-    p = strchr(user, '/');
-    if (p != NULL) {
-        krb5_free_unparsed_name(ctx, user);
-        return NULL;
-    }
+    while ((p = strchr(user, '/')) != NULL)
+        *p = '.';
     length = strlen(user) + strlen(domain) + strlen(operation) + 4;
     prefix = malloc(length);
     if (prefix == NULL) {
