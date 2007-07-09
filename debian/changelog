@@ -1,3 +1,11 @@
+krb5-sync (0.6-1) unstable; urgency=low
+
+  * New upstream release.
+    - Support synchronizing selected accounts with non-empty instances.
+    - Add configuration documentation for AD.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 09 Jul 2007 14:47:13 -0700
+
 krb5-sync (0.5-2) unstable; urgency=low
 
   * Create /var/spool/krb5-sync/.lock as part of package installation
