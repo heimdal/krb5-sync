@@ -10,7 +10,7 @@
   This software is distributed under a BSD-style license.  Please see the
   section LICENSE for more information.
 
-  This should be considered alpha-quality code.  It is not currently
+  This should be considered beta-quality code.  It is not currently
   running anywhere in production and will likely require modifications to
   fit any environment other than Stanford's.  Feedback and improvements
   will be gratefully accepted.
