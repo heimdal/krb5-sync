@@ -23,3 +23,7 @@
 
  * The configure logic for finding the AFS libraries could use some
    cleanup and modularization.
+
+ * The message about skipping accounts with non-NULL instances is written
+   with the wrong realm information when displayed for AFS changes after
+   an AD change is successful.
