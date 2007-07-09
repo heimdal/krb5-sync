@@ -27,3 +27,7 @@
  * The message about skipping accounts with non-NULL instances is written
    with the wrong realm information when displayed for AFS changes after
    an AD change is successful.
+
+ * Support principals with escaped / and @ characters in them.  / may
+   already work but needs testing.  An escaped @ will break the logic for
+   queuing currently.
