@@ -1,10 +1,13 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 0.6 (2007-07-09)
+krb5-sync 0.6 (unreleased)
 
     Add support for propagating selected non-empty instances into the AFS
     and Active Directory environments rather than ignoring all principals
-    with non-empty instances.
+    with non-empty instances.  Currently, this propagates the account
+    names into AD with "." instead of "/" as the instance separator as a
+    temporary measure for Stanford-internal reasons.  I'm hoping to remove
+    this soon.
 
     Add Active Directory configuration instructions.  Thanks, Ross
     Wilper.
