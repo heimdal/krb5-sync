@@ -252,13 +252,23 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
             break;
     }
 
-    /* This is a bit of a hack.  Get the username from the prefix. */
+    /*
+     * Get the username from the principal and chop off the realm.  This is
+     * broken; it doesn't deal with escaped @ in principal names.
+     */
     retval = krb5_unparse_name(ctx, principal, &user);
     if (retval != 0)
         goto fail;
-    p = strchr(prefix, '@');
+    p = strchr(user, '@');
     if (p != NULL)
         *p = '\0';
+
+    /*
+     * This is a horrible hack that we're doing for iPass.  Must see if we can
+     * avoid this, since no one else is going to want it.
+     */
+    while ((p = strchr(user, '/')) != NULL)
+        *p = '.';
 
     /* Write out the queue data. */
     WRITE_CHECK(fd, user);
