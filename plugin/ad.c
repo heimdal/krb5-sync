@@ -105,7 +105,9 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
 {
     krb5_error_code ret;
     char *target = NULL;
+    char *p;
     krb5_ccache ccache;
+    krb5_principal ad_principal;
     int result_code;
     krb5_data result_code_string, result_string;
     int code = 0;
@@ -113,25 +115,30 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (get_creds(config, ctx, &ccache, errstr, errstrlen) != 0)
         return 1;
 
-    /*
-     * Change the principal over to the AD realm.  Right now, this is all the
-     * rewriting or mapping that we do.  If later we need to do more
-     * comprehensive mapping, this is where we'd do it.
-     */
+    /* Change the principal over to the AD realm. */
     krb5_set_principal_realm(ctx, principal, config->ad_realm);
 
-    /* This is just for logging purposes. */
+    /* This is a brutally ugly hack that will hopefully be temporary. */
     ret = krb5_unparse_name(ctx, principal, &target);
     if (ret != 0) {
         snprintf(errstr, errstrlen, "unable to parse target principal: %s",
                  error_message(ret));
-        return 1;
+        goto done;
+    }
+    while ((p = strchr(target, '/')) != NULL)
+        *p = '.';
+    ret = krb5_parse_name(ctx, target, &ad_principal);
+    if (ret != 0) {
+        snprintf(errstr, errstrlen, "unable to reparse target principal: %s",
+                 error_message(ret));
+        goto done;
     }
 
     /* Do the actual password change. */
-    ret = krb5_set_password_using_ccache(ctx, ccache, password, principal,
+    ret = krb5_set_password_using_ccache(ctx, ccache, password, ad_principal,
                                          &result_code, &result_code_string,
                                          &result_string);
+    krb5_free_principal(ctx, ad_principal);
     if (ret != 0) {
         snprintf(errstr, errstrlen, "password change failed for %s in %s: %s",
                  target, config->ad_realm, error_message(ret));
@@ -153,7 +160,8 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     snprintf(errstr, errstrlen, "Password changed");
 
 done:
-    krb5_free_unparsed_name(ctx, target);
+    if (target != NULL)
+        krb5_free_unparsed_name(ctx, target);
     krb5_cc_destroy(ctx, ccache);
     return code;
 }
