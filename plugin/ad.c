@@ -142,6 +142,14 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         goto done;
     }
 
+    /* This is just for logging purposes. */
+    ret = krb5_unparse_name(ctx, principal, &target);
+    if (ret != 0) {
+        snprintf(errstr, errstrlen, "unable to parse target principal: %s",
+                 error_message(ret));
+        return 1;
+    }
+
     /* Do the actual password change. */
     ret = krb5_set_password_using_ccache(ctx, ccache, password, ad_principal,
                                          &result_code, &result_code_string,
