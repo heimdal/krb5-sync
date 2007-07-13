@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 0.6 (unreleased)
+krb5-sync 0.6 (2007-07-13)
 
     Add support for propagating selected non-empty instances into the AFS
     and Active Directory environments rather than ignoring all principals
