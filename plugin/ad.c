@@ -94,13 +94,16 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
  * code on failure.  Currently, all this does is change the realm.
  */
 static krb5_error_code
-get_ad_principal(krb5_context ctx, krb5_const_principal principal,
+get_ad_principal(krb5_context ctx, const char *realm,
+                 krb5_const_principal principal,
                  krb5_principal *ad_principal)
 {
+    krb5_error_code ret;
+
     ret = krb5_copy_principal(ctx, principal, ad_principal);
     if (ret != 0)
         return ret;
-    krb5_set_principal_realm(ctx, *ad_principal, config->ad_realm);
+    krb5_set_principal_realm(ctx, *ad_principal, realm);
     return 0;
 }
 
@@ -121,7 +124,6 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
 {
     krb5_error_code ret;
     char *target = NULL;
-    char *p;
     krb5_ccache ccache;
     krb5_principal ad_principal = NULL;
     int result_code;
@@ -132,7 +134,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         return 1;
 
     /* Get the corresponding Active Directory principal. */
-    ret = get_ad_principal(ctx, principal, &ad_principal);
+    ret = get_ad_principal(ctx, config->ad_realm, principal, &ad_principal);
     if (ret != 0) {
         snprintf(errstr, errstrlen, "unable to get AD principal: %s",
                  error_message(ret));
@@ -199,7 +201,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     LDAP *ld;
     LDAPMessage *res = NULL;
     LDAPMod mod, *mod_array[2];
-    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *dn, *p;
+    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *dn;
     char *target = NULL;
     char **vals = NULL;
     const char *attrs[] = { "userAccountControl", NULL };
@@ -272,7 +274,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      * the AD principal and then query Active Directory via LDAP to get back
      * the CN for the user to construct the full DN.
      */
-    ret = get_ad_principal(ctx, principal, &ad_principal);
+    ret = get_ad_principal(ctx, config->ad_realm, principal, &ad_principal);
     if (ret != 0) {
         snprintf(errstr, errstrlen, "unable to get AD principal: %s",
                  error_message(ret));
