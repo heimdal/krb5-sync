@@ -71,7 +71,7 @@ sub queue {
     $baseuser =~ s%/%.%;
     my $type = $action;
     $type = 'enable' if $type eq 'disable';
-    my $base = "$QUEUE/$username-$system-$type-$timestamp";
+    my $base = "$QUEUE/$baseuser-$system-$type-$timestamp";
     my $file;
     lock_queue;
     for (my $count = 0; $count < 100; $count++) {
@@ -237,13 +237,13 @@ The queue directory will contain files with names in the format:
 
     <username>-<domain>-<action>-<timestamp>-<count>
 
-where <username> is the name of the affected account (no instances allowed,
-and with the realm removed), <domain> is either C<ad> or C<afs>, <action> is
-either C<enable> (used for both enabling and disabling accounts) or
-C<password>, <timestamp> is a ISO 8601 timestamp in UTC, and <count> is a
-two-digit zero-padded number between 0 and 99 (so that we can handle
-multiple changes that arrive in the same second).  Each file contains a
-queued change in the format described in krb5-sync(8).
+where <username> is the name of the affected account (C</> will be replaced
+with C<.> in the file name and the realm will be removed), <domain> is
+either C<ad> or C<afs>, <action> is either C<enable> (used for both enabling
+and disabling accounts) or C<password>, <timestamp> is a ISO 8601 timestamp
+in UTC, and <count> is a two-digit zero-padded number between 0 and 99 (so
+that we can handle multiple changes that arrive in the same second).  Each
+file contains a queued change in the format described in krb5-sync(8).
 
 Supported arguments to B<krb5-sync-backend> are:
 

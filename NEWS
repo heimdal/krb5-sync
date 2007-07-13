@@ -4,10 +4,18 @@ krb5-sync 0.6 (unreleased)
 
     Add support for propagating selected non-empty instances into the AFS
     and Active Directory environments rather than ignoring all principals
-    with non-empty instances.  Currently, this propagates the account
-    names into AD with "." instead of "/" as the instance separator as a
-    temporary measure for Stanford-internal reasons.  I'm hoping to remove
-    this soon.
+    with non-empty instances.
+
+    Fix the Active Directory password change component to not overwrite
+    the realm of the principal passed from kadmind so that logging of AFS
+    password change attempts will contain the local realm instead of the
+    AD realm.
+
+    When enabling or disabling accounts in Active Directory, look them up
+    by userPrincipalName instead of sAMAccountName.
+
+    Correctly strip the realm for queuing even for principals containing
+    escaped @ characters.
 
     Add Active Directory configuration instructions.  Thanks, Ross
     Wilper.

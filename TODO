@@ -7,8 +7,7 @@
    synchronization.
 
  * The base DN for finding users in Active Directory probably has to be
-   configurable.  I think that ou=Accounts may be a local peculiarity, and
-   even if not, I can see people putting accounts in different trees.
+   configurable.
 
  * After remctl has been modified to allow passing of some parameters on
    standard input, change krb5-sync-backend to accept the password on
@@ -23,11 +22,3 @@
 
  * The configure logic for finding the AFS libraries could use some
    cleanup and modularization.
-
- * The message about skipping accounts with non-NULL instances is written
-   with the wrong realm information when displayed for AFS changes after
-   an AD change is successful.
-
- * Support principals with escaped / and @ characters in them.  / may
-   already work but needs testing.  An escaped @ will break the logic for
-   queuing currently.

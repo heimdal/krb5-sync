@@ -89,6 +89,22 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
 }
 
 /*
+ * Given the krb5_principal from kadmind, convert it to the corresponding
+ * principal in Active Directory.  Returns 0 on success and a Kerberos error
+ * code on failure.  Currently, all this does is change the realm.
+ */
+static krb5_error_code
+get_ad_principal(krb5_context ctx, krb5_const_principal principal,
+                 krb5_principal *ad_principal)
+{
+    ret = krb5_copy_principal(ctx, principal, ad_principal);
+    if (ret != 0)
+        return ret;
+    krb5_set_principal_realm(ctx, *ad_principal, config->ad_realm);
+    return 0;
+}
+
+/*
  * Push a password change to Active Directory.  Takes the module
  * configuration, a Kerberos context, the principal whose password is being
  * changed (we will have to change the realm), the new password and its
@@ -107,7 +123,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     char *target = NULL;
     char *p;
     krb5_ccache ccache;
-    krb5_principal ad_principal;
+    krb5_principal ad_principal = NULL;
     int result_code;
     krb5_data result_code_string, result_string;
     int code = 0;
@@ -115,22 +131,12 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (get_creds(config, ctx, &ccache, errstr, errstrlen) != 0)
         return 1;
 
-    /* Change the principal over to the AD realm. */
-    krb5_set_principal_realm(ctx, principal, config->ad_realm);
-
-    /* This is a brutally ugly hack that will hopefully be temporary. */
-    ret = krb5_unparse_name(ctx, principal, &target);
+    /* Get the corresponding Active Directory principal. */
+    ret = get_ad_principal(ctx, principal, &ad_principal);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to parse target principal: %s",
+        snprintf(errstr, errstrlen, "unable to get AD principal: %s",
                  error_message(ret));
-        goto done;
-    }
-    while ((p = strchr(target, '/')) != NULL)
-        *p = '.';
-    ret = krb5_parse_name(ctx, target, &ad_principal);
-    if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to reparse target principal: %s",
-                 error_message(ret));
+        code = 1;
         goto done;
     }
 
@@ -189,6 +195,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
                        int errstrlen)
 {
     krb5_ccache ccache;
+    krb5_principal ad_principal = NULL;
     LDAP *ld;
     LDAPMessage *res = NULL;
     LDAPMod mod, *mod_array[2];
@@ -261,20 +268,23 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     }
 
     /*
-     * Since all we know is the username, first we have to query the server to
-     * get back the CN for the user to construct the full DN.  We strip the
-     * realm off of the principal name to get the sAMAccountName value.
+     * Since all we know is the local principal, we have to convert that to
+     * the AD principal and then query Active Directory via LDAP to get back
+     * the CN for the user to construct the full DN.
      */
-    ret = krb5_unparse_name(ctx, principal, &target);
+    ret = get_ad_principal(ctx, principal, &ad_principal);
+    if (ret != 0) {
+        snprintf(errstr, errstrlen, "unable to get AD principal: %s",
+                 error_message(ret));
+        goto done;
+    }
+    ret = krb5_unparse_name(ctx, ad_principal, &target);
     if (ret != 0) {
         snprintf(errstr, errstrlen, "unable to parse target principal: %s",
                  error_message(ret));
         goto done;
     }
-    p = strchr(target, '@');
-    if (p != NULL)
-        *p = '\0';
-    snprintf(ldapdn, sizeof(ldapdn), "(sAMAccountName=%s)", target);
+    snprintf(ldapdn, sizeof(ldapdn), "(userPrincipalName=%s)", target);
     ret = ldap_search_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn,
                         (char **) attrs, 0, &res);
     if (ret != LDAP_SUCCESS) {
