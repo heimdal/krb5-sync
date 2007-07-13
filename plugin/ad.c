@@ -143,7 +143,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     }
 
     /* This is just for logging purposes. */
-    ret = krb5_unparse_name(ctx, principal, &target);
+    ret = krb5_unparse_name(ctx, ad_principal, &target);
     if (ret != 0) {
         snprintf(errstr, errstrlen, "unable to parse target principal: %s",
                  error_message(ret));
