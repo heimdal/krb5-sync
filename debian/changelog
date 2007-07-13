@@ -2,9 +2,12 @@ krb5-sync (0.6-1) unstable; urgency=low
 
   * New upstream release.
     - Support synchronizing selected accounts with non-empty instances.
+    - Don't overwrite principal realms in the AD plugin.
+    - Use userPrincipalName instead of sAMAccountName in AD.
+    - Correctly strip the realm in principals with escaped @ characters.
     - Add configuration documentation for AD.
 
- -- Russ Allbery <rra@debian.org>  Mon, 09 Jul 2007 14:47:13 -0700
+ -- Russ Allbery <rra@debian.org>  Fri, 13 Jul 2007 13:41:45 -0700
 
 krb5-sync (0.5-2) unstable; urgency=low
 
