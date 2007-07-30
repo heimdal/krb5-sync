@@ -3,14 +3,16 @@ plugin API for performing actions before and after a password change is
 committed to the KDC database and after a change is made to the attributes
 of a principal (specifically, a change to DISALLOW_ALL_TIX).
 
-Currently, there is only one patch available:
+Currently, there are two patches available:
 
-    mit-krb5-1.4.4      Built against Stanford-patched MIT Kerberos 1.4.4
+    mit-krb5-1.4.4      Built against stock MIT Kerberos 1.4.4
+    stanford-krb5-1.4.4 Built against Stanford-patched MIT Kerberos 1.4.4
 
-More patches against other, or cleaner, source trees may be provided in
-the future.  Please let me know if there is a specific version you wish to
-see a patch for (and even better, let me know if you have a tested patch
-for a different version).
+If you're also applying the patch from the krb5-strength package, apply
+that patch first and then use the stanford-krb5-1.4.4 patch.  More patches
+against other source trees may be provided in the future.  Please let me
+know if there is a specific version you wish to see a patch for (and even
+better, let me know if you have a tested patch for a different version).
 
 This patch adds to kadmind a configuration option which should be set in
 the local realm section of kdc.conf.  That configuration option is in the
