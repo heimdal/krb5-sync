@@ -204,8 +204,11 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
         goto queue;
     status = pwupdate_ad_change(config, ctx, principal, password, pwlen,
                                 errstr, errstrlen);
-    if (status == 3)
+    if (status == 3) {
+        syslog(LOG_INFO, "pwupdate: AD password change failed, queuing: %s",
+               errstr);
         goto queue;
+    }
     krb5_free_context(ctx);
     return status;
 
@@ -216,7 +219,7 @@ queue:
     if (status)
         return 0;
     else {
-        snprintf(errstr, errstrlen, "queueing AFS password change failed");
+        snprintf(errstr, errstrlen, "queueing AD password change failed");
         return 1;
     }
 }
@@ -252,8 +255,11 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
         goto queue;
     status = pwupdate_afs_change(config, ctx, principal, password, pwlen,
                                  errstr, errstrlen);
-    if (status != 0)
+    if (status != 0) {
+        syslog(LOG_INFO, "pwupdate: AFS password change failed, queuing: %s",
+               errstr);
         goto queue;
+    }
     krb5_free_context(ctx);
     return status;
 

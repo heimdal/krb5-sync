@@ -2,6 +2,10 @@
 
 krb5-sync 0.7 (unreleased)
 
+    Log a message to syslog from the plugin when password changes fail
+    and we have to queue.  Otherwise, when the queuing is successful,
+    we never log the original error.
+
     Log krb5-sync operations to LOG_AUTHPRIV (LOG_AUTH if that doesn't
     exist) so that they go to the same place as the kadmind logs do by
     default.
