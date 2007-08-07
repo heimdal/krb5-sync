@@ -55,9 +55,6 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                     int pwlen UNUSED, char *errstr, int errstrlen)
 {
     krb5_error_code ret;
-    char aname[ANAME_SZ + 1], admin_aname[ANAME_SZ + 1];
-    char inst[INST_SZ + 1], admin_inst[INST_SZ + 1];
-    char realm[REALM_SZ + 1], admin_realm[REALM_SZ + 1];
     char cell[MAXKTCREALMLEN];
     char *local_cell;
     char local_realm[MAXKTCREALMLEN];
@@ -66,6 +63,14 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
     struct ubik_client *conn;
     struct ktc_encryptionKey mitkey, newkey;
     struct ktc_token token;
+
+    /*
+     * Apparently, kname_parse doesn't initialize all the fields if they're
+     * not present in the principal, so initialize them just to be sure.
+     */
+    char aname[ANAME_SZ + 1] = "", admin_aname[ANAME_SZ + 1] = "";
+    char inst[INST_SZ + 1]   = "", admin_inst[INST_SZ + 1]   = "";
+    char realm[REALM_SZ + 1] = "", admin_realm[REALM_SZ + 1] = "";
 
     /*
      * First, figure out what principal we're dealing with and then check that

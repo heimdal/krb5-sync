@@ -6,6 +6,11 @@ krb5-sync 0.7 (2007-08-07)
     and we have to queue.  Otherwise, when the queuing is successful,
     we never log the original error.
 
+    Work around the behavior of MIT Kerberos's Kerberos v4 compat
+    libraries that left garbage in the instance field after parsing an
+    unqualified principal with no instance.  Only of interest to users
+    doing AFS password propagation.
+
     Log krb5-sync operations to LOG_AUTHPRIV (LOG_AUTH if that doesn't
     exist) so that they go to the same place as the kadmind logs do by
     default.
