@@ -27,6 +27,19 @@ cannot be loaded, kadmind startup will abort with a (hopefully useful)
 error message in syslog.
 
 
+Be aware that, due to the structure of the kadmind code, the pre-commit
+hook will be called before the password is checked for reuse.  If the
+password is present in that account's password history, the password
+change may still be rejected by the local KDC after the pre-commit hook
+has been called.  If you remember only one password in the password
+history, this will be harmless, since in this failure case the pre-commit
+hook would have propagated the existing password.  If, however, you store
+multiple passwords in the password history, the pre-commit hook could
+change the password in another environment even though it wasn't
+successful in the local KDC.  This will hopefully be fixed in a later
+version of the kadmind patch.
+
+
 Any plugin used with this patch must implement the following two
 interfaces:
 

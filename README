@@ -74,6 +74,17 @@ DESCRIPTION
   Currently, only one Active Directory realm and only one AFS kaserver
   cell is supported for updates.
 
+  Be aware that, due to the structure of the kadmind code, the pre-commit
+  hook and hence password propagation to Active Directory will happen
+  before the password is checked for reuse.  This means that the password
+  may be changed in Active Directory but then rejected by the local KDC if
+  it is present in the account's password history.  If you remember only
+  one password in the password history, this will be harmless, since it
+  will only mean the Active Directory password will be reset to the
+  existing password.  If, however, you store multiple passwords in the
+  password history, the passwords could end up being desynchronized.  This
+  will hopefully be fixed in a later version of the kadmind patch.
+
 REQUIREMENTS
 
   The utilities provided in this package will work without any
