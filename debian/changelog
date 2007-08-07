@@ -1,3 +1,11 @@
+krb5-sync (0.7-1) unstable; urgency=low
+
+  * New upstream release.
+    - Better logging of plugin failures leading to queuing.
+    - Log krb5-sync actions as LOG_AUTHPRIV, not LOG_DAEMON.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 07 Aug 2007 10:46:35 -0700
+
 krb5-sync (0.6-1) unstable; urgency=low
 
   * New upstream release.
