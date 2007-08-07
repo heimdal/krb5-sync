@@ -6,7 +6,7 @@ dnl See README for licensing terms.
 
 AC_REVISION([$Revision$])
 AC_PREREQ([2.60])
-AC_INIT([krb5-sync], [0.6], [rra@stanford.edu])
+AC_INIT([krb5-sync], [0.7], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([tools])
 AM_INIT_AUTOMAKE([1.10 -Wall -Werror])
 AM_MAINTAINER_MODE
