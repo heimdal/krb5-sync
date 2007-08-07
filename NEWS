@@ -2,6 +2,10 @@
 
 krb5-sync 0.7 (unreleased)
 
+    Log krb5-sync operations to LOG_AUTHPRIV (LOG_AUTH if that doesn't
+    exist) so that they go to the same place as the kadmind logs do by
+    default.
+
     Rename the provided patch to document that it only applies over top
     of the krb5-strength patches and provide a patch that applies to a
     stock MIT Kerberos 1.4.4 tree.

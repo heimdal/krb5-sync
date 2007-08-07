@@ -16,9 +16,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #include <plugin/internal.h>
+
+#ifndef LOG_AUTHPRIV
+# define LOG_AUTHPRIV LOG_AUTH
+#endif
 
 /*
  * Change a password in Active Directory.  Print a success message if we were
@@ -209,6 +214,12 @@ main(int argc, char *argv[])
     krb5_context ctx;
     krb5_error_code ret;
     krb5_principal principal;
+
+    /*
+     * Actions should be logged to LOG_AUTHPRIV to go to the same place as the
+     * logs from kadmind for easier log analysis.
+     */
+    openlog("krb5-sync", LOG_PID, LOG_AUTHPRIV);
 
     while ((option = getopt(argc, argv, "def:p:")) != EOF) {
         switch (option) {
