@@ -2,6 +2,9 @@
 
 krb5-sync 1.0 (unreleased)
 
+    Fix the logging output from Active Directory account status changes
+    to not append the realm twice.
+
     Send krb5-sync logging to LOG_AUTH instead of LOG_AUTHPRIV to
     really match what kadmind does.
 

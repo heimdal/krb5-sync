@@ -355,8 +355,8 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
 
     /* Success. */
     code = 0;
-    syslog(LOG_INFO, "successfully set account %s@%s to %s", target,
-           config->ad_realm, enabled ? "enabled" : "disabled");
+    syslog(LOG_INFO, "successfully set account %s to %s", target,
+           enabled ? "enabled" : "disabled");
 
 done:
     if (target != NULL)
