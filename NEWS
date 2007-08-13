@@ -1,5 +1,10 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 1.0 (unreleased)
+
+    Send krb5-sync logging to LOG_AUTH instead of LOG_AUTHPRIV to
+    really match what kadmind does.
+
 krb5-sync 0.7 (2007-08-07)
 
     Log a message to syslog from the plugin when password changes fail

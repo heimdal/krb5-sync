@@ -21,10 +21,6 @@
 
 #include <plugin/internal.h>
 
-#ifndef LOG_AUTHPRIV
-# define LOG_AUTHPRIV LOG_AUTH
-#endif
-
 /*
  * Change a password in Active Directory.  Print a success message if we were
  * successful, and exit with an error message if we weren't.
@@ -216,10 +212,10 @@ main(int argc, char *argv[])
     krb5_principal principal;
 
     /*
-     * Actions should be logged to LOG_AUTHPRIV to go to the same place as the
+     * Actions should be logged to LOG_AUTH to go to the same place as the
      * logs from kadmind for easier log analysis.
      */
-    openlog("krb5-sync", LOG_PID, LOG_AUTHPRIV);
+    openlog("krb5-sync", LOG_PID, LOG_AUTH);
 
     while ((option = getopt(argc, argv, "def:p:")) != EOF) {
         switch (option) {
