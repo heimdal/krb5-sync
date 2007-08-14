@@ -25,6 +25,7 @@ our $ID = q$Id$;
 ##############################################################################
 
 use strict;
+use Getopt::Long qw(GetOptions);
 use Fcntl qw(LOCK_EX O_WRONLY O_CREAT O_EXCL);
 use POSIX qw(EEXIST);
 
@@ -169,7 +170,7 @@ sub process {
         if (not defined $pid) {
             die "$0: cannot fork: $!\n";
         } elsif ($pid == 0) {
-            unless ($silent) {
+            if ($silent) {
                 open (STDERR, '>&STDOUT') or die "$0: cannot dup STDOUT: $!\n";
             }
             exec ($SYNC, '-f', $file) or die "$0: cannot exec $SYNC: $!\n";
@@ -182,10 +183,11 @@ sub process {
                 $ignore = 1 if $output =~ /$regex/;
             }
             if (not $silent) {
-                print $output;
+                print $output if $output;
+                warn "$0: krb5-sync failed on $file\n" unless $? == 0;
             } elsif (not $ignore and $? != 0) {
                 warn $output;
-                warn "$0: krb5-sync failed on $file\n" unless ($? == 0);
+                warn "$0: krb5-sync failed on $file\n";
             }
             unless ($? == 0) {
                 $skipped{$id} = 1;
