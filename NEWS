@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 1.0 (unreleased)
+krb5-sync 1.0 (2007-08-13)
 
     Add a new option to krb5-sync-backend to tell process to filter out
     successful messages from krb5-sync and common errors that mean the
