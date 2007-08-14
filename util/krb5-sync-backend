@@ -36,7 +36,8 @@ our $QUEUE  = '/var/spool/krb5-sync';
 
 # Regexes of error messages to ignore when running in silent mode.
 our @IGNORE =
-    (qr/^AD password change for \S+ failed \(3\):.*Authentication error$/);
+    (qr/^AD password change for \S+ failed \(3\):.*Authentication error$/,
+     qr/^AD status change for \S+ failed \(1\): user .* not found in \S+$/);
 
 ##############################################################################
 # Writing queue files
@@ -345,6 +346,7 @@ This option will filter out all output when B<krb5-sync> is successful and
 will filter out error messages matching:
 
     /^AD password change for \S+ failed \(3\):.*Authentication error$/
+    /^AD status change for \S+ failed \(1\): user .* not found in \S+$/
 
 even when it fails.  (This message generally means the account doesn't exist
 in Active Directory.)  The regexes can be modified at the start of this
