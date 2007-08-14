@@ -29,10 +29,14 @@ use Fcntl qw(LOCK_EX O_WRONLY O_CREAT O_EXCL);
 use POSIX qw(EEXIST);
 
 # Path to the krb5-sync binary.
-our $SYNC = '/usr/sbin/krb5-sync';
+our $SYNC   = '/usr/sbin/krb5-sync';
 
 # Path to the directory that contains queued changes.
-our $QUEUE = '/var/spool/krb5-sync';
+our $QUEUE  = '/var/spool/krb5-sync';
+
+# Regexes of error messages to ignore when running in silent mode.
+our @IGNORE =
+    (qr/^AD password change for \S+ failed \(3\):.*Authentication error$/);
 
 ##############################################################################
 # Writing queue files
@@ -148,6 +152,7 @@ sub list {
 # processing any of the queue files of a particular type fails, we skip all
 # subsequent queue files of the same type.
 sub process {
+    my ($silent) = @_;
     chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
     lock_queue;
     opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
@@ -159,9 +164,31 @@ sub process {
         my ($id) = ($file =~ /^([^-]+-[^-]+-[^-]+)-/);
         $id ||= 'UNKNOWN';
         next if $skipped{$id};
-        if (system ($SYNC, '-f', $file) != 0) {
-            warn "$0: krb5-sync failed on $file\n";
-            $skipped{$id} = 1;
+        my $pid = open (SYNC, '-|');
+        if (not defined $pid) {
+            die "$0: cannot fork: $!\n";
+        } elsif ($pid == 0) {
+            unless ($silent) {
+                open (STDERR, '>&STDOUT') or die "$0: cannot dup STDOUT: $!\n";
+            }
+            exec ($SYNC, '-f', $file) or die "$0: cannot exec $SYNC: $!\n";
+        } else {
+            local $/;
+            my $output = <SYNC>;
+            close SYNC;
+            my $ignore;
+            for my $regex (@IGNORE) {
+                $ignore = 1 if $output =~ /$regex/;
+            }
+            if (not $silent) {
+                print $output;
+            } elsif (not $ignore and $? != 0) {
+                warn $output;
+                warn "$0: krb5-sync failed on $file\n" unless ($? == 0);
+            }
+            unless ($? == 0) {
+                $skipped{$id} = 1;
+            }
         }
     }
 }
@@ -170,10 +197,20 @@ sub process {
 # Main routine
 ##############################################################################
 
-# Clean up the program name for error reporting.
+# Flush output and clean up the program name for error reporting.
+$| = 1;
+my $fullpath = $0;
 $0 =~ s%.*/%%;
 
 # Read command-line options.
+my ($help, $silent) = @_;
+Getopt::Long::config ('bundling', 'require_order');
+GetOptions ('h|help'   => \$help,
+            's|silent' => \$silent);
+if ($help) {
+    print "Feeding myself to perldoc, please wait....\n";
+    exec ('perldoc', '-t', $fullpath);
+}
 my ($function, @args) = @ARGV;
 die "$0: no function specified\n" unless $function;
 
@@ -200,7 +237,7 @@ EOH
     list;
 } elsif ($function eq 'process') {
     die "Usage: sync process\n" unless @args == 0;
-    process;
+    process ($silent);
 } elsif ($function eq 'password') {
     die "Usage: sync password <user> <system> <password>\n" unless @args == 3;
     queue_password (@args);
@@ -218,9 +255,13 @@ krb5-sync-backend - Manipulate K5 password and status change queue
 
 =head1 SYNOPSIS
 
+B<krb5-sync-backend> B<-h>
+
 B<krb5-sync-backend> (disable|enable) I<user>
 
-B<krb5-sync-backend> (help|list|process)
+B<krb5-sync-backend> (help|list)
+
+B<krb5-sync-backend> [B<-s>] process
 
 B<krb5-sync-backend> password I<user> (ad|afs) I<password>
 
@@ -287,7 +328,29 @@ processes (which are generally readable to anyone on the system).
 
 =back
 
-B<krb5-sync-backend> takes no traditional command-line options.
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h>, B<--help>
+
+Display this documentation (by running this script through C<perldoc -t> and
+exit.  All other options and commands are ignored.
+
+=item B<-s>, B<--silent>
+
+When running the process command, filter out the output of B<krb5-sync> to
+ignore common errors and success messages and only show uncommon errors.
+This option will filter out all output when B<krb5-sync> is successful and
+will filter out error messages matching:
+
+    /^AD password change for \S+ failed \(3\):.*Authentication error$/
+
+even when it fails.  (This message generally means the account doesn't exist
+in Active Directory.)  The regexes can be modified at the start of this
+script.
+
+=back
 
 =head1 FILES
 

@@ -2,6 +2,11 @@
 
 krb5-sync 1.0 (unreleased)
 
+    Add a new option to krb5-sync-backend to tell process to filter out
+    successful messages from krb5-sync and common errors that mean the
+    account doesn't exist in Active Directory.  Also add support for the
+    -h flag.
+
     Fix the logging output from Active Directory account status changes
     to not append the realm twice.
 
