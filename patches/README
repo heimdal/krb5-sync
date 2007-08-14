@@ -8,6 +8,11 @@ Currently, there are two patches available:
     mit-krb5-1.4.4      Built against stock MIT Kerberos 1.4.4
     stanford-krb5-1.4.4 Built against Stanford-patched MIT Kerberos 1.4.4
 
+After applying the patch, you will need to run src/util/reconf to
+regenerate the Autoconf files.  With MIT Kerberos 1.4.4, you will need an
+older version of Autoconf (2.59 or earlier) or shared library fragments
+will not be handled properly.
+
 If you're also applying the patch from the krb5-strength package, apply
 that patch first and then use the stanford-krb5-1.4.4 patch.  More patches
 against other source trees may be provided in the future.  Please let me
