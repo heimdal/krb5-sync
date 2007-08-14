@@ -1,3 +1,12 @@
+krb5-sync (1.0-1) unstable; urgency=low
+
+  * New upstream release.
+    - Add krb5-sync-backend -s option to filter out some messages.
+    - Log krb5-sync actions as LOG_AUTH.
+    - Don't repeat the realm in AD status change log messages.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 13 Aug 2007 18:02:10 -0700
+
 krb5-sync (0.7-1) unstable; urgency=low
 
   * New upstream release.
