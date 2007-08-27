@@ -1,3 +1,11 @@
+krb5-sync (1.1-1) unstable; urgency=low
+
+  * New upstream release.
+    - Don't assume the principal instance is nul-terminated.
+    - Improve instance checking to fix some false negatives.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 27 Aug 2007 14:33:21 -0700
+
 krb5-sync (1.0-1) unstable; urgency=low
 
   * New upstream release.
