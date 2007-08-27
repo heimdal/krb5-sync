@@ -1,5 +1,13 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 1.1 (unreleased)
+
+    MIT Kerberos kadmind (at least in 1.4.4) doesn't always nul-terminate
+    principal instances when processing kpasswd requests.  The instance
+    verification also didn't correctly handle some combinations of
+    allowed instances.  Rewrite the check routine to cope with all of
+    these issues.
+
 krb5-sync 1.0 (2007-08-13)
 
     Add a new option to krb5-sync-backend to tell process to filter out

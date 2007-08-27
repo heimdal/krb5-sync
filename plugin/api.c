@@ -123,19 +123,35 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
 static int
 instance_allowed(const char *allowed, const krb5_data *instance)
 {
-    const char *p, *i;
+    const char *p, *i, *end;
+    int checking, okay;
 
     if (allowed == NULL || instance == NULL)
         return 0;
     i = instance->data;
-    p = strstr(allowed, i);
-    if (p == NULL)
+    end = i + instance->length;
+    checking = 1;
+    okay = 0;
+    for (p = allowed; *p != '\0'; p++) {
+        if (*p == ' ') {
+            if (okay && i == end)
+                break;
+            okay = 0;
+            checking = 1;
+            i = instance->data;
+        } else if (checking && (i == end || *p != *i)) {
+            okay = 0;
+            checking = 0;
+            i = instance->data;
+        } else if (checking && *p == *i) {
+            okay = 1;
+            i++;
+        }
+    }
+    if (okay && (*p == '\0' || *p == ' ') && i == end)
+        return 1;
+    else
         return 0;
-    if (p != allowed && p[-1] != ' ')
-        return 0;
-    if (p[strlen(i)] != ' ' && p[strlen(i)] != '\0')
-        return 0;
-    return 1;
 }
 
 /*
