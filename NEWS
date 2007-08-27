@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 1.1 (unreleased)
+krb5-sync 1.1 (2007-08-27)
 
     MIT Kerberos kadmind (at least in 1.4.4) doesn't always nul-terminate
     principal instances when processing kpasswd requests.  The instance
