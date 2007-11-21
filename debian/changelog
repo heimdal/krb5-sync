@@ -1,3 +1,10 @@
+krb5-sync (1.2-1) unstable; urgency=low
+
+  * New upstream release.
+    - Fix thread leak in AFS kaserver synchronization.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 20 Nov 2007 17:20:26 -0800
+
 krb5-sync (1.1-1) unstable; urgency=low
 
   * New upstream release.
