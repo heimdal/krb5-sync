@@ -1,5 +1,11 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 1.2 (unreleased)
+
+    Don't call rx_Finalize after every synchronization with an AFS
+    kaserver.  This isn't correct and leaks threads.  Only call
+    rx_Finalize when shutting down the entire module.
+
 krb5-sync 1.1 (2007-08-27)
 
     MIT Kerberos kadmind (at least in 1.4.4) doesn't always nul-terminate

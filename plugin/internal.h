@@ -57,7 +57,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
                        krb5_principal principal, int enabled, char *errstr,
                        int errstrlen);
 
-/* Queuing */
+/* Queuing. */
 int pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,
                             krb5_principal principal, const char *domain,
                             const char *operation);
@@ -65,5 +65,7 @@ int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
                          krb5_principal principal, const char *domain,
                          const char *operation, const char *password);
 
+/* Shutdown. */
+void pwupdate_afs_close(void);
 
 #endif /* !INTERNAL_H */

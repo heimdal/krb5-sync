@@ -162,7 +162,6 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                  error_message(code));
         memset(&newkey, 0, sizeof(newkey));
         ubik_ClientDestroy(conn);
-        rx_Finalize();
         return 1;
     }
 
@@ -170,6 +169,16 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
     syslog(LOG_INFO, "pwupdate: %s.%s@%s password changed", aname, inst,
            realm);
     ubik_ClientDestroy(conn);
-    rx_Finalize();
     return 0;
+}
+
+
+/*
+ * Close down the AFS synchronization part of the module.  We call rx_Finalize
+ * here in case that's needed to shut down Rx connections cleanly.
+ */
+void
+pwupdate_afs_close(void)
+{
+    rx_Finalize();
 }

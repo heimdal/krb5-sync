@@ -83,6 +83,7 @@ pwupdate_close(void *data)
         free(config->afs_principal);
     if (config->afs_realm != NULL)
         free(config->afs_realm);
+    pwupdate_afs_close();
     if (config->ad_keytab != NULL)
         free(config->ad_keytab);
     if (config->ad_principal != NULL)
