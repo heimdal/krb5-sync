@@ -20,9 +20,12 @@ moduledir = $(libdir)/kadmind
 
 # Rules for building the password synchronization plugin.
 module_LTLIBRARIES = plugin/passwd_update.la
-plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/afs.c plugin/api.c \
-	plugin/internal.h plugin/queue.c
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version
+plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/internal.h \
+	plugin/queue.c
+if AFS
+    plugin_passwd_update_la_SOURCES += plugin/afs.c
+endif
 
 # Rules for building the krb5-sync utility.  We specify the CFLAGS to work
 # around Automake's inability to link libtool objects into a program that
@@ -30,7 +33,7 @@ plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 # will cause the sources to be built twice, once with a prefix for this
 # program.
 sbin_PROGRAMS = tools/krb5-sync
-tools_krb5_sync_SOURCES = util/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
+tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
 tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
 
 # Rules for the krb5-sync-backend script.

@@ -6,6 +6,10 @@ krb5-sync 1.2 (unreleased)
     kaserver.  This isn't correct and leaks threads.  Only call
     rx_Finalize when shutting down the entire module.
 
+    The AFS synchronization code is now only built if requested using the
+    --with-afs flag to configure, allowing the package to be built at
+    sites that don't use AFS.
+
 krb5-sync 1.1 (2007-08-27)
 
     MIT Kerberos kadmind (at least in 1.4.4) doesn't always nul-terminate

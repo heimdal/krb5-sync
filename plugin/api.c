@@ -54,10 +54,17 @@ pwupdate_init(krb5_context ctx, void **data)
     config = malloc(sizeof(struct plugin_config));
     if (config == NULL)
         return 1;
+#ifdef HAVE_AFS
     config_string(ctx, "afs_srvtab", &config->afs_srvtab);
     config_string(ctx, "afs_principal", &config->afs_principal);
     config_string(ctx, "afs_realm", &config->afs_realm);
     config_string(ctx, "afs_instances", &config->afs_instances);
+#else
+    config->afs_srvtab = NULL;
+    config->afs_principal = NULL;
+    config->afs_realm = NULL;
+    config->afs_instances = NULL;
+#endif
     config_string(ctx, "ad_keytab", &config->ad_keytab);
     config_string(ctx, "ad_principal", &config->ad_principal);
     config_string(ctx, "ad_realm", &config->ad_realm);
@@ -83,7 +90,9 @@ pwupdate_close(void *data)
         free(config->afs_principal);
     if (config->afs_realm != NULL)
         free(config->afs_realm);
+#ifdef HAVE_AFS
     pwupdate_afs_close();
+#endif
     if (config->ad_keytab != NULL)
         free(config->ad_keytab);
     if (config->ad_principal != NULL)
@@ -252,6 +261,7 @@ queue:
  * If the change fails or if a password change in AFS were already queued for
  * this user, queue the password change.  Only fail if we can't even do that.
  */
+#ifdef HAVE_AFS
 int pwupdate_postcommit_password(void *data, krb5_principal principal,
                                  char *password, int pwlen,
 				 char *errstr, int errstrlen)
@@ -291,6 +301,16 @@ queue:
         return 1;
     }
 }
+#else /* !HAVE_AFS */
+int pwupdate_postcommit_password(void *data UNUSED,
+                                 krb5_principal principal UNUSED,
+                                 char *password UNUSED, int pwlen UNUSED,
+				 char *errstr UNUSED, int errstrlen UNUSED)
+{
+    return 0;
+}
+#endif
+
 
 /*
  * Actions to take after the account status is changed in the local database.

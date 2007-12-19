@@ -10,6 +10,8 @@
  * synchronize changes when the plugin previously failed for some reason.
  */
 
+#include "config.h"
+
 #include <com_err.h>
 #include <errno.h>
 #include <krb5.h>
@@ -67,6 +69,7 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
  * Change a password in AFS kaserver.  Print a success message if we were
  * successful, and exit with an error message if we weren't.
  */
+#ifdef HAVE_AFS
 static void
 afs_password(void *data, krb5_context ctx, krb5_principal principal,
              char *password, const char *user)
@@ -83,6 +86,16 @@ afs_password(void *data, krb5_context ctx, krb5_principal principal,
     }
     printf("AFS password change for %s succeeded\n", user);
 }
+#else /* !HAVE_AFS */
+static void
+afs_password(void *data UNUSED, krb5_context ctx UNUSED,
+             krb5_principal principal UNUSED, char *password UNUSED,
+             const char *user UNUSED)
+{
+    fprintf(stderr, "AFS password change requested but not supported\n");
+    exit(1);
+}
+#endif
 
 /*
  * Read a line from a queue file, making sure we got a complete line and

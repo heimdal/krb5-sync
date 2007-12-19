@@ -7,6 +7,7 @@
 #ifndef INTERNAL_H
 #define INTERNAL_H 1
 
+#include "config.h"
 #include <krb5.h>
 
 /* Used for unused parameters to silence gcc warnings. */
@@ -48,9 +49,11 @@ int pwupdate_postcommit_status(void *data, krb5_principal principal,
 int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
                        krb5_principal principal, char *password, int pwlen,
                        char *errstr, int errstrlen);
+#ifdef HAVE_AFS
 int pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                         krb5_principal principal, char *password, int pwlen,
                         char *errstr, int errstrlen);
+#endif
 
 /* Account status update. */
 int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
@@ -66,6 +69,8 @@ int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
                          const char *operation, const char *password);
 
 /* Shutdown. */
+#ifdef HAVE_AFS
 void pwupdate_afs_close(void);
+#endif
 
 #endif /* !INTERNAL_H */

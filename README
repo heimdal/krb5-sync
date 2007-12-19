@@ -106,14 +106,14 @@ REQUIREMENTS
   queries (generally, this is one of the Domain Controllers).
 
   To build the AFS kaserver update code, you will need the AFS libraries
-  available.  Several of the static AFS libraries are required, so the AFS
-  libraries must either be built PIC (using, for instance, the gcc -fPIC
-  option) or you will need to be using a platform where non-PIC code can
-  be linked into a dynamically loaded object.  This will work on x86 Linux
-  but not on x86_64 (AMD64) Linux, for instance.  This could be fixed (by
-  using only calls available in the libafsauthent and libafsrpc libraries,
-  for instance), but it's probably more trouble than it's worth given that
-  the AFS kaserver is becoming quickly obsolete.
+  available.  This support is optional and the package can be built
+  without it.  Several of the static AFS libraries are required, so the
+  AFS libraries must either be built PIC (using, for instance, the gcc
+  -fPIC option) or you will need to be using a platform where non-PIC code
+  can be linked into a dynamically loaded object.  This will work on x86
+  Linux but not on x86_64 (AMD64) Linux, for instance.  This could be
+  fixed, but it's probably more trouble than it's worth given that the AFS
+  kaserver is becoming quickly obsolete.
 
   If updating an AFS kaserver, the system on which kadmind is running must
   have as its default AFS cell the cell in which updates should be made.
@@ -149,14 +149,26 @@ COMPILING AND INSTALLING
   path is not the one corresponding to the Kerberos libraries you want to
   use or if your Kerberos libraries and includes aren't in a location
   searched by default by your compiler, you need to specify
-  --with-kerberos=PATH:
+  --with-krb5=PATH:
 
-      ./configure --with-kerberos=/usr/pubsw
+      ./configure --with-krb5=/usr/pubsw
 
   To specify a particular krb5-config script to use, either set the
   KRB5_CONFIG environment variable or pass it to configure like:
 
       ./configure KRB5_CONFIG=/path/to/krb5-config
+
+  To build with AFS kaserver synchronization support, pass --with-afs to
+  configure.  You may need to include the path to the AFS include files
+  and libraries, such as:
+
+      ./configure --with-afs=/usr/afsws
+
+  The AFS kaserver support also requires Kerberos v4 libraries and tries
+  to use krb5-config to find such libraries.  If your Kerberos v4
+  libraries aren't somewhere found by your compiler and the krb5-config
+  script doesn't produce correct results, you need to specify
+  --with-krb4=PATH giving the root path of the Kerberos v4 installation.
 
   You can pass the --enable-reduced-depends flag to configure to try to
   minimize the shared library dependencies encoded in the binaries.  This
@@ -268,6 +280,8 @@ ACTIVE DIRECTORY SETUP
 
       ktpass.exe -out <filename> -princ <principal name> -pass <AD password>
           -mapuser <AD user account name>
+
+  (all on one line).
 
   Thanks to Ross Wilper for this setup information.
 

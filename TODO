@@ -1,11 +1,5 @@
                            krb5-sync To-Do List
 
- * The AFS code currently builds unconditionally, so if the AFS libraries
-   weren't found at configure time, the build just fails.  It should
-   instead all be protected by #ifdef and not built if the AFS libraries
-   aren't found, since most people aren't going to care about AFS kaserver
-   synchronization.
-
  * The base DN for finding users in Active Directory probably has to be
    configurable.
 
@@ -19,6 +13,3 @@
  * Currently, the queue path is hard-coded in krb5-sync-backend even
    though for the plugin it's configurable in krb5.conf.
    krb5-sync-backend needs to be able to read the krb5.conf value somehow.
-
- * The configure logic for finding the AFS libraries could use some
-   cleanup and modularization.
