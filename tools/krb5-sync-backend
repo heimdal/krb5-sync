@@ -197,6 +197,27 @@ sub process {
 }
 
 ##############################################################################
+# Queue cleanup
+##############################################################################
+
+# Given a number of days, remove all queue files older than that number of
+# days.
+sub purge {
+    my ($days) = @_;
+    chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
+    lock_queue;
+    opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
+    my @files = sort grep { !/^\./ } readdir QUEUE;
+    closedir QUEUE;
+    for my $file (@files) {
+        if (-M $file > $days) {
+            unlink $file or warn "$0: cannot unlink $QUEUE/$file: $!\n";
+        }
+    }
+    unlock_queue;
+}
+
+##############################################################################
 # Main routine
 ##############################################################################
 
@@ -234,6 +255,7 @@ Kerberos status synchronization help:
   sync password <user> ad <password>    Queue <user> password change in AD
   sync password <user> afs <password>   Queue <user> password change in AFS K4
   sync process                          Process pending queued actions
+  sync purge <days>                     Delete queued actions older than <days>
 EOH
 } elsif ($function eq 'list') {
     die "Usage: sync list\n" unless @args == 0;
@@ -244,6 +266,9 @@ EOH
 } elsif ($function eq 'password') {
     die "Usage: sync password <user> <system> <password>\n" unless @args == 3;
     queue_password (@args);
+} elsif ($function eq 'purge') {
+    die "Usage: sync purge <days>\n" unless @args == 1;
+    purge (@args);
 } else {
     die "$0: unknown function $function\n";
 }
@@ -267,6 +292,8 @@ B<krb5-sync-backend> (help|list)
 B<krb5-sync-backend> [B<-s>] process
 
 B<krb5-sync-backend> password I<user> (ad|afs) I<password>
+
+B<krb5-sync-backend> purge I<days>
 
 =head1 DESCRIPTION
 
@@ -329,6 +356,13 @@ line, so you don't want to invoke this command in any environment where an
 untrusted user would be in a position to see the command-line arguments of
 processes (which are generally readable to anyone on the system).
 
+=item purge I<days>
+
+Delete all queued actions last modified longer than I<days> days ago.  This
+can be used to clean up old failed change propagations in situations where
+accounts may be created or have password changes queued that are later
+removed and never created in other environments.
+
 =back
 
 =head1 OPTIONS
@@ -347,8 +381,8 @@ ignore common errors and success messages and only show uncommon errors.
 This option will filter out all output when B<krb5-sync> is successful and
 will filter out error messages matching:
 
-    /^AD password change for \S+ failed \(3\):.*Authentication error$/
-    /^AD status change for \S+ failed \(1\): user .* not found in \S+$/
+    ^AD password change for \S+ failed \(3\):.*Authentication error$
+    ^AD status change for \S+ failed \(1\): user .* not found in \S+$
 
 even when it fails.  (This message generally means the account doesn't exist
 in Active Directory.)  The regexes can be modified at the start of this
