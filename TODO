@@ -13,3 +13,6 @@
  * Currently, the queue path is hard-coded in krb5-sync-backend even
    though for the plugin it's configurable in krb5.conf.
    krb5-sync-backend needs to be able to read the krb5.conf value somehow.
+
+ * A test suite would be nice, probably drawing on the code in the wallet
+   for testing Kerberos operations and keys.
