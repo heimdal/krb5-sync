@@ -1,5 +1,4 @@
-/*
- * api.c
+/* $Id$
  *
  * The public APIs of the password update kadmind plugin.
  *
@@ -11,6 +10,12 @@
  * synchronization is done in postcommit.  The implication is that if Active
  * Directory synchronization fails, the update fails, but if AFS kaserver
  * synchronization fails, everything else still succeeds.
+ *
+ * Written by Russ Allbery <rra@stanford.edu>
+ * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
+ * Nomine Associates, on behalf of Stanford University.
+ * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * See LICENSE for licensing terms.
  */
 
 #include <com_err.h>

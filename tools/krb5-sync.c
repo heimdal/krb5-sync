@@ -1,5 +1,4 @@
-/*
- * krb5-sync.c
+/* $Id$
  *
  * Command-line access to the krb5-sync kadmind plugin.
  *
@@ -8,6 +7,12 @@
  * enabled/disabled status according to the same configuration used by the
  * plugin.  It's primarily intended for testing, but can also be used to
  * synchronize changes when the plugin previously failed for some reason.
+ *
+ * Written by Russ Allbery <rra@stanford.edu>
+ * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
+ * Nomine Associates, on behalf of Stanford University.
+ * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * See LICENSE for licensing terms.
  */
 
 #include "config.h"

@@ -1,5 +1,4 @@
-/*
- * queue.c
+/* $Id$
  *
  * Change queuing and queue checking.
  *
@@ -9,6 +8,10 @@
  * whether conflicting changes are already queued, and if so, either queue our
  * operation as well or fail our operation so that correct changes won't be
  * undone.
+ *
+ * Written by Russ Allbery <rra@stanford.edu>
+ * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * See LICENSE for licensing terms.
  */
 
 #include <dirent.h>

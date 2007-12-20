@@ -13,7 +13,7 @@ dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2005, 2006, 2007
 dnl     Board of Trustees, Leland Stanford Jr. University
-dnl See README for licensing terms.
+dnl See LICENSE for licensing terms.
 
 AC_DEFUN([RRA_ENABLE_REDUCED_DEPENDS],
 [rra_reduced_depends=false

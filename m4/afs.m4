@@ -13,7 +13,7 @@ dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Based on code developed by Derrick Brashear and Ken Hornstein of Sine
 dnl Nomine Associates, on behalf of Stanford University.
 dnl Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
-dnl See README for licensing terms.
+dnl See LICENSE for licensing terms.
 
 dnl The function that does the work checking for the AFS libraries.
 AC_DEFUN([_RRA_LIB_AFS_CHECK],

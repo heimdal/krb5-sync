@@ -8,7 +8,7 @@
   Associates, on behalf of Stanford University.
 
   This software is distributed under a BSD-style license.  Please see the
-  section LICENSE for more information.
+  file LICENSE in the distribution for more information.
 
   This code is running in production at Stanford, but will likely require
   modifications to fit any other environment.  Feedback and improvements
@@ -284,23 +284,3 @@ ACTIVE DIRECTORY SETUP
   (all on one line).
 
   Thanks to Ross Wilper for this setup information.
-
-LICENSE
-
-  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.
-  All rights reserved.
-
-  Permission to use, copy, modify, and distribute this software and its
-  documentation for any purpose and without fee is hereby granted,
-  provided that the above copyright notice appear in all copies and that
-  both that copyright notice and this permission notice appear in
-  supporting documentation, and that the name of Stanford University not
-  be used in advertising or publicity pertaining to distribution of the
-  software without specific, written prior permission.  Stanford
-  University makes no representations about the suitability of this
-  software for any purpose.  It is provided "as is" without express or
-  implied warranty.
-
-  THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
-  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.

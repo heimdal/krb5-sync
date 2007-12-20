@@ -17,7 +17,7 @@ dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
 dnl Copyright 2005, 2006, 2007
 dnl     Board of Trustees, Leland Stanford Jr. University
-dnl See README for licensing terms.
+dnl See LICENSE for licensing terms.
 
 dnl Set CPPFLAGS, LDFLAGS, and LIBS to values including the Kerberos v5
 dnl settings.

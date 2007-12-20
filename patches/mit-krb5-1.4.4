@@ -1,3 +1,19 @@
+krb5-sync patch for stock MIT Kerberos 1.4.4.
+
+This patch may apply to earlier or later versions but may not and will
+require verification.
+
+Note that this patch modifies configure.in and hence will require running
+util/reconf from the src directory of the MIT Kerberos distribution before
+running configure and rebuilding.
+
+Written by Russ Allbery <rra@stanford.edu>
+Based on code developed by Derrick Brashear and Ken Hornstein of Sine
+Nomine Associates, on behalf of Stanford University.
+
+Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+See LICENSE for licensing terms.
+
 diff -ru krb5-1.4.4/src/lib/kadm5/admin.h krb5-1.4.4-patched/src/lib/kadm5/admin.h
 --- krb5-1.4.4/src/lib/kadm5/admin.h	2005-11-28 16:01:49.000000000 -0800
 +++ krb5-1.4.4-patched/src/lib/kadm5/admin.h	2007-07-29 19:12:55.000000000 -0700

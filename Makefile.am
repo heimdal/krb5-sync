@@ -2,11 +2,11 @@
 # $Id$
 #
 # Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
-# See README for licensing terms.
+# See LICENSE for licensing terms.
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = autogen patches/README patches/mit-krb5-1.4.4 \
+EXTRA_DIST = LICENSE autogen patches/README patches/mit-krb5-1.4.4 \
 	patches/stanford-krb5-1.4.4 tools/krb5-sync.8 tools/krb5-sync.pod \
 	tools/krb5-sync-backend.8
 
