@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 4), libkrb5-dev, libopenafs-dev, libldap2-dev
-Standards-Version: 3.7.2
+Standards-Version: 3.7.3
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
 
 Package: krb5-sync

@@ -7,8 +7,9 @@ krb5-sync (1.2-1) unstable; urgency=low
     installation or upgrade to pick up the new plugin.
   * Add a Homepage control header.
   * Update debian/copyright based on the upstream LICENSE file.
+  * Update standards version to 3.7.3 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Thu, 20 Dec 2007 16:07:13 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 20 Dec 2007 16:07:50 -0800
 
 krb5-sync (1.1-1) unstable; urgency=low
 
