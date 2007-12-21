@@ -27,7 +27,7 @@ configure-stamp:
 	dh_testdir
 	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr \
 	    --mandir=\$${prefix}/share/man --with-afs=/usr \
-	    $(SYSTEM)
+	    --enable-reduced-depends $(SYSTEM)
 	touch configure-stamp
 
 build: build-arch build-indep
