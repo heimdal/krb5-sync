@@ -6,8 +6,9 @@ krb5-sync (1.2-1) unstable; urgency=low
   * If /usr/sbin/kadmind is present, restart krb5-admin-server on
     installation or upgrade to pick up the new plugin.
   * Add a Homepage control header.
+  * Update debian/copyright based on the upstream LICENSE file.
 
- -- Russ Allbery <rra@debian.org>  Tue, 20 Nov 2007 18:37:36 -0800
+ -- Russ Allbery <rra@debian.org>  Thu, 20 Dec 2007 16:07:13 -0800
 
 krb5-sync (1.1-1) unstable; urgency=low
 
