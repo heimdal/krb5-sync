@@ -2,6 +2,7 @@ krb5-sync (1.2-1) unstable; urgency=low
 
   * New upstream release.
     - Fix thread leak in AFS kaserver synchronization.
+    - Add a purge command to krb5-sync-backend.
   * If /usr/sbin/kadmind is present, restart krb5-admin-server on
     installation or upgrade to pick up the new plugin.
   * Add a Homepage control header.
