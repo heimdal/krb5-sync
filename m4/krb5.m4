@@ -53,10 +53,9 @@ dnl Does the appropriate library checks for reduced-dependency Kerberos v5
 dnl linkage.
 AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
 [RRA_LIB_KRB5_SWITCH
- AC_CHECK_LIB([krb5], [krb5_init_context],
-     [LIBS="-lkrb5 $LIBS"
-      KRB5_LIBS="-lkrb5"],
+ AC_CHECK_LIB([krb5], [krb5_init_context], [KRB5_LIBS="-lkrb5"],
      [AC_MSG_ERROR([cannot find usable Kerberos v5 library])])
+ LIBS="$KRB5_LIBS $LIBS"
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_err_txt], ,
@@ -94,6 +93,7 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
         [AC_MSG_ERROR([cannot find usable Kerberos v5 library])],
         [$rra_krb5_extra])],
     [-lasn1 -lroken -lcrypto -lcom_err $rra_krb5_extra])
+ LIBS="$KRB5_LIBS $LIBS"
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_err_txt], ,
