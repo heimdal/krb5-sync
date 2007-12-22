@@ -25,7 +25,8 @@ AS_IF([test x"$rra_afs" = xtrue],
     [RRA_LIB_KRB4
      CPPFLAGS="$AFS_CPPFLAGS $KRB4_CPPFLAGS $CPPFLAGS"
      LDFLAGS="$AFS_LDFLAGS $KRB4_LDFLAGS $LDFLAGS"
-     LIBS="$AFS_LIBS $KRB4_LIBS $LIBS"])
+     LIBS="$AFS_LIBS $KRB4_LIBS $LIBS"
+     AC_CHECK_FUNCS([afs_error_message])])
 AM_CONDITIONAL([AFS], [test x"$rra_afs" = xtrue])
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 

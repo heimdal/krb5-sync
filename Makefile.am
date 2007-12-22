@@ -21,8 +21,8 @@ moduledir = $(libdir)/kadmind
 # Rules for building the password synchronization plugin.
 module_LTLIBRARIES = plugin/passwd_update.la
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version
-plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/internal.h \
-	plugin/queue.c
+plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
+	plugin/internal.h plugin/queue.c
 if AFS
     plugin_passwd_update_la_SOURCES += plugin/afs.c
 endif

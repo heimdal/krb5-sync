@@ -46,46 +46,48 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
 
     ret = krb5_kt_resolve(ctx, config->ad_keytab, &kt);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to resolve keytab \"%s\": %s",
-                 config->ad_keytab, error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to resolve keytab \"%s\"",
+                           config->ad_keytab);
         return 1;
     }
     ret = krb5_parse_name(ctx, config->ad_principal, &princ);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to parse principal \"%s\": %s",
-                 config->ad_principal, error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to parse principal \"%s\"",
+                           config->ad_principal);
         return 1;
     }
     krb5_get_init_creds_opt_init(&opts);
     memset(&creds, 0, sizeof(creds));
     ret = krb5_get_init_creds_keytab(ctx, &creds, princ, kt, 0, NULL, &opts);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to get initial credentials: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to get initial credentials");
         return 1;
     }
     ret = krb5_kt_close(ctx, kt);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to close keytab: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to close keytab");
         return 1;
     }
     ret = krb5_cc_resolve(ctx, CACHE_NAME, cc);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to resolve memory cache: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to resolve memory cache");
         return 1;
     }
     ret = krb5_cc_initialize(ctx, *cc, princ);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to initialize memory cache: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to initialize memory cache");
         return 1;
     }
     ret = krb5_cc_store_cred(ctx, *cc, &creds);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to store credentials: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to store credentials");
         return 1;
     }
     krb5_free_cred_contents(ctx, &creds);
@@ -141,8 +143,8 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     /* Get the corresponding Active Directory principal. */
     ret = get_ad_principal(ctx, config->ad_realm, principal, &ad_principal);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to get AD principal: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to get AD principal");
         code = 1;
         goto done;
     }
@@ -150,8 +152,8 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     /* This is just for logging purposes. */
     ret = krb5_unparse_name(ctx, ad_principal, &target);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to parse target principal: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to parse target principal");
         return 1;
     }
 
@@ -161,8 +163,9 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
                                          &result_string);
     krb5_free_principal(ctx, ad_principal);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "password change failed for %s in %s: %s",
-                 target, config->ad_realm, error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "password change failed for %s in %s",
+                           target, config->ad_realm);
         code = 1;
         goto done;
     }
@@ -289,14 +292,14 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      */
     ret = get_ad_principal(ctx, config->ad_realm, principal, &ad_principal);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to get AD principal: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to get AD principal");
         goto done;
     }
     ret = krb5_unparse_name(ctx, ad_principal, &target);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "unable to parse target principal: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "unable to parse target principal");
         goto done;
     }
     snprintf(ldapdn, sizeof(ldapdn), "(userPrincipalName=%s)", target);

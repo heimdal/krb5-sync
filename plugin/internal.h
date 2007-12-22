@@ -14,6 +14,7 @@
 
 #include "config.h"
 #include <krb5.h>
+#include <sys/types.h>
 
 /* Used for unused parameters to silence gcc warnings. */
 #define UNUSED  __attribute__((__unused__))
@@ -77,5 +78,9 @@ int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
 #ifdef HAVE_AFS
 void pwupdate_afs_close(void);
 #endif
+
+/* Error handling. */
+void pwupdate_set_error(char *, size_t, krb5_context, krb5_error_code,
+                        const char *, ...);
 
 #endif /* !INTERNAL_H */

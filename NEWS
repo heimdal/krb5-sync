@@ -13,6 +13,11 @@ krb5-sync 1.2 (unreleased)
     Add the purge command to krb5-sync-backend, which removes all queued
     actions last modified more than some number of days in the past.
 
+    Use the new Kerberos error message APIs to retrieve error messages,
+    giving more complete errors in current versions of Kerberos.  This is
+    also necessary in the long run for Heimdal support, although the
+    package in general doesn't support Heimdal yet.
+
 krb5-sync 1.1 (2007-08-27)
 
     MIT Kerberos kadmind (at least in 1.4.4) doesn't always nul-terminate

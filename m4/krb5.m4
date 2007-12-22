@@ -53,8 +53,17 @@ dnl Does the appropriate library checks for reduced-dependency Kerberos v5
 dnl linkage.
 AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
 [RRA_LIB_KRB5_SWITCH
- AC_CHECK_LIB([krb5], [krb5_init_context], [KRB5_LIBS="-lkrb5"],
+ AC_CHECK_LIB([krb5], [krb5_init_context],
+     [LIBS="-lkrb5 $LIBS"
+      KRB5_LIBS="-lkrb5"],
      [AC_MSG_ERROR([cannot find usable Kerberos v5 library])])
+ AC_CHECK_FUNCS([krb5_get_error_message],
+     [AC_CHECK_FUNCS([krb5_free_error_message])],
+     [AC_CHECK_FUNCS([krb5_get_err_txt], ,
+         [AC_CHECK_LIB([com_err], [com_err],
+             [KRB5_LIBS="$KRB5_LIBS -lcom_err"],
+             [AC_MSG_ERROR([cannot find usable com_err library])])
+          AC_CHECK_HEADERS([et/com_err.h])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl Does the appropriate library checks for Kerberos v5 linkage when we don't
@@ -85,6 +94,10 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
         [AC_MSG_ERROR([cannot find usable Kerberos v5 library])],
         [$rra_krb5_extra])],
     [-lasn1 -lroken -lcrypto -lcom_err $rra_krb5_extra])
+ AC_CHECK_FUNCS([krb5_get_error_message],
+     [AC_CHECK_FUNCS([krb5_free_error_message])],
+     [AC_CHECK_FUNCS([krb5_get_err_txt], ,
+         [AC_CHECK_HEADERS([et/com_err.h])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl The main macro.
@@ -120,6 +133,12 @@ AS_IF([test x"$rra_reduced_depends" = xtrue],
                KRB5_LIBS=`"$KRB5_CONFIG" --libs krb5`],
               [KRB5_CPPFLAGS=`"$KRB5_CONFIG" --cflags`
                KRB5_LIBS=`"$KRB5_CONFIG" --libs`])
-          KRB5_CPPFLAGS=`echo "$KRB5_CPPFLAGS" | sed 's%-I/usr/include ?%%'`],
+          KRB5_CPPFLAGS=`echo "$KRB5_CPPFLAGS" | sed 's%-I/usr/include ?%%'`
+          RRA_LIB_KRB5_SWITCH
+          AC_CHECK_FUNCS([krb5_get_error_message],
+              [AC_CHECK_FUNCS([krb5_free_error_message])],
+              [AC_CHECK_FUNCS([krb5_get_err_txt], ,
+                  [AC_CHECK_HEADERS([et/com_err.h])])])
+          RRA_LIB_KRB5_RESTORE],
          [_RRA_LIB_KRB5_PATHS
           _RRA_LIB_KRB5_MANUAL])])])

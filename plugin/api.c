@@ -123,8 +123,8 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
 
     ret = krb5_init_context(ctx);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "failure initializing Kerberos library:"
-                 " %s", error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, *ctx, ret,
+                           "failure initializing Kerberos library");
         return 0;
     }
     return 1;

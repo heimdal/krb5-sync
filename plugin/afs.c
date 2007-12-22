@@ -38,6 +38,19 @@
 #include <afs/cellconfig.h>
 #include <afs/kauth.h>
 #include <afs/kautils.h>
+#include <afs/com_err.h>
+
+/*
+ * We want to use the AFS error_message function in this file where possible
+ * (where we need to use the Kerberos one, we call pwupdate_set_error
+ * instead), but only recent versions of AFS have a separate function other
+ * than the normal com_err routine name.  If we have naming conflicts, just
+ * hope we get the right com_err first.  (If not, we just won't have nice
+ * error messages.)
+ */
+#ifndef HAVE_AFS_ERROR_MESSAGE
+# define afs_error_message(code) error_message(code)
+#endif
 
 #ifndef KRB5_KRB4_COMPAT
 # define ANAME_SZ 40
@@ -86,8 +99,8 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
      */
     ret = krb5_524_conv_principal(ctx, principal, aname, inst, realm);
     if (ret != 0) {
-        snprintf(errstr, errstrlen, "failed converting principal to K4: %s",
-                 error_message(ret));
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "failed converting principal to K4");
         return 1;
     }
     if (strlen(config->afs_realm) > sizeof(realm) - 1) {
@@ -145,7 +158,7 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
                             &mitkey, 1000, &token, 1);
     if (code != 0) {
         snprintf(errstr, errstrlen, "ka_GetAdminToken failed: %s",
-                 error_message(code));
+                 afs_error_message(code));
         return 1;
     }
     memset(&mitkey, 0, sizeof(mitkey));
@@ -157,14 +170,14 @@ pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
     code = ka_AuthServerConn(realm, KA_MAINTENANCE_SERVICE, &token, &conn);
     if (code != 0) {
         snprintf(errstr, errstrlen, "ka_AuthServerConn failed: %s",
-                 error_message(code));
+                 afs_error_message(code));
         return 1;
     }
     ka_StringToKey(password, realm, &newkey);
     code = ka_ChangePassword(aname, inst, conn, 0, &newkey);
     if (code != 0) {
         snprintf(errstr, errstrlen, "ka_ChangePassword failed: %s",
-                 error_message(code));
+                 afs_error_message(code));
         memset(&newkey, 0, sizeof(newkey));
         ubik_ClientDestroy(conn);
         return 1;
