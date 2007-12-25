@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 1.2 (unreleased)
+krb5-sync 1.2 (2007-12-25)
 
     Don't call rx_Finalize after every synchronization with an AFS
     kaserver.  This isn't correct and leaks threads.  Only call
