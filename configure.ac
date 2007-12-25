@@ -5,7 +5,7 @@ dnl Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.
 dnl See LICENSE for licensing terms.
 
 AC_REVISION([$Revision$])
-AC_PREREQ([2.60])
+AC_PREREQ([2.61])
 AC_INIT([krb5-sync], [1.2], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.10 -Wall -Werror])
