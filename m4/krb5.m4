@@ -59,10 +59,13 @@ AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_err_txt], ,
-         [AC_CHECK_LIB([com_err], [com_err],
-             [KRB5_LIBS="$KRB5_LIBS -lcom_err"],
-             [AC_MSG_ERROR([cannot find usable com_err library])])
-          AC_CHECK_HEADERS([et/com_err.h])])])
+         [AC_CHECK_LIB([ksvc], [krb5_svc_get_msg],
+             [KRB5_LIBS="$KRB5_LIBS -lksvc"
+              AC_DEFINE([HAVE_KRB5_SVC_GET_MSG], [1])],
+             [AC_CHECK_LIB([com_err], [com_err],
+                 [KRB5_LIBS="$KRB5_LIBS -lcom_err"],
+                 [AC_MSG_ERROR([cannot find usable com_err library])])
+              AC_CHECK_HEADERS([et/com_err.h])])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl Does the appropriate library checks for Kerberos v5 linkage when we don't
@@ -75,19 +78,23 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
  AC_SEARCH_LIBS([crypt], [crypt], [rra_krb5_extra="-lcrypt $rra_krb5_extra"])
  AC_CHECK_LIB([krb5], [krb5_init_context],
     [KRB5_LIBS="-lkrb5 -lasn1 -lroken -lcrypto -lcom_err $rra_krb5_extra"],
-    [AC_CHECK_LIB([com_err], [error_message],
-        [rra_krb5_extra="-lcom_err $rra_krb5_extra"])
-     AC_CHECK_LIB([k5crypto], [krb5int_hash_md5],
-        [rra_krb5_extra="-lk5crypto $rra_krb5_extra"])
-     AC_CHECK_LIB([krb5support], [krb5int_getspecific],
-        [rra_krb5_extra="$rra_krb5_extra -lkrb5support"],
+    [AC_CHECK_LIB([krb5support], [krb5int_getspecific],
+        [rra_krb5_extra="-lkrb5support $rra_krb5_extra"],
         [AC_CHECK_LIB([pthreads], [pthread_setspecific],
             [rra_krb5_pthread="-lpthreads"],
             [AC_CHECK_LIB([pthread], [pthread_setspecific],
                 [rra_krb5_pthread="-lpthread"])])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
-            [rra_krb5_extra="$rra_krb5_extra -lkrb5support $rra_krb5_pthread"],
+            [rra_krb5_extra="-lkrb5support $rra_krb5_extra $rra_krb5_pthread"],
             [$rra_krb5_pthread])])
+     AC_CHECK_LIB([com_err], [error_message],
+        [rra_krb5_extra="-lcom_err $rra_krb5_extra"])
+     AC_CHECK_LIB([ksvc], [krb5_svc_get_msg],
+        [rra_krb5_extra="-lksvc $rra_krb5_extra"])
+     AC_CHECK_LIB([k5crypto], [krb5int_hash_md5],
+        [rra_krb5_extra="-lk5crypto $rra_krb5_extra"])
+     AC_CHECK_LIB([k5profile], [profile_get_values],
+        [rra_krb5_extra="-lk5profile $rra_krb5_extra"])
      AC_CHECK_LIB([krb5], [krb5_cc_default],
         [KRB5_LIBS="-lkrb5 $rra_krb5_extra"],
         [AC_MSG_ERROR([cannot find usable Kerberos v5 library])],
@@ -97,7 +104,8 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_err_txt], ,
-         [AC_CHECK_HEADERS([et/com_err.h])])])
+         [AC_CHECK_FUNCS([krb5_svc_get_msg], ,
+             [AC_CHECK_HEADERS([et/com_err.h])])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl The main macro.
@@ -138,7 +146,8 @@ AS_IF([test x"$rra_reduced_depends" = xtrue],
           AC_CHECK_FUNCS([krb5_get_error_message],
               [AC_CHECK_FUNCS([krb5_free_error_message])],
               [AC_CHECK_FUNCS([krb5_get_err_txt], ,
-                  [AC_CHECK_HEADERS([et/com_err.h])])])
+                  [AC_CHECK_FUNCS([krb5_svc_get_msg], ,
+                      [AC_CHECK_HEADERS([et/com_err.h])])])])
           RRA_LIB_KRB5_RESTORE],
          [_RRA_LIB_KRB5_PATHS
           _RRA_LIB_KRB5_MANUAL])])])
