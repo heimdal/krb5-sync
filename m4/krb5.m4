@@ -86,7 +86,7 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
             [AC_CHECK_LIB([pthread], [pthread_setspecific],
                 [rra_krb5_pthread="-lpthread"])])
          AC_CHECK_LIB([krb5support], [krb5int_setspecific],
-            [rra_krb5_extra="-lkrb5support $rra_krb5_pthread"],
+            [rra_krb5_extra="$rra_krb5_extra -lkrb5support $rra_krb5_pthread"],
             [$rra_krb5_pthread])])
      AC_CHECK_LIB([krb5], [krb5_cc_default],
         [KRB5_LIBS="-lkrb5 $rra_krb5_extra"],
