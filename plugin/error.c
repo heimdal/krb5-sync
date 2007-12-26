@@ -19,7 +19,9 @@
 
 #include <krb5.h>
 #if !defined(HAVE_KRB5_GET_ERROR_MESSAGE) && !defined(HAVE_KRB5_GET_ERR_TEXT)
-# ifdef HAVE_ET_COM_ERR_H
+# if defined(HAVE_IBM_SVC_KRB5_SVC_H)
+#  include <ibm_svc/krb5_svc.h>
+# elif defined(HAVE_ET_COM_ERR_H)
 #  include <et/com_err.h>
 # else
 #  include <com_err.h>

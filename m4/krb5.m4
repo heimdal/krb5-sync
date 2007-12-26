@@ -61,7 +61,8 @@ AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
      [AC_CHECK_FUNCS([krb5_get_err_txt], ,
          [AC_CHECK_LIB([ksvc], [krb5_svc_get_msg],
              [KRB5_LIBS="$KRB5_LIBS -lksvc"
-              AC_DEFINE([HAVE_KRB5_SVC_GET_MSG], [1])],
+              AC_DEFINE([HAVE_KRB5_SVC_GET_MSG], [1])
+              AC_CHECK_HEADERS([ibm_svc/krb5_svc.h])],
              [AC_CHECK_LIB([com_err], [com_err],
                  [KRB5_LIBS="$KRB5_LIBS -lcom_err"],
                  [AC_MSG_ERROR([cannot find usable com_err library])])
@@ -104,7 +105,8 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_err_txt], ,
-         [AC_CHECK_FUNCS([krb5_svc_get_msg], ,
+         [AC_CHECK_FUNCS([krb5_svc_get_msg],
+             [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h])],
              [AC_CHECK_HEADERS([et/com_err.h])])])])
  RRA_LIB_KRB5_RESTORE])
 
@@ -146,7 +148,8 @@ AS_IF([test x"$rra_reduced_depends" = xtrue],
           AC_CHECK_FUNCS([krb5_get_error_message],
               [AC_CHECK_FUNCS([krb5_free_error_message])],
               [AC_CHECK_FUNCS([krb5_get_err_txt], ,
-                  [AC_CHECK_FUNCS([krb5_svc_get_msg], ,
+                  [AC_CHECK_FUNCS([krb5_svc_get_msg],
+                      [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h])],
                       [AC_CHECK_HEADERS([et/com_err.h])])])])
           RRA_LIB_KRB5_RESTORE],
          [_RRA_LIB_KRB5_PATHS
