@@ -63,14 +63,17 @@ dnl have krb5-config or reduced dependencies.
 AC_DEFUN([_RRA_LIB_KRB4_MANUAL],
 [RRA_LIB_KRB4_SWITCH
  rra_krb4_extra=
- AC_SEARCH_LIBS([res_search], [resolv], [rra_krb4_extra=-lresolv],
-    [AC_SEARCH_LIBS([__res_search], [resolv], [rra_krb4_extra=-lresolv])])
- AC_SEARCH_LIBS([socket], [socket],
-    [rra_krb4_extra="-lsocket $rra_krb4_extra"],
+ LIBS=
+ AC_SEARCH_LIBS([res_search], [resolv], [rra_krb5_extra=-lresolv],
+    [AC_SEARCH_LIBS([__res_search], [resolv], [rra_krb5_extra=-lresolv])])
+ AC_SEARCH_LIBS([gethostbyname], [nsl])
+ AC_SEARCH_LIBS([socket], [socket], ,
     [AC_CHECK_LIB([nsl], [socket],
-        [rra_krb4_extra="-lnsl -lsocket $rra_krb4_extra"], ,
-        [-lsocket $rra_krb4_extra])])
- AC_SEARCH_LIBS([crypt], [crypt], [rra_krb4_extra="-lcrypt $rra_krb4_extra"])
+        [LIBS="-lnsl -lsocket $rra_krb5_extra"], ,
+            [-lsocket $rra_krb5_extra])])
+ AC_SEARCH_LIBS([crypt], [crypt])
+ rra_krb5_extra="$LIBS"
+ LIBS="$rra_krb5_save_LIBS"
  AC_CHECK_LIB([crypto], [des_set_key],
     [rra_krb4_extra="-lcrypto $rra_krb4_extra"],
     [AC_CHECK_LIB([des], [des_set_key],
@@ -114,7 +117,8 @@ AC_SUBST([KRB4_LIBS])
 AC_ARG_WITH([krb4],
     [AC_HELP_STRING([--with-krb4=DIR],
         [Location of Kerberos v4 headers and libraries])],
-    [AS_IF([test x"$withval" != xno], [rra_krb4_root="$withval"])])
+    [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
+        [rra_krb4_root="$withval"])])
 AS_IF([test x"$rra_reduced_depends" = xtrue],
     [_RRA_LIB_KRB4_PATHS
      _RRA_LIB_KRB4_REDUCED],
