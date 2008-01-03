@@ -65,6 +65,11 @@ AC_DEFUN([_RRA_LIB_KRB4_MANUAL],
  rra_krb4_extra=
  AC_SEARCH_LIBS([res_search], [resolv], [rra_krb4_extra=-lresolv],
     [AC_SEARCH_LIBS([__res_search], [resolv], [rra_krb4_extra=-lresolv])])
+ AC_SEARCH_LIBS([socket], [socket],
+    [rra_krb4_extra="-lsocket $rra_krb4_extra"],
+    [AC_CHECK_LIB([nsl], [socket],
+        [rra_krb4_extra="-lnsl -lsocket $rra_krb4_extra"], ,
+        [-lsocket $rra_krb4_extra])])
  AC_SEARCH_LIBS([crypt], [crypt], [rra_krb4_extra="-lcrypt $rra_krb4_extra"])
  AC_CHECK_LIB([crypto], [des_set_key],
     [rra_krb4_extra="-lcrypto $rra_krb4_extra"],

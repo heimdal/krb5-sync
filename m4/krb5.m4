@@ -76,6 +76,11 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
  rra_krb5_extra=
  AC_SEARCH_LIBS([res_search], [resolv], [rra_krb5_extra=-lresolv],
     [AC_SEARCH_LIBS([__res_search], [resolv], [rra_krb5_extra=-lresolv])])
+ AC_SEARCH_LIBS([socket], [socket],
+    [rra_krb5_extra="-lsocket $rra_krb5_extra"],
+    [AC_CHECK_LIB([nsl], [socket],
+        [rra_krb5_extra="-lnsl -lsocket $rra_krb5_extra"], ,
+        [-lsocket $rra_krb5_extra])])
  AC_SEARCH_LIBS([crypt], [crypt], [rra_krb5_extra="-lcrypt $rra_krb5_extra"])
  AC_CHECK_LIB([krb5], [krb5_init_context],
     [KRB5_LIBS="-lkrb5 -lasn1 -lroken -lcrypto -lcom_err $rra_krb5_extra"],
