@@ -1,7 +1,7 @@
 The krb5-sync package as a whole is:
 
-  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.
-  All rights reserved.
+  Copyright 2006, 2007, 2008 Board of Trustees, Leland Stanford Jr.
+  University.  All rights reserved.
 
 and covered under the following license:
 
@@ -27,7 +27,8 @@ files.
 
 Collected copyright notices for the entire package:
 
-  Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+  Copyright 2006, 2007, 2008
+      Board of Trustees, Leland Stanford Jr. University
   Copyright 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001, 2002,
       2003, 2004, 2005, 2006 Free Software Foundation, Inc.
   Copyright 1994 X Consortium

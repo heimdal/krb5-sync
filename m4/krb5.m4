@@ -15,7 +15,7 @@ dnl current values first; and RRA_LIB_KRB5_RESTORE to restore those settings
 dnl to before the last RRA_LIB_KRB5_SWITCH.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2005, 2006, 2007
+dnl Copyright 2005, 2006, 2007, 2008
 dnl     Board of Trustees, Leland Stanford Jr. University
 dnl See LICENSE for licensing terms.
 
