@@ -63,20 +63,18 @@ get_error(krb5_context ctx, krb5_error_code code)
 }
 
 /*
- * Free an error string if necessary.  krb5_free_error_message() is thankfully
- * safe to call on static strings; it only frees the pointer if it was a
- * pointer returned by krb5_get_error_message().
+ * Free an error string if necessary.
  */
 static void
 free_error(krb5_context ctx, const char *msg)
 {
     if (msg == error_unknown)
         return;
-# if defined(HAVE_KRB5_FREE_ERROR_MESSAGE)
+#if defined(HAVE_KRB5_FREE_ERROR_MESSAGE)
     krb5_free_error_message(ctx, msg);
-# elif defined(HAVE_KRB5_SVC_GET_MSG)
+#elif defined(HAVE_KRB5_SVC_GET_MSG)
     krb5_free_string((char *) msg);
-# endif
+#endif
 }
 
 /*
