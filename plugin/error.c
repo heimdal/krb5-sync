@@ -47,15 +47,15 @@ get_error(krb5_context ctx, krb5_error_code code)
 {
     const char *msg = NULL;
 
-# if defined(HAVE_KRB5_GET_ERROR_MESSAGE)
+#if defined(HAVE_KRB5_GET_ERROR_MESSAGE)
     msg = krb5_get_error_message(ctx, code);
-# elif defined(HAVE_KRB5_GET_ERR_TEXT)
+#elif defined(HAVE_KRB5_GET_ERR_TEXT)
     msg = krb5_get_err_text(ctx, code);
-# elif defined(HAVE_KRB5_SVC_GET_MSG)
+#elif defined(HAVE_KRB5_SVC_GET_MSG)
     krb5_svc_get_msg(code, &msg);
-# else
+#else
     msg = error_message(code);
-# endif
+#endif
     if (msg == NULL)
         return error_unknown;
     else
