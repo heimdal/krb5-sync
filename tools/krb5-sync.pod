@@ -71,6 +71,7 @@ The configuration block in F<krb5.conf> should look something like this:
         ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
         ad_realm        = WINDOWS.EXAMPLE.COM
         ad_admin_server = dc1.windows.example.com
+        ad_ldap_base    = ou=People
     }
 
 The afs_* configuration is only required if you want to synchronize
@@ -87,7 +88,9 @@ keytab for authenticating to the other realm, the *_principal options
 specify the principal to authenticate as (using the key in the srvtab or
 keytab), and the *_realm options specify the foreign realm.
 ad_admin_server is the host to contact via LDAP to push account status
-changes.
+changes.  ad_ldap_base specifies the base tree inside Active Directory
+where account information is stored.  Omit the trailing C<dc=> part; it
+will be added automatically from ad_realm.
 
 =head1 OPTIONS
 

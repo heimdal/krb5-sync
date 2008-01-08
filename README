@@ -200,20 +200,24 @@ CONFIGURATION
           ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
           ad_realm        = WINDOWS.EXAMPLE.COM
           ad_admin_server = dc1.windows.example.com
+          ad_ldap_base    = ou=People
           ad_instances    = root ipass
 
           queue_dir       = /var/spool/krb5-sync
       }
 
   The afs_* configuration is only required if you want to synchronize
-  passwords to an AFS kaserver.  Similarly, the ad_* configuration is only
-  required if you want to synchronize passwords or account status to
-  Active Directory.  The *_srvtab or *_keytab option specifies the
+  passwords to an AFS kaserver.  Similarly, the ad_* configuration is
+  only required if you want to synchronize passwords or account status
+  to Active Directory.  The *_srvtab or *_keytab option specifies the
   location of a srvtab or keytab for authenticating to the other realm,
   the *_principal options specify the principal to authenticate as (using
   the key in the srvtab or keytab), and the *_realm options specify the
-  foreign realm.  ad_admin_server is the host to contact via LDAP to push
-  account status changes.
+  foreign realm. ad_admin_server is the host to contact via LDAP to push
+  account status changes. ad_ldap_base specifies the base tree inside
+  Active Directory where account information is stored.  Omit the trailing
+  "dc=" part; it will be added automatically from ad_realm.  The default
+  is "dc=Accounts".
 
   The *_instances option specifies which instances have passwords and
   account status propagated to that environment.  By default, all

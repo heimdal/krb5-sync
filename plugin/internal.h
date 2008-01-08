@@ -35,6 +35,7 @@ struct plugin_config {
     char *ad_principal;
     char *ad_realm;
     char *ad_admin_server;
+    char *ad_ldap_base;
     char *ad_instances;
     char *queue_dir;
 };

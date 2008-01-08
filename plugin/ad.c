@@ -267,13 +267,18 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     }
 
     /*
-     * Convert the domain name to a DN; since we're always working in the
-     * Accounts tree, just start out with that.  This may be
-     * Stanford-specific; if so, we'll need to add the base DN as a
-     * configuration option.
+     * Convert the domain name to a DN.  The default is ou=Accounts, which
+     * is what Stanford uses, but the base DN prior to the dc portion for
+     * the realm can be changed with a configuration option.
      */
     memset(ldapbase, 0, sizeof(ldapbase));
-    strcpy(ldapbase, "ou=Accounts,dc=");
+    if (config->ad_ldap_base == NULL)
+        strcpy(ldapbase, "ou=Accounts,dc=");
+    else {
+        strncpy(ldapbase, config->ad_ldap_base, sizeof(ldapbase) - 5);
+        ldapbase[sizeof(ldapbase) - 5] = '\0';
+        strcat(ldapbase, ",dc=");
+    }
     lb = ldapbase + strlen(ldapbase);
     for (dname = config->ad_realm; *dname != '\0'; dname++) {
         if (*dname == '.') {

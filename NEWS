@@ -2,6 +2,9 @@
 
 krb5-sync 1.3 (unreleased)
 
+    Add an ad_ldap_base configuration option to specify the base DN for
+    Active Directory.  Patch from Andreas Johansson.
+
     For Kerberos libraries without krb5-config, also check for networking
     libraries (-lsocket and friends) before checking for Kerberos
     libraries in case shared library dependencies are broken.

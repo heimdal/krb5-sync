@@ -74,6 +74,7 @@ pwupdate_init(krb5_context ctx, void **data)
     config_string(ctx, "ad_principal", &config->ad_principal);
     config_string(ctx, "ad_realm", &config->ad_realm);
     config_string(ctx, "ad_admin_server", &config->ad_admin_server);
+    config_string(ctx, "ad_ldap_base", &config->ad_ldap_base);
     config_string(ctx, "ad_instances", &config->ad_instances);
     config_string(ctx, "queue_dir", &config->queue_dir);
     *data = config;
