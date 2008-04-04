@@ -4,7 +4,7 @@ our $ID = q$Id$;
 # krb5-sync-backend -- Manipulate K5 password and status change queue.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2007 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2007, 2008 Board of Trustees, Leland Stanford Jr. University
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted, provided
@@ -37,7 +37,8 @@ our $QUEUE  = '/var/spool/krb5-sync';
 
 # Regexes of error messages to ignore when running in silent mode.
 our @IGNORE =
-    (qr/^AD password change for \S+ failed \(3\):.*Authentication error$/,
+    (qr/^AD password change for \S+ failed \(1\):.*Connection timed out$/,
+     qr/^AD password change for \S+ failed \(3\):.*Authentication error$/,
      qr/^AD status change for \S+ failed \(1\): user .* not found in \S+$/);
 
 ##############################################################################
