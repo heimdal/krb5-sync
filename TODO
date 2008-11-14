@@ -1,5 +1,9 @@
                            krb5-sync To-Do List
 
+ * Fix the krb5-sync utility so that it doesn't unconditionally attempt
+   to sync passwords to Active Directory even when no Active Directory
+   configuration is present.
+
  * The base DN for finding users in Active Directory probably has to be
    configurable.
 
