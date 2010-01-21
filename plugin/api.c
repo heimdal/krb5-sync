@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * The public APIs of the password update kadmind plugin.
  *
  * Provides the public pwupdate_init, pwupdate_close,

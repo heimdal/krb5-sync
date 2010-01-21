@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-our $ID = q$Id$;
 #
 # krb5-sync-backend -- Manipulate K5 password and status change queue.
 #

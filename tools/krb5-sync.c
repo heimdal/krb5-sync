@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Command-line access to the krb5-sync kadmind plugin.
  *
  * This program provides command-line access to the functionality of the

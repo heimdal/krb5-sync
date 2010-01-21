@@ -1,5 +1,4 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id$
 dnl
 dnl Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University.
 dnl See LICENSE for licensing terms.

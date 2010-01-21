@@ -1,5 +1,4 @@
 dnl afs.m4 -- Find the compiler and linker flags for OpenAFS.
-dnl $Id$
 dnl
 dnl If --with-afs is given, finds the compiler and linker flags for building
 dnl with OpenAFS libraries; sets AFS_CPPFLAGS, AFS_LDFLAGS, and AFS_LIBS as

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Active Directory synchronization functions.
  *
  * Implements the interface that talks to Active Directory for both password

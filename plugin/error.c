@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Error reporting routines.
  *
  * Compatibility wrappers around the Kerberos error reporting routines that

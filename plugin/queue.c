@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Change queuing and queue checking.
  *
  * For some of the changes done by this plugin, we want to queue the change if

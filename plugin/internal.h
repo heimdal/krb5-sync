@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Internal prototypes and structures for the kadmind password update plugin.
  *
  * Written by Russ Allbery <rra@stanford.edu>

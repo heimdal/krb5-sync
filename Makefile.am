@@ -1,5 +1,4 @@
 # Makefile.am -- Automake makefile for krb5-sync.
-# $Id$
 #
 # Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
 # See LICENSE for licensing terms.

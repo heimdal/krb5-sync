@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * AFS kaserver synchronization functions.
  *
  * Implements the interface that talks to an AFS kaserver for password
