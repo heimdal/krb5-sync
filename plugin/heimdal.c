@@ -25,7 +25,7 @@
 
 #define KADM5_HOOK_VERSION_V0 0
 
-struct kadm5_hook {
+typedef struct kadm5_hook {
     const char *name;
     int version;
     const char *vendor;
@@ -40,7 +40,7 @@ struct kadm5_hook {
                               const char *password);
     krb5_error_code (*modify)(krb5_context, void *,
                               kadm5_principal_ent_t, uint32_t mask);
-};
+} kadm5_hook;
 
 
 /*
@@ -159,7 +159,7 @@ modify(krb5_context ctx, void *data, kadm5_principal_ent_t entry,
 
 
 /* The public symbol that Heimdal looks for. */
-struct kadm5_hook kadm5_hook = {
+struct kadm5_hook kadm5_hook_v0 = {
     "krb5-sync",
     KADM5_HOOK_VERSION_V0,
     "Russ Allbery",
