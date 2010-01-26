@@ -18,7 +18,7 @@ AC_PROG_LIBTOOL
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SET
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
-    krb5_principal_set_realm
+    krb5_principal_set_realm \
     krb5_xfree])
 RRA_LIB_AFS
 AS_IF([test x"$rra_afs" = xtrue],
