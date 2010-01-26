@@ -19,6 +19,7 @@
 #include <krb5.h>
 #include <ldap.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 
@@ -43,7 +44,7 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     krb5_keytab kt;
     krb5_creds creds;
     krb5_principal princ;
-    krb5_get_init_creds_opt opts;
+    krb5_get_init_creds_opt *opts;
     krb5_error_code ret;
 
     ret = krb5_kt_resolve(ctx, config->ad_keytab, &kt);
@@ -60,14 +61,39 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
                            config->ad_principal);
         return 1;
     }
-    krb5_get_init_creds_opt_init(&opts);
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    ret = krb5_get_init_creds_opt_alloc(ctx, &opts);
+    if (ret != 0) {
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "error allocating credential options");
+        return 1;
+    }
+#else
+    opts = calloc(1, sizeof(krb5_get_init_creds_opt));
+    if (opts == NULL) {
+        pwupdate_set_error(errstr, errstrlen, ctx, errno,
+                           "error allocating credential options");
+        return 1;
+    }
+    krb5_get_init_creds_opt_init(opts);
+#endif
     memset(&creds, 0, sizeof(creds));
-    ret = krb5_get_init_creds_keytab(ctx, &creds, princ, kt, 0, NULL, &opts);
+    ret = krb5_get_init_creds_keytab(ctx, &creds, princ, kt, 0, NULL, opts);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to get initial credentials");
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+        krb5_get_init_creds_opt_free(ctx, opts);
+#else
+        free(opts);
+#endif
         return 1;
     }
+#ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
+    krb5_get_init_creds_opt_free(ctx, opts);
+#else
+    free(opts);
+#endif
     ret = krb5_kt_close(ctx, kt);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
@@ -112,7 +138,11 @@ get_ad_principal(krb5_context ctx, const char *realm,
     ret = krb5_copy_principal(ctx, principal, ad_principal);
     if (ret != 0)
         return ret;
+#ifdef HAVE_KRB5_PRINCIPAL_SET_REALM
+    krb5_principal_set_realm(ctx, *ad_principal, realm);
+#else
     krb5_set_principal_realm(ctx, *ad_principal, realm);
+#endif
     return 0;
 }
 
@@ -174,9 +204,9 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (result_code != 0) {
         snprintf(errstr, errstrlen, "password change failed for %s in %s:"
                  " (%d) %.*s%s%.*s", target, config->ad_realm, result_code,
-                 result_code_string.length, result_code_string.data, 
-                 result_string.length ? ": " : "", 
-                 result_string.length, result_string.data); 
+                 result_code_string.length, (char *) result_code_string.data,
+                 result_string.length ? ": " : "",
+                 result_string.length, (char *) result_string.data);
         code = 3;
         goto done;
     }
@@ -187,7 +217,11 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
 
 done:
     if (target != NULL)
+#ifdef HAVE_KRB5_XFREE
+        krb5_xfree(target);
+#else
         krb5_free_unparsed_name(ctx, target);
+#endif
     krb5_cc_destroy(ctx, ccache);
     return code;
 }
