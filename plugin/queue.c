@@ -120,11 +120,19 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
     length = strlen(user) + strlen(domain) + strlen(operation) + 4;
     prefix = malloc(length);
     if (prefix == NULL) {
+#ifdef HAVE_KRB5_XFREE
+        krb5_xfree(user);
+#else
         krb5_free_unparsed_name(ctx, user);
+#endif
         return NULL;
     }
     snprintf(prefix, length, "%s-%s-%s-", user, domain, operation);
+#ifdef HAVE_KRB5_XFREE
+    krb5_xfree(user);
+#else
     krb5_free_unparsed_name(ctx, user);
+#endif
     return prefix;
 }
 
