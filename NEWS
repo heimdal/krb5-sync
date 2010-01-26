@@ -2,6 +2,8 @@
 
 krb5-sync 1.3 (unreleased)
 
+    Add plugin support for the proposed kadmin hooks for Heimdal.
+
     Add an ad_ldap_base configuration option to specify the base DN for
     Active Directory.  Patch from Andreas Johansson.
 

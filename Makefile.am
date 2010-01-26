@@ -1,6 +1,8 @@
-# Makefile.am -- Automake makefile for krb5-sync.
+# Automake makefile for krb5-sync.
 #
-# Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+# Written by Russ Allbery <rra@stanford.edu>
+# Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+#
 # See LICENSE for licensing terms.
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
@@ -21,7 +23,7 @@ moduledir = $(libdir)/kadmind
 module_LTLIBRARIES = plugin/passwd_update.la
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
-	plugin/internal.h plugin/queue.c
+	plugin/internal.h plugin/heimdal.c plugin/queue.c
 if AFS
     plugin_passwd_update_la_SOURCES += plugin/afs.c
 endif
