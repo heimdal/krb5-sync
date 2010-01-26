@@ -43,22 +43,22 @@ struct plugin_config {
 int pwupdate_init(krb5_context ctx, void **data);
 void pwupdate_close(void *data);
 int pwupdate_precommit_password(void *data, krb5_principal principal,
-                                char *password, int pwlen,
+                                const char *password, int pwlen,
 				char *errstr, int errstrlen);
 int pwupdate_postcommit_password(void *data, krb5_principal principal,
-                                 char *password, int pwlen,
+                                 const char *password, int pwlen,
 				 char *errstr, int errstrlen);
 int pwupdate_postcommit_status(void *data, krb5_principal principal,
                                int enabled, char *errstr, int errstrlen);
 
 /* Password changing. */
 int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
-                       krb5_principal principal, char *password, int pwlen,
-                       char *errstr, int errstrlen);
+                       krb5_principal principal, const char *password,
+                       int pwlen, char *errstr, int errstrlen);
 #ifdef HAVE_AFS
 int pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
-                        krb5_principal principal, char *password, int pwlen,
-                        char *errstr, int errstrlen);
+                        krb5_principal principal, const char *password,
+                        int pwlen, char *errstr, int errstrlen);
 #endif
 
 /* Account status update. */

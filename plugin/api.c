@@ -218,7 +218,7 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  */
 int
 pwupdate_precommit_password(void *data, krb5_principal principal,
-                            char *password, int pwlen,
+                            const char *password, int pwlen,
                             char *errstr, int errstrlen)
 {
     struct plugin_config *config = data;
@@ -268,7 +268,7 @@ queue:
  */
 #ifdef HAVE_AFS
 int pwupdate_postcommit_password(void *data, krb5_principal principal,
-                                 char *password, int pwlen,
+                                 const char *password, int pwlen,
 				 char *errstr, int errstrlen)
 {
     struct plugin_config *config = data;
@@ -309,7 +309,7 @@ queue:
 #else /* !HAVE_AFS */
 int pwupdate_postcommit_password(void *data UNUSED,
                                  krb5_principal principal UNUSED,
-                                 char *password UNUSED, int pwlen UNUSED,
+                                 const char *password UNUSED, int pwlen UNUSED,
 				 char *errstr UNUSED, int errstrlen UNUSED)
 {
     return 0;

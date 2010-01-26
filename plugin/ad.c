@@ -11,6 +11,9 @@
  * See LICENSE for licensing terms.
  */
 
+/* Need to determine why this is deprecated. */
+#define LDAP_DEPRECATED 1
+
 #include <com_err.h>
 #include <errno.h>
 #include <krb5.h>
@@ -125,7 +128,7 @@ get_ad_principal(krb5_context ctx, const char *realm,
  */
 int
 pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
-                   krb5_principal principal, char *password,
+                   krb5_principal principal, const char *password,
                    int pwlen UNUSED, char *errstr, int errstrlen)
 {
     krb5_error_code ret;
@@ -157,9 +160,9 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     }
 
     /* Do the actual password change. */
-    ret = krb5_set_password_using_ccache(ctx, ccache, password, ad_principal,
-                                         &result_code, &result_code_string,
-                                         &result_string);
+    ret = krb5_set_password_using_ccache(ctx, ccache, (char *) password,
+                                         ad_principal, &result_code,
+                                         &result_code_string, &result_string);
     krb5_free_principal(ctx, ad_principal);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
