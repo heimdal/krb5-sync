@@ -28,6 +28,14 @@
 #include <plugin/internal.h>
 
 /*
+ * The code below was written to the Heimdal API.  Adjust to MIT Kerberos if
+ * necessary.
+ */
+#ifndef HAVE_KRB5_PRINCIPAL_GET_NUM_COMP
+# define krb5_principal_get_num_comp(c, p) krb5_princ_size((c), (p))
+#endif
+
+/*
  * Load a string option from Kerberos appdefaults, setting the default to NULL
  * if the setting was not found.  This requires an annoying workaround because
  * one cannot specify a default value of NULL.
@@ -136,15 +144,15 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
  * otherwise.
  */
 static int
-instance_allowed(const char *allowed, const krb5_data *instance)
+instance_allowed(const char *allowed, const char *instance, size_t length)
 {
     const char *p, *i, *end;
     int checking, okay;
 
     if (allowed == NULL || instance == NULL)
         return 0;
-    i = instance->data;
-    end = i + instance->length;
+    i = instance;
+    end = i + length;
     checking = 1;
     okay = 0;
     for (p = allowed; *p != '\0'; p++) {
@@ -153,11 +161,11 @@ instance_allowed(const char *allowed, const krb5_data *instance)
                 break;
             okay = 0;
             checking = 1;
-            i = instance->data;
+            i = instance;
         } else if (checking && (i == end || *p != *i)) {
             okay = 0;
             checking = 0;
-            i = instance->data;
+            i = instance;
         } else if (checking && *p == *i) {
             okay = 1;
             i++;
@@ -180,15 +188,27 @@ static int
 principal_allowed(struct plugin_config *config, krb5_context ctx,
                   krb5_principal principal, int ad)
 {
-    if (krb5_princ_size(ctx, principal) > 1) {
+    if (krb5_principal_get_num_comp(ctx, principal) > 1) {
         char *display;
         krb5_error_code ret;
-        const krb5_data *instance;
+        const char *instance;
+        size_t instlen;
+#ifndef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
+        const krb5_data *instdata;
+#endif
 
-        instance = krb5_princ_component(ctx, principal, 1);
-        if (ad && instance_allowed(config->ad_instances, instance))
+#ifdef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
+        instance = krb5_principal_get_comp_string(ctx, principal, 1);
+        instlen = strlen(instance);
+#else
+        instdata = krb5_princ_component(ctx, principal, 1);
+        instance = instdata->data;
+        instlen = instdata->length;
+#endif
+        if (ad && instance_allowed(config->ad_instances, instance, instlen))
             return 1;
-        else if (!ad && instance_allowed(config->afs_instances, instance))
+        else if (!ad && instance_allowed(config->afs_instances, instance,
+                                         instlen))
             return 1;
         ret = krb5_unparse_name(ctx, principal, &display);
         if (ret != 0)
