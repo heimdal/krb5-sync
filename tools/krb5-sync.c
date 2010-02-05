@@ -23,6 +23,7 @@
 #include <syslog.h>
 
 #include <plugin/internal.h>
+#include <util/messages-krb5.h>
 #include <util/messages.h>
 
 
@@ -113,11 +114,8 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     read_line(queue, filename, buffer, sizeof(buffer));
     user = strdup(buffer);
     ret = krb5_parse_name(ctx, buffer, &principal);
-    if (ret != 0) {
-        fprintf(stderr, "Cannot parse user %s into principal: %s\n", buffer,
-                error_message(ret));
-        exit(1);
-    }
+    if (ret != 0)
+        die_krb5(ctx, ret, "cannot parse user %s into principal", buffer);
 
     /* Get function. */
     read_line(queue, filename, buffer, sizeof(buffer));
@@ -212,11 +210,8 @@ main(int argc, char *argv[])
 
     /* Create a Kerberos context for plugin initialization. */
     ret = krb5_init_context(&ctx);
-    if (ret != 0) {
-        fprintf(stderr, "Cannot initialize Kerberos context: %s\n",
-                krb5_get_error_message(ctx, ret));
-        exit(1);
-    }
+    if (ret != 0)
+        die_krb5(ctx, ret, "cannot initialize Kerberos context");
 
     /* Initialize the plugin. */
     if (pwupdate_init(ctx, &data))
@@ -227,11 +222,8 @@ main(int argc, char *argv[])
         process_queue_file(data, ctx, filename);
     else {
         ret = krb5_parse_name(ctx, user, &principal);
-        if (ret != 0) {
-            fprintf(stderr, "Cannot parse user %s into principal: %s", user,
-                    krb5_get_error_message(ctx, ret));
-            exit(1);
-        }
+        if (ret != 0)
+            die_krb5(ctx, ret, "cannot parse user %s into principal", user);
         if (password != NULL)
             ad_password(data, ctx, principal, password, user);
         if (enable || disable)

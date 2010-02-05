@@ -18,9 +18,10 @@ portable_libportable_la_SOURCES = portable/dummy.c portable/krb5-extra.c \
 	portable/system.h
 portable_libportable_la_LDFLAGS = $(KRB5_LDFLAGS)
 portable_libportable_la_LIBADD = $(LTLIBOBJS) $(KRB5_LIBS)
-util_libutil_la_SOURCES = util/macros.h util/messages.c util/messages.h	\
-        util/xmalloc.c util/xmalloc.h
-util_libutil_la_LIBADD = portable/libportable.la
+util_libutil_la_SOURCES = util/macros.h util/messages-krb5.c		    \
+        util/messages-krb5.h util/messages.c util/messages.h util/xmalloc.c \
+        util/xmalloc.h
+util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
 # Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
 moduledir = $(libdir)/kadmind
