@@ -7,9 +7,13 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *
  * See LICENSE for licensing terms.
  */
+
+#include <config.h>
+#include <portable/system.h>
 
 /* Need to determine why this is deprecated. */
 #define LDAP_DEPRECATED 1
@@ -18,9 +22,6 @@
 #include <errno.h>
 #include <krb5.h>
 #include <ldap.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <syslog.h>
 
 #include <plugin/internal.h>

@@ -12,12 +12,13 @@
  * See LICENSE for licensing terms.
  */
 
+#include <config.h>
+#include <portable/system.h>
+
 #include <errno.h>
 #include <kadm5/admin.h>
 #include <kadm5/kadm5_err.h>
 #include <krb5.h>
-#include <stdio.h>
-#include <string.h>
 
 #include <plugin/internal.h>
 

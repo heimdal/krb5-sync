@@ -9,20 +9,19 @@
  * undone.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *
  * See LICENSE for licensing terms.
  */
+
+#include <config.h>
+#include <portable/system.h>
 
 #include <dirent.h>
 #include <fcntl.h>
 #include <krb5.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/file.h>
-#include <sys/types.h>
 #include <time.h>
-#include <unistd.h>
 
 #include <plugin/internal.h>
 
