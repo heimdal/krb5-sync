@@ -44,11 +44,6 @@ RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit])
 AC_REPLACE_FUNCS([asprintf strlcat strlcpy])
 
-# Crank up the warnings if we're using GCC.
-if test "x$GCC" = "xyes" ; then
-   CFLAGS="-Wall $CFLAGS"
-fi
-
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADER([config.h])
 AC_OUTPUT
