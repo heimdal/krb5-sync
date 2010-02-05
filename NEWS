@@ -17,6 +17,9 @@ krb5-sync 2.0 (unreleased)
     Ignore connection timeouts from AD when running the queue with
     krb5-sync-backend in silent mode.
 
+    Enable Automake silent rules.  For a quieter build, pass the
+    --enable-silent-rules option to configure or build with make V=0.
+
 krb5-sync 1.2 (2007-12-25)
 
     Don't call rx_Finalize after every synchronization with an AFS

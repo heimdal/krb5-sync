@@ -97,7 +97,7 @@ REQUIREMENTS
   updates, you will also need to know the server to which to do LDAP
   queries (generally, this is one of the Domain Controllers).
 
-COMPILING AND INSTALLING
+INSTALLATION
 
   First, patch MIT Kerberos or Heimdal with the patch provided in the
   patches directory and install the new libkadm5srv library.  See
@@ -112,10 +112,16 @@ COMPILING AND INSTALLING
       make
       make install
 
-  The last step will probably have to be done as root.  By default, the
-  plugin is installed as /usr/local/lib/kadmind/passwd_update.so and the
-  utilities are installed in /usr/local/sbin.  You can change those paths
-  with the --prefix, --libdir, and --sbindir options to configure.
+  Pass --enable-silent-rules to configure for a quieter build (similar to
+  the Linux kernel).  Use make warnings instead of make to build with full
+  GCC compiler warnings (requires a relatively current version of GCC).
+
+  The plugin is installed as /usr/local/lib/kadmind/passwd_update.so by
+  default, and the utilities are installed in /usr/local/sbin.  The last
+  step will probably have to be done as root.  To install in a different
+  location, specify the location with the --prefix option to configure.
+  Alternately, --libdir, --sbindir, and --mandir can be given to change
+  the installation locations of the binaries and manual pages separately.
 
   If /usr/bin/perl is not the path to Perl on your system, you will need
   to change the first line of krb5-sync-backend.  You will also need to
