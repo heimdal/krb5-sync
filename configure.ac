@@ -22,12 +22,15 @@ AM_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
 RRA_LIB_KRB5
-RRA_LIB_KRB5_SET
+RRA_LIB_KRB5_SWITCH
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
+    krb5_get_init_creds_opt_set_default_flags \
     krb5_principal_get_comp_string \
     krb5_principal_get_num_comp \
+    krb5_principal_get_realm \
     krb5_principal_set_realm \
     krb5_xfree])
+RRA_LIB_KRB5_RESTORE
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
 AC_HEADER_STDBOOL

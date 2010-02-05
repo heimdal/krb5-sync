@@ -15,11 +15,11 @@
  */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
 #include <dirent.h>
 #include <fcntl.h>
-#include <krb5.h>
 #include <sys/file.h>
 #include <time.h>
 

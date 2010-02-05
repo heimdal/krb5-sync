@@ -10,20 +10,24 @@ ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = LICENSE autogen patches/README patches/mit-krb5-1.4.4	\
 	patches/stanford-krb5-1.4.4 tools/krb5-sync.pod
 
+AM_CPPFLAGS = $(KRB5_CPPFLAGS)
+
 noinst_LTLIBRARIES = portable/libportable.la
-portable_libportable_la_SOURCES = portable/dummy.c portable/macros.h	\
-	portable/stdbool.h portable/system.h
-portable_libportable_la_LIBADD = $(LTLIBOBJS)
+portable_libportable_la_SOURCES = portable/dummy.c portable/krb5-extra.c \
+	portable/krb5.h portable/macros.h portable/stdbool.h		 \
+	portable/system.h
+portable_libportable_la_LDFLAGS = $(KRB5_LDFLAGS)
+portable_libportable_la_LIBADD = $(LTLIBOBJS) $(KRB5_LIBS)
 
 # Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
 moduledir = $(libdir)/kadmind
 
 # Rules for building the password synchronization plugin.
 module_LTLIBRARIES = plugin/passwd_update.la
-plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/queue.c
-plugin_passwd_update_la_LIBADD = portable/libportable.la
+plugin_passwd_update_la_LDFLAGS = -module -avoid-version $(KRB5_LDFLAGS)
+plugin_passwd_update_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
 # Rules for building the krb5-sync utility.  We specify the CFLAGS to work
 # around Automake's inability to link libtool objects into a program that
@@ -33,7 +37,8 @@ plugin_passwd_update_la_LIBADD = portable/libportable.la
 sbin_PROGRAMS = tools/krb5-sync
 tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
 tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
-tools_krb5_sync_LDADD = portable/libportable.la
+tools_krb5_sync_LDFLAGS = $(KRB5_LDFLAGS)
+tools_krb5_sync_LDADD = portable/libportable.la $(KRB5_LIBS)
 
 # Rules for the krb5-sync-backend script.
 dist_sbin_SCRIPTS = tools/krb5-sync-backend

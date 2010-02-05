@@ -16,11 +16,10 @@
  */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
-#include <com_err.h>
 #include <errno.h>
-#include <krb5.h>
 #include <syslog.h>
 
 #include <plugin/internal.h>
@@ -246,7 +245,7 @@ main(int argc, char *argv[])
     ret = krb5_init_context(&ctx);
     if (ret != 0) {
         fprintf(stderr, "Cannot initialize Kerberos context: %s\n",
-                error_message(ret));
+                krb5_get_error_message(ctx, ret));
         exit(1);
     }
 
@@ -263,7 +262,7 @@ main(int argc, char *argv[])
         ret = krb5_parse_name(ctx, user, &principal);
         if (ret != 0) {
             fprintf(stderr, "Cannot parse user %s into principal: %s", user,
-                    error_message(ret));
+                    krb5_get_error_message(ctx, ret));
             exit(1);
         }
         if (password != NULL)

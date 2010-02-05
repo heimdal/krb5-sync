@@ -19,22 +19,13 @@
  */
 
 #include <config.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
-#include <com_err.h>
 #include <errno.h>
-#include <krb5.h>
 #include <syslog.h>
 
 #include <plugin/internal.h>
-
-/*
- * The code below was written to the Heimdal API.  Adjust to MIT Kerberos if
- * necessary.
- */
-#ifndef HAVE_KRB5_PRINCIPAL_GET_NUM_COMP
-# define krb5_principal_get_num_comp(c, p) krb5_princ_size((c), (p))
-#endif
 
 
 /*
@@ -130,7 +121,7 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
  * otherwise.
  */
 static int
-instance_allowed(const char *allowed, const char *instance, size_t length)
+instance_allowed(const char *allowed, const char *instance)
 {
     const char *p, *i, *end;
     int checking, okay;
@@ -138,7 +129,7 @@ instance_allowed(const char *allowed, const char *instance, size_t length)
     if (allowed == NULL || instance == NULL)
         return 0;
     i = instance;
-    end = i + length;
+    end = i + strlen(instance);
     checking = 1;
     okay = 0;
     for (p = allowed; *p != '\0'; p++) {
@@ -179,20 +170,9 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
         char *display;
         krb5_error_code ret;
         const char *instance;
-        size_t instlen;
-#ifndef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
-        const krb5_data *instdata;
-#endif
 
-#ifdef HAVE_KRB5_PRINCIPAL_GET_COMP_STRING
         instance = krb5_principal_get_comp_string(ctx, principal, 1);
-        instlen = strlen(instance);
-#else
-        instdata = krb5_princ_component(ctx, principal, 1);
-        instance = instdata->data;
-        instlen = instdata->length;
-#endif
-        if (ad && instance_allowed(config->ad_instances, instance, instlen))
+        if (ad && instance_allowed(config->ad_instances, instance))
             return 1;
         ret = krb5_unparse_name(ctx, principal, &display);
         if (ret != 0)
