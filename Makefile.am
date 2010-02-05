@@ -7,9 +7,8 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = LICENSE autogen patches/README patches/mit-krb5-1.4.4	  \
-	patches/stanford-krb5-1.4.4 tools/krb5-sync.8 tools/krb5-sync.pod \
-	tools/krb5-sync-backend.8
+EXTRA_DIST = LICENSE autogen patches/README patches/mit-krb5-1.4.4	\
+	patches/stanford-krb5-1.4.4 tools/krb5-sync.pod
 
 noinst_LTLIBRARIES = portable/libportable.la
 portable_libportable_la_SOURCES = portable/dummy.c portable/macros.h	\
@@ -40,20 +39,12 @@ tools_krb5_sync_LDADD = portable/libportable.la
 dist_sbin_SCRIPTS = tools/krb5-sync-backend
 
 # Rules for man pages.
-man_MANS = tools/krb5-sync.8 tools/krb5-sync-backend.8
+dist_man_MANS = tools/krb5-sync.8 tools/krb5-sync-backend.8
 
 # Handle the standard stuff that make maintainer-clean should probably remove
 # but doesn't.
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
 	configure tools/krb5-sync.8
-
-$(srcdir)/tools/krb5-sync.8: $(srcdir)/tools/krb5-sync.pod
-	pod2man --release=$(VERSION) --center="Administrative Commands" \
-	    --section=8 $(srcdir)/tools/krb5-sync.pod > $@
-
-$(srcdir)/tools/krb5-sync-backend.8: $(srcdir)/tools/krb5-sync-backend
-	pod2man --release=$(VERSION) --center="Administrative Commands" \
-	    --section=8 $(srcdir)/tools/krb5-sync-backend > $@
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on, and add -DDEBUG=1 so we'll also compile all
