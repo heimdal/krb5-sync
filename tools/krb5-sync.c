@@ -23,6 +23,7 @@
 #include <syslog.h>
 
 #include <plugin/internal.h>
+#include <util/messages.h>
 
 
 /*
@@ -38,12 +39,9 @@ ad_password(void *data, krb5_context ctx, krb5_principal principal,
 
     status = pwupdate_ad_change(data, ctx, principal, password,
                                 strlen(password), errbuf, sizeof(errbuf));
-    if (status != 0) {
-        fprintf(stderr, "AD password change for %s failed (%d): %s\n", user,
-                status, errbuf);
-        exit(1);
-    }
-    printf("AD password change for %s succeeded\n", user);
+    if (status != 0)
+        die("AD password change for %s failed (%d): %s", user, status, errbuf);
+    notice("AD password change for %s succeeded", user);
 }
 
 
@@ -60,12 +58,9 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
 
     status = pwupdate_ad_status(data, ctx, principal, enable, errbuf,
                                 sizeof(errbuf));
-    if (status != 0) {
-        fprintf(stderr, "AD status change for %s failed (%d): %s\n", user,
-                status, errbuf);
-        exit(1);
-    }
-    printf("AD status change for %s succeeded\n", user);
+    if (status != 0)
+        die("AD status change for %s failed (%d): %s", user, status, errbuf);
+    notice("AD status change for %s succeeded\n", user);
 }
 
 
@@ -76,15 +71,10 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
 static void
 read_line(FILE *file, const char *filename, char *buffer, size_t bufsiz)
 {
-    if (fgets(buffer, bufsiz, file) == NULL) {
-        fprintf(stderr, "Cannot read from queue file %s: %s\n", filename,
-                strerror(errno));
-        exit(1);
-    }
-    if (buffer[strlen(buffer) - 1] != '\n') {
-        fprintf(stderr, "Line too long in queue file %s\n", filename);
-        exit(1);
-    }
+    if (fgets(buffer, bufsiz, file) == NULL)
+        sysdie("cannot read from queue file %s", filename);
+    if (buffer[strlen(buffer) - 1] != '\n')
+        die("line too long in queue file %s", filename);
     buffer[strlen(buffer) - 1] = '\0';
 }
 
@@ -116,11 +106,8 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     int password = 0;
 
     queue = fopen(filename, "r");
-    if (queue == NULL) {
-        fprintf(stderr, "Cannot open queue file %s: %s\n", filename,
-                strerror(errno));
-        exit(1);
-    }
+    if (queue == NULL)
+        sysdie("cannot open queue file %s", filename);
 
     /* Get user and convert into a principal. */
     read_line(queue, filename, buffer, sizeof(buffer));
@@ -136,11 +123,8 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     read_line(queue, filename, buffer, sizeof(buffer));
     if (strcmp(buffer, "ad") == 0)
         ad = 1;
-    else {
-        fprintf(stderr, "Unknown target system %s in queue file %s\n",
-                buffer, filename);
-        exit(1);
-    }
+    else
+        die("unknown target system %s in queue file %s", buffer, filename);
     read_line(queue, filename, buffer, sizeof(buffer));
     if (strcmp(buffer, "enable") == 0)
         enable = 1;
@@ -148,11 +132,8 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
         disable = 1;
     else if (strcmp(buffer, "password") == 0)
         password = 1;
-    else {
-        fprintf(stderr, "Unknown action %s in queue file %s\n", buffer,
-                filename);
-        exit(1);
-    }
+    else
+        die("unknown action %s in queue file %s", buffer, filename);
 
     /* Perform the appropriate action. */
     if (password) {
@@ -165,11 +146,8 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
 
     /* If we got here, we were successful.  Close the file and delete it. */
     fclose(queue);
-    if (unlink(filename) != 0) {
-        fprintf(stderr, "Unable to unlink queue file %s: %s\n", filename,
-                strerror(errno));
-        exit(1);
-    }
+    if (unlink(filename) != 0)
+        sysdie("unable to unlink queue file %s", filename);
     free(user);
 }
 
@@ -193,21 +171,14 @@ main(int argc, char *argv[])
      * logs from kadmind for easier log analysis.
      */
     openlog("krb5-sync", LOG_PID, LOG_AUTH);
+    message_program_name = "krb5-sync";
 
     while ((option = getopt(argc, argv, "def:p:")) != EOF) {
         switch (option) {
         case 'd':
-            if (enable) {
-                fprintf(stderr, "Cannot specify both -d and -e\n");
-                exit(1);
-            }
             disable = 1;
             break;
         case 'e':
-            if (disable) {
-                fprintf(stderr, "Cannot specify both -d and -e\n");
-                exit(1);
-            }
             enable = 1;
             break;
         case 'f':
@@ -232,14 +203,12 @@ main(int argc, char *argv[])
         exit(1);
     }
     user = argv[0];
-    if (!enable && !disable && password == NULL && filename == NULL) {
-        fprintf(stderr, "No action specified\n");
-        exit(1);
-    }
-    if (filename != NULL && (enable || disable || password != NULL)) {
-        fprintf(stderr, "Must specify queue file or action, not both\n");
-        exit(1);
-    }
+    if (enable && disable)
+        die("cannot specify both -d and -e");
+    if (!enable && !disable && password == NULL && filename == NULL)
+        die("no action specified");
+    if (filename != NULL && (enable || disable || password != NULL))
+        die("must specify queue file or action, not both");
 
     /* Create a Kerberos context for plugin initialization. */
     ret = krb5_init_context(&ctx);
@@ -250,10 +219,8 @@ main(int argc, char *argv[])
     }
 
     /* Initialize the plugin. */
-    if (pwupdate_init(ctx, &data)) {
-        fprintf(stderr, "Plugin initialization failed\n");
-        exit(1);
-    }
+    if (pwupdate_init(ctx, &data))
+        die("plugin initialization failed");
 
     /* Now, do whatever we were supposed to do. */
     if (filename != NULL)

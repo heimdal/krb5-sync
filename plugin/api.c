@@ -26,6 +26,7 @@
 #include <syslog.h>
 
 #include <plugin/internal.h>
+#include <util/macros.h>
 
 
 /*

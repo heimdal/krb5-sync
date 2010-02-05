@@ -12,12 +12,15 @@ EXTRA_DIST = LICENSE autogen patches/README patches/mit-krb5-1.4.4	\
 
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
 
-noinst_LTLIBRARIES = portable/libportable.la
+noinst_LTLIBRARIES = portable/libportable.la util/libutil.la
 portable_libportable_la_SOURCES = portable/dummy.c portable/krb5-extra.c \
 	portable/krb5.h portable/macros.h portable/stdbool.h		 \
 	portable/system.h
 portable_libportable_la_LDFLAGS = $(KRB5_LDFLAGS)
 portable_libportable_la_LIBADD = $(LTLIBOBJS) $(KRB5_LIBS)
+util_libutil_la_SOURCES = util/macros.h util/messages.c util/messages.h	\
+        util/xmalloc.c util/xmalloc.h
+util_libutil_la_LIBADD = portable/libportable.la
 
 # Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
 moduledir = $(libdir)/kadmind
@@ -38,7 +41,7 @@ sbin_PROGRAMS = tools/krb5-sync
 tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
 tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
 tools_krb5_sync_LDFLAGS = $(KRB5_LDFLAGS)
-tools_krb5_sync_LDADD = portable/libportable.la $(KRB5_LIBS)
+tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la $(KRB5_LIBS)
 
 # Rules for the krb5-sync-backend script.
 dist_sbin_SCRIPTS = tools/krb5-sync-backend

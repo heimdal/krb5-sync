@@ -21,9 +21,7 @@
 #include <krb5.h>
 
 #include <plugin/internal.h>
-
-/* Used for unused parameters to silence gcc warnings. */
-#define UNUSED  __attribute__((__unused__))
+#include <util/macros.h>
 
 #define KADM5_HOOK_VERSION_V0 0
 

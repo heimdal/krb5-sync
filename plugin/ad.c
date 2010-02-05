@@ -24,6 +24,7 @@
 #include <syslog.h>
 
 #include <plugin/internal.h>
+#include <util/macros.h>
 
 /* The memory cache name used to store credentials for AD. */
 #define CACHE_NAME "MEMORY:krb5_sync"

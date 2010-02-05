@@ -34,8 +34,10 @@ RRA_LIB_KRB5_RESTORE
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([sys/bittypes.h])
+AC_CHECK_HEADERS([sys/bittypes.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
+RRA_C_C99_VAMACROS
+RRA_C_GNU_VAMACROS
 AC_TYPE_LONG_LONG_INT
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit])
