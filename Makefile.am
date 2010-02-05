@@ -24,9 +24,6 @@ module_LTLIBRARIES = plugin/passwd_update.la
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version
 plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/queue.c
-if AFS
-    plugin_passwd_update_la_SOURCES += plugin/afs.c
-endif
 plugin_passwd_update_la_LIBADD = portable/libportable.la
 
 # Rules for building the krb5-sync utility.  We specify the CFLAGS to work

@@ -28,10 +28,6 @@
  * the first argument to the other calls.
  */
 struct plugin_config {
-    char *afs_srvtab;
-    char *afs_principal;
-    char *afs_realm;
-    char *afs_instances;
     char *ad_keytab;
     char *ad_principal;
     char *ad_realm;
@@ -57,11 +53,6 @@ int pwupdate_postcommit_status(void *data, krb5_principal principal,
 int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
                        krb5_principal principal, const char *password,
                        int pwlen, char *errstr, int errstrlen);
-#ifdef HAVE_AFS
-int pwupdate_afs_change(struct plugin_config *config, krb5_context ctx,
-                        krb5_principal principal, const char *password,
-                        int pwlen, char *errstr, int errstrlen);
-#endif
 
 /* Account status update. */
 int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
@@ -75,11 +66,6 @@ int pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,
 int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
                          krb5_principal principal, const char *domain,
                          const char *operation, const char *password);
-
-/* Shutdown. */
-#ifdef HAVE_AFS
-void pwupdate_afs_close(void);
-#endif
 
 /* Error handling. */
 void pwupdate_set_error(char *, size_t, krb5_context, krb5_error_code,

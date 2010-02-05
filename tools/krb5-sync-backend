@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 #
-# krb5-sync-backend -- Manipulate K5 password and status change queue.
+# krb5-sync-backend -- Manipulate Kerberos password and status change queue.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2007, 2008 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2007, 2008, 2010 Board of Trustees, Leland Stanford Jr. University
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted, provided
@@ -253,7 +253,6 @@ Kerberos status synchronization help:
   sync help                             This text
   sync list                             List pending queued actions
   sync password <user> ad <password>    Queue <user> password change in AD
-  sync password <user> afs <password>   Queue <user> password change in AFS K4
   sync process                          Process pending queued actions
   sync purge <days>                     Delete queued actions older than <days>
 EOH
@@ -279,7 +278,7 @@ EOH
 
 =head1 NAME
 
-krb5-sync-backend - Manipulate K5 password and status change queue
+krb5-sync-backend - Manipulate Kerberos password and status change queue
 
 =head1 SYNOPSIS
 
@@ -291,30 +290,31 @@ B<krb5-sync-backend> (help|list)
 
 B<krb5-sync-backend> [B<-s>] process
 
-B<krb5-sync-backend> password I<user> (ad|afs) I<password>
+B<krb5-sync-backend> password I<user> ad I<password>
 
 B<krb5-sync-backend> purge I<days>
 
 =head1 DESCRIPTION
 
-B<krb5-sync-backend> provides an interface to the queue of pending password
-and account status changes written by either this utility or by the
-synchronization plugin after failures.  It can queue account enables,
-disables, or password changes for either the AFS kaserver or AD, list the
-queued actions, or process the queued actions with B<krb5-sync> (telling it
-to take its action from a file).
+B<krb5-sync-backend> provides an interface to the queue of pending
+password and account status changes written by either this utility or by
+the synchronization plugin after failures.  It can queue account enables,
+disables, or password changes for Active Directory, list the queued
+actions, or process the queued actions with B<krb5-sync> (telling it to
+take its action from a file).
 
 The queue directory will contain files with names in the format:
 
     <username>-<domain>-<action>-<timestamp>-<count>
 
-where <username> is the name of the affected account (C</> will be replaced
-with C<.> in the file name and the realm will be removed), <domain> is
-either C<ad> or C<afs>, <action> is either C<enable> (used for both enabling
-and disabling accounts) or C<password>, <timestamp> is a ISO 8601 timestamp
-in UTC, and <count> is a two-digit zero-padded number between 0 and 99 (so
-that we can handle multiple changes that arrive in the same second).  Each
-file contains a queued change in the format described in krb5-sync(8).
+where <username> is the name of the affected account (C</> will be
+replaced with C<.> in the file name and the realm will be removed),
+<domain> is C<ad>, <action> is either C<enable> (used for both enabling
+and disabling accounts) or C<password>, <timestamp> is a ISO 8601
+timestamp in UTC, and <count> is a two-digit zero-padded number between 0
+and 99 (so that we can handle multiple changes that arrive in the same
+second).  Each file contains a queued change in the format described in
+krb5-sync(8).
 
 Supported arguments to B<krb5-sync-backend> are:
 
@@ -350,8 +350,8 @@ the next action that differs in one of those three parameters.
 
 =item password I<user> (ad|afs) I<password>
 
-Queue a password change for I<user> in either AD or AFS kaserver, setting
-their password to I<password>.  Note that I<password> appears on the command
+Queue a password change for I<user> in Active Directory, setting their
+password to I<password>.  Note that I<password> appears on the command
 line, so you don't want to invoke this command in any environment where an
 untrusted user would be in a position to see the command-line arguments of
 processes (which are generally readable to anyone on the system).

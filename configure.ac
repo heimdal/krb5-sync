@@ -27,13 +27,6 @@ AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
     krb5_principal_get_num_comp \
     krb5_principal_set_realm \
     krb5_xfree])
-RRA_LIB_AFS
-AS_IF([test x"$rra_afs" = xtrue],
-    [RRA_LIB_KRB4
-     RRA_LIB_KRB4_SET
-     RRA_LIB_AFS_SET
-     AC_CHECK_FUNCS([afs_error_message])])
-AM_CONDITIONAL([AFS], [test x"$rra_afs" = xtrue])
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
 AC_HEADER_STDBOOL

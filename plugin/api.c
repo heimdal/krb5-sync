@@ -67,17 +67,6 @@ pwupdate_init(krb5_context ctx, void **data)
     config = malloc(sizeof(struct plugin_config));
     if (config == NULL)
         return 1;
-#ifdef HAVE_AFS
-    config_string(ctx, "afs_srvtab", &config->afs_srvtab);
-    config_string(ctx, "afs_principal", &config->afs_principal);
-    config_string(ctx, "afs_realm", &config->afs_realm);
-    config_string(ctx, "afs_instances", &config->afs_instances);
-#else
-    config->afs_srvtab = NULL;
-    config->afs_principal = NULL;
-    config->afs_realm = NULL;
-    config->afs_instances = NULL;
-#endif
     config_string(ctx, "ad_keytab", &config->ad_keytab);
     config_string(ctx, "ad_principal", &config->ad_principal);
     config_string(ctx, "ad_realm", &config->ad_realm);
@@ -98,15 +87,6 @@ pwupdate_close(void *data)
 {
     struct plugin_config *config = data;
 
-    if (config->afs_srvtab != NULL)
-        free(config->afs_srvtab);
-    if (config->afs_principal != NULL)
-        free(config->afs_principal);
-    if (config->afs_realm != NULL)
-        free(config->afs_realm);
-#ifdef HAVE_AFS
-    pwupdate_afs_close();
-#endif
     if (config->ad_keytab != NULL)
         free(config->ad_keytab);
     if (config->ad_principal != NULL)
@@ -208,9 +188,6 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
 #endif
         if (ad && instance_allowed(config->ad_instances, instance, instlen))
             return 1;
-        else if (!ad && instance_allowed(config->afs_instances, instance,
-                                         instlen))
-            return 1;
         ret = krb5_unparse_name(ctx, principal, &display);
         if (ret != 0)
             display = NULL;
@@ -278,64 +255,16 @@ queue:
 
 /*
  * Actions to take after the password is changed in the local database.
- *
- * Push the new password to the AFS kaserver if we have the necessary
- * configuration information and return any error it returns, but skip any
- * principals with a non-NULL instance since those are kept separately in each
- * realm.
- *
- * If the change fails or if a password change in AFS were already queued for
- * this user, queue the password change.  Only fail if we can't even do that.
+ * Currently, there are none.
  */
-#ifdef HAVE_AFS
-int pwupdate_postcommit_password(void *data, krb5_principal principal,
-                                 const char *password, int pwlen,
-				 char *errstr, int errstrlen)
-{
-    struct plugin_config *config = data;
-    krb5_context ctx;
-    int status;
-
-    if (config->afs_realm == NULL
-        || config->afs_srvtab == NULL
-        || config->afs_principal == NULL)
-        return 0;
-    if (!create_context(&ctx, errstr, errstrlen))
-        return 1;
-    if (!principal_allowed(config, ctx, principal, 0))
-        return 0;
-    if (pwupdate_queue_conflict(config, ctx, principal, "afs", "password"))
-        goto queue;
-    status = pwupdate_afs_change(config, ctx, principal, password, pwlen,
-                                 errstr, errstrlen);
-    if (status != 0) {
-        syslog(LOG_INFO, "pwupdate: AFS password change failed, queuing: %s",
-               errstr);
-        goto queue;
-    }
-    krb5_free_context(ctx);
-    return status;
-
-queue:
-    status = pwupdate_queue_write(config, ctx, principal, "afs", "password",
-                                  password);
-    krb5_free_context(ctx);
-    if (status)
-        return 0;
-    else {
-        snprintf(errstr, errstrlen, "queueing AFS password change failed");
-        return 1;
-    }
-}
-#else /* !HAVE_AFS */
-int pwupdate_postcommit_password(void *data UNUSED,
-                                 krb5_principal principal UNUSED,
-                                 const char *password UNUSED, int pwlen UNUSED,
-				 char *errstr UNUSED, int errstrlen UNUSED)
+int
+pwupdate_postcommit_password(void *data UNUSED,
+                             krb5_principal principal UNUSED,
+                             const char *password UNUSED, int pwlen UNUSED,
+                             char *errstr UNUSED, int errstrlen UNUSED)
 {
     return 0;
 }
-#endif
 
 
 /*

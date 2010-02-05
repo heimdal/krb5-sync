@@ -68,38 +68,6 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
 }
 
 /*
- * Change a password in AFS kaserver.  Print a success message if we were
- * successful, and exit with an error message if we weren't.
- */
-#ifdef HAVE_AFS
-static void
-afs_password(void *data, krb5_context ctx, krb5_principal principal,
-             char *password, const char *user)
-{
-    char errbuf[BUFSIZ];
-    int status;
-
-    status = pwupdate_afs_change(data, ctx, principal, password,
-                                 strlen(password), errbuf, sizeof(errbuf));
-    if (status != 0) {
-        fprintf(stderr, "AFS password change for %s failed (%d): %s\n", user,
-                status, errbuf);
-        exit(1);
-    }
-    printf("AFS password change for %s succeeded\n", user);
-}
-#else /* !HAVE_AFS */
-static void
-afs_password(void *data UNUSED, krb5_context ctx UNUSED,
-             krb5_principal principal UNUSED, char *password UNUSED,
-             const char *user UNUSED)
-{
-    fprintf(stderr, "AFS password change requested but not supported\n");
-    exit(1);
-}
-#endif
-
-/*
  * Read a line from a queue file, making sure we got a complete line and
  * cutting off the trailing newline.  Doesn't return on error.
  */
@@ -123,7 +91,7 @@ read_line(FILE *file, const char *filename, char *buffer, size_t bufsiz)
  * format is:
  *
  *     <principal>
- *     afs | ad
+ *     ad
  *     enable | disable | password
  *     [<password>]
  *
@@ -139,7 +107,6 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     char *user;
     krb5_principal principal;
     krb5_error_code ret;
-    int afs = 0;
     int ad = 0;
     int enable = 0;
     int disable = 0;
@@ -166,8 +133,6 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     read_line(queue, filename, buffer, sizeof(buffer));
     if (strcmp(buffer, "ad") == 0)
         ad = 1;
-    else if (strcmp(buffer, "afs") == 0)
-        afs = 1;
     else {
         fprintf(stderr, "Unknown target system %s in queue file %s\n",
                 buffer, filename);
@@ -185,19 +150,12 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
                 filename);
         exit(1);
     }
-    if (afs && (enable || disable)) {
-        fprintf(stderr, "Enable and disable not supported for target afs"
-                " in queue file %s\n", filename);
-        exit(1);
-    }
 
     /* Perform the appropriate action. */
     if (password) {
         read_line(queue, filename, buffer, sizeof(buffer));
         if (ad)
             ad_password(data, ctx, principal, buffer, user);
-        else if (afs)
-            afs_password(data, ctx, principal, buffer, user);
     } else if (enable || disable) {
         ad_status(data, ctx, principal, enable, user);
     }
@@ -303,10 +261,8 @@ main(int argc, char *argv[])
                     error_message(ret));
             exit(1);
         }
-        if (password != NULL) {
+        if (password != NULL)
             ad_password(data, ctx, principal, password, user);
-            afs_password(data, ctx, principal, password, user);
-        }
         if (enable || disable)
             ad_status(data, ctx, principal, enable, user);
     }
