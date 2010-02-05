@@ -17,7 +17,9 @@
 
 #include <errno.h>
 #include <kadm5/admin.h>
-#include <kadm5/kadm5_err.h>
+#ifdef HAVE_KADM5_KADM5_ERR_H
+# include <kadm5/kadm5_err.h>
+#endif
 #include <krb5.h>
 
 #include <plugin/internal.h>
