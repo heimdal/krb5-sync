@@ -117,7 +117,6 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
         return NULL;
     }
     krb5_free_unparsed_name(ctx, user);
-#endif
     return prefix;
 }
 
