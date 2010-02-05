@@ -20,6 +20,10 @@ krb5-sync 2.0 (unreleased)
     Enable Automake silent rules.  For a quieter build, pass the
     --enable-silent-rules option to configure or build with make V=0.
 
+    Add portability code for platforms without a working snprintf or other
+    deficiencies and updated the code to take advantage of those
+    guarantees.
+
 krb5-sync 1.2 (2007-12-25)
 
     Don't call rx_Finalize after every synchronization with an AFS

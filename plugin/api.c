@@ -36,6 +36,7 @@
 # define krb5_principal_get_num_comp(c, p) krb5_princ_size((c), (p))
 #endif
 
+
 /*
  * Load a string option from Kerberos appdefaults, setting the default to NULL
  * if the setting was not found.  This requires an annoying workaround because
@@ -52,6 +53,7 @@ config_string(krb5_context ctx, const char *opt, char **result)
         *result = NULL;
     }
 }
+
 
 /*
  * Initialize the module.  This consists solely of loading our configuration
@@ -78,6 +80,7 @@ pwupdate_init(krb5_context ctx, void **data)
     return 0;
 }
 
+
 /*
  * Shut down the module.  This just means freeing our configuration struct,
  * since we don't store any other local state.
@@ -100,6 +103,7 @@ pwupdate_close(void *data)
     free(config);
 }
 
+
 /*
  * Create a local Kerberos context and set the error appropriately if this
  * fails.  Return true on success, false otherwise.  Puts the error message in
@@ -118,6 +122,7 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
     }
     return 1;
 }
+
 
 /*
  * Given the list of allowed principals as a space-delimited string and the
@@ -158,6 +163,7 @@ instance_allowed(const char *allowed, const char *instance, size_t length)
         return 0;
 }
 
+
 /*
  * Check the principal for which we're changing a password.  If it contains a
  * non-null instance, we don't want to propagate the change; we only want to
@@ -196,11 +202,12 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
                display != NULL ? display : "???",
                ad ? "Active Directory" : "AFS");
         if (display != NULL)
-            free(display);
+            krb5_free_unparsed_name(ctx, display);
         return 0;
     }
     return 1;
 }
+
 
 /*
  * Actions to take before the password is changed in the local database.
@@ -248,10 +255,11 @@ queue:
     if (status)
         return 0;
     else {
-        snprintf(errstr, errstrlen, "queueing AD password change failed");
+        strlcpy(errstr, "queueing AD password change failed", errstrlen);
         return 1;
     }
 }
+
 
 /*
  * Actions to take after the password is changed in the local database.
@@ -309,7 +317,7 @@ queue:
     if (status)
         return 0;
     else {
-        snprintf(errstr, errstrlen, "queueing AD status change failed");
+        strlcpy(errstr, "queueing AD status change failed", errstrlen);
         return 1;
     }
 }

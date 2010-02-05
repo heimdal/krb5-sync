@@ -32,6 +32,7 @@
 /* The flag value used in Active Directory to indicate a disabled account. */
 #define UF_ACCOUNTDISABLE 0x02
 
+
 /*
  * Given the plugin options, a Kerberos context, a pointer to krb5_ccache
  * storage, and the buffer into which to store an error message if any,
@@ -124,6 +125,7 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     return 0;
 }
 
+
 /*
  * Given the krb5_principal from kadmind, convert it to the corresponding
  * principal in Active Directory.  Returns 0 on success and a Kerberos error
@@ -146,6 +148,7 @@ get_ad_principal(krb5_context ctx, const char *realm,
 #endif
     return 0;
 }
+
 
 /*
  * Push a password change to Active Directory.  Takes the module
@@ -214,7 +217,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     free(result_string.data);
     free(result_code_string.data);
     syslog(LOG_INFO, "pwupdate: %s password changed", target);
-    snprintf(errstr, errstrlen, "Password changed");
+    strlcpy(errstr, "Password changed", errstrlen);
 
 done:
     if (target != NULL)
@@ -227,6 +230,7 @@ done:
     return code;
 }
 
+
 /*
  * Empty SASL callback function to satisfy the requirements of the LDAP SASL
  * bind interface.  Hopefully it won't need anything.
@@ -238,6 +242,7 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
     return 0;
 }
 
+
 /*
  * Change the status of an account in Active Directory.  Takes the plugin
  * configuration, a Kerberos context, the principal whose status changed (only
@@ -245,16 +250,17 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
  * account is enabled, and a buffer into which to put error messages and its
  * length.
  */
-int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
-                       krb5_principal principal, int enabled, char *errstr,
-                       int errstrlen)
+int
+pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
+                   krb5_principal principal, int enabled, char *errstr,
+                   int errstrlen)
 {
     krb5_ccache ccache;
     krb5_principal ad_principal = NULL;
     LDAP *ld;
     LDAPMessage *res = NULL;
     LDAPMod mod, *mod_array[2];
-    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *dn;
+    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *end, *dn;
     char *target = NULL;
     char **vals = NULL;
     const char *attrs[] = { "userAccountControl", NULL };
@@ -310,21 +316,21 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      */
     memset(ldapbase, 0, sizeof(ldapbase));
     if (config->ad_ldap_base == NULL)
-        strcpy(ldapbase, "ou=Accounts,dc=");
+        strlcpy(ldapbase, "ou=Accounts,dc=", sizeof(ldapbase));
     else {
-        strncpy(ldapbase, config->ad_ldap_base, sizeof(ldapbase) - 5);
-        ldapbase[sizeof(ldapbase) - 5] = '\0';
-        strcat(ldapbase, ",dc=");
+        strlcpy(ldapbase, config->ad_ldap_base, sizeof(ldapbase));
+        strlcat(ldapbase, ",dc=", sizeof(ldapbase));
     }
     lb = ldapbase + strlen(ldapbase);
-    for (dname = config->ad_realm; *dname != '\0'; dname++) {
+    end = ldapbase + sizeof(ldapbase) - 1;
+    for (dname = config->ad_realm; lb < end && *dname != '\0'; dname++) {
         if (*dname == '.') {
-            strcpy(lb, ",dc=");
+            *lb = '\0';
+            strlcat(ldapbase, ",dc=", sizeof(ldapbase));
             lb += 4;
-        } else
+        } else {
             *lb++ = *dname;
-        if (strlen(ldapbase) > sizeof(ldapbase) - 5)
-            break;
+        }
     }
 
     /*
@@ -410,7 +416,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
 
 done:
     if (target != NULL)
-        free(target);
+        krb5_free_unparsed_name(ctx, target);
     if (res != NULL)
         ldap_msgfree(res);
     if (vals != NULL)

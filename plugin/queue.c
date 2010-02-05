@@ -41,6 +41,7 @@
             goto fail;                                  \
     } while (0)
 
+
 /*
  * Lock the queue directory.  Returns a file handle to the lock file, which
  * must then be passed into unlock_queue when the queue should be unlocked, or
@@ -53,14 +54,10 @@ static int
 lock_queue(struct plugin_config *config)
 {
     char *lockpath = NULL;
-    size_t length;
     int fd = -1;
 
-    length = strlen(config->queue_dir) + 1 + strlen(".lock") + 1;
-    lockpath = malloc(length);
-    if (lockpath == NULL)
+    if (asprintf(&lockpath, "%s/.lock", config->queue_dir) < 0)
         return -1;
-    snprintf(lockpath, length, "%s/.lock", config->queue_dir);
     fd = open(lockpath, O_RDWR | O_CREAT, 0644);
     if (fd < 0)
         goto fail;
@@ -102,7 +99,6 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
 {
     char *user = NULL, *prefix = NULL;
     char *p;
-    size_t length;
     krb5_error_code retval;
 
     /* Enable and disable should go into the same queue. */
@@ -116,20 +112,10 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
         *p = '\0';
     while ((p = strchr(user, '/')) != NULL)
         *p = '.';
-    length = strlen(user) + strlen(domain) + strlen(operation) + 4;
-    prefix = malloc(length);
-    if (prefix == NULL) {
-#ifdef HAVE_KRB5_XFREE
-        krb5_xfree(user);
-#else
+    if (asprintf(&prefix, "%s-%s-%s-", user, domain, operation) < 0) {
         krb5_free_unparsed_name(ctx, user);
-#endif
         return NULL;
     }
-    snprintf(prefix, length, "%s-%s-%s-", user, domain, operation);
-#ifdef HAVE_KRB5_XFREE
-    krb5_xfree(user);
-#else
     krb5_free_unparsed_name(ctx, user);
 #endif
     return prefix;
@@ -227,8 +213,8 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
 {
     char *prefix = NULL, *timestamp = NULL, *path = NULL, *user = NULL;
     char *p;
-    size_t length;
     unsigned int i;
+    int status;
     int lock = -1, fd = -1;
     krb5_error_code retval;
 
@@ -248,14 +234,15 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
         goto fail;
 
     /* Find a unique filename for the queue file. */
-    length = strlen(config->queue_dir) + 1 + strlen(prefix)
-        + strlen(timestamp) + 1 + strlen(MAX_QUEUE_STR) + 1;
-    path = malloc(length);
-    if (path == NULL)
-        goto fail;
     for (i = 0; i < MAX_QUEUE; i++) {
-        snprintf(path, length, "%s/%s%s-%02d", config->queue_dir, prefix,
-                 timestamp, i);
+        if (path != NULL) {
+            free(path);
+            path = NULL;
+        }
+        status = asprintf(&path, "%s/%s%s-%02d", config->queue_dir, prefix,
+                          timestamp, i);
+        if (status < 0)
+            goto fail;
         fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
         if (fd >= 0)
             break;

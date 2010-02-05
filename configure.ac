@@ -15,6 +15,7 @@ AM_INIT_AUTOMAKE([1.11 check-news silent-rules -Wall -Werror])
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
+AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AM_DISABLE_STATIC
@@ -35,7 +36,7 @@ AC_CHECK_DECLS([snprintf, vsnprintf])
 AC_TYPE_LONG_LONG_INT
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit])
-AC_REPLACE_FUNCS([strlcat strlcpy])
+AC_REPLACE_FUNCS([asprintf strlcat strlcpy])
 
 # Crank up the warnings if we're using GCC.
 if test "x$GCC" = "xyes" ; then

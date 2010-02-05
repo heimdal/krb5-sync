@@ -25,6 +25,7 @@
 
 #include <plugin/internal.h>
 
+
 /*
  * Change a password in Active Directory.  Print a success message if we were
  * successful, and exit with an error message if we weren't.
@@ -45,6 +46,7 @@ ad_password(void *data, krb5_context ctx, krb5_principal principal,
     }
     printf("AD password change for %s succeeded\n", user);
 }
+
 
 /*
  * Change the account status in Active Directory.  Print a success message if
@@ -67,6 +69,7 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
     printf("AD status change for %s succeeded\n", user);
 }
 
+
 /*
  * Read a line from a queue file, making sure we got a complete line and
  * cutting off the trailing newline.  Doesn't return on error.
@@ -85,6 +88,7 @@ read_line(FILE *file, const char *filename, char *buffer, size_t bufsiz)
     }
     buffer[strlen(buffer) - 1] = '\0';
 }
+
 
 /*
  * Read a queue file and take appropriate action based on its contents.  The
@@ -169,6 +173,7 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     }
     free(user);
 }
+
 
 int
 main(int argc, char *argv[])
