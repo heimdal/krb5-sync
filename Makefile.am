@@ -43,8 +43,12 @@ dist_man_MANS = tools/krb5-sync.8 tools/krb5-sync-backend.8
 
 # Handle the standard stuff that make maintainer-clean should probably remove
 # but doesn't.
-MAINTAINERCLEANFILES = Makefile.in aclocal.m4 config.h.in config.h.in~ \
-	configure tools/krb5-sync.8
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile		 \
+	build-aux/config.guess build-aux/config.sub build-aux/depcomp	 \
+	build-aux/install-sh build-aux/ltmain.sh build-aux/missing	 \
+	config.h.in config.h.in~ configure m4/libtool.m4 m4/ltoptions.m4 \
+	m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4			 \
+	tools/krb5-sync-backend.8 tools/krb5-sync.8
 
 # A set of flags for warnings.  Add -O because gcc won't find some warnings
 # without optimization turned on, and add -DDEBUG=1 so we'll also compile all
