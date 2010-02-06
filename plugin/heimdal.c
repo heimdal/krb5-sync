@@ -27,6 +27,11 @@
 
 #define KADM5_HOOK_VERSION_V0 0
 
+enum kadm5_hook_stage {
+    KADM5_HOOK_STAGE_PRECOMMIT,
+    KADM5_HOOK_STAGE_POSTCOMMIT
+};
+
 typedef struct kadm5_hook {
     const char *name;
     int version;
@@ -35,12 +40,12 @@ typedef struct kadm5_hook {
     krb5_error_code (*init)(krb5_context, void **);
     void (*fini)(krb5_context, void *);
 
-    krb5_error_code (*chpass)(krb5_context, void *, krb5_principal,
-                              const char *);
-    krb5_error_code (*create)(krb5_context, void *,
+    krb5_error_code (*chpass)(krb5_context, void *, enum kadm5_hook_stage,
+                              krb5_principal, const char *);
+    krb5_error_code (*create)(krb5_context, void *, enum kadm5_hook_stage,
                               kadm5_principal_ent_t, uint32_t mask,
                               const char *password);
-    krb5_error_code (*modify)(krb5_context, void *,
+    krb5_error_code (*modify)(krb5_context, void *, enum kadm5_hook_stage,
                               kadm5_principal_ent_t, uint32_t mask);
 } kadm5_hook;
 
@@ -72,23 +77,20 @@ fini(krb5_context ctx UNUSED, void *data)
 
 /*
  * Handle a password change.
- *
- * We're actually called after the password change is complete, so we should
- * only call the postcommit_password hook, but the precommit hook does what we
- * want.  This needs to be cleaned up later.
  */
 static krb5_error_code
-chpass(krb5_context ctx, void *data, krb5_principal princ,
-       const char *password)
+chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
+       krb5_principal princ, const char *password)
 {
     char error[BUFSIZ];
     size_t length;
-    int status;
+    int status = 0;
 
     length = strlen(password);
-    status = pwupdate_precommit_password(data, princ, password, length,
-                                         error, sizeof(error));
-    if (status == 0)
+    if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
+        status = pwupdate_precommit_password(data, princ, password, length,
+                                             error, sizeof(error));
+    else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
         status = pwupdate_postcommit_password(data, princ, password, length,
                                               error, sizeof(error));
     if (status == 0)
@@ -108,19 +110,22 @@ chpass(krb5_context ctx, void *data, krb5_principal princ,
  * hooks as we did for a password change.
  */
 static krb5_error_code
-create(krb5_context ctx, void *data, kadm5_principal_ent_t entry,
-       uint32_t mask UNUSED, const char *password)
+create(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
+       kadm5_principal_ent_t entry, uint32_t mask UNUSED,
+       const char *password)
 {
     char error[BUFSIZ];
     size_t length;
-    int status;
+    int status = 0;
 
     length = strlen(password);
-    status = pwupdate_precommit_password(data, entry->principal, password,
-                                         length, error, sizeof(error));
-    if (status == 0)
-        status = pwupdate_postcommit_password(data, entry->principal, password,
-                                              length, error, sizeof(error));
+    if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
+        status = pwupdate_precommit_password(data, entry->principal, password,
+                                             length, error, sizeof(error));
+    else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
+        status = pwupdate_postcommit_password(data, entry->principal,
+                                              password, length, error,
+                                              sizeof(error));
     if (status == 0)
         return 0;
     else {
@@ -134,17 +139,18 @@ create(krb5_context ctx, void *data, kadm5_principal_ent_t entry,
 /*
  * Handle a principal modification.
  *
- * We only care about changes to the DISALLOW_ALL_TIX flag.  Check whether
- * that's what's being changed and call the appropriate hook.
+ * We only care about changes to the DISALLOW_ALL_TIX flag, and we only
+ * support status postcommit.  Check whether that's what's being changed and
+ * call the appropriate hook.
  */
 static krb5_error_code
-modify(krb5_context ctx, void *data, kadm5_principal_ent_t entry,
-       uint32_t mask)
+modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
+       kadm5_principal_ent_t entry, uint32_t mask)
 {
     char error[BUFSIZ];
     int enabled, status;
 
-    if (mask & KADM5_ATTRIBUTES) {
+    if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
         status = pwupdate_postcommit_status(data, entry->principal, enabled,
                                             error, sizeof(error));
