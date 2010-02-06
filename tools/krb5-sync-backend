@@ -96,11 +96,10 @@ sub queue {
     unlock_queue;
 }
 
-# Queue a password change.  Takes the username, password, and system (ad or
-# afs).
+# Queue a password change.  Takes the username, password, and system (ad).
 sub queue_password {
     my ($username, $system, $password) = @_;
-    if ($system ne 'afs' && $system ne 'ad') {
+    if ($system ne 'ad') {
         die "$0: invalid password change destination $system\n";
     }
     queue ($username, $system, 'password', timestamp, $password);
@@ -348,7 +347,7 @@ fails for a queued action, all other actions sharing the same username,
 domain, and action will be skipped and queue processing will continue with
 the next action that differs in one of those three parameters.
 
-=item password I<user> (ad|afs) I<password>
+=item password I<user> ad I<password>
 
 Queue a password change for I<user> in Active Directory, setting their
 password to I<password>.  Note that I<password> appears on the command
