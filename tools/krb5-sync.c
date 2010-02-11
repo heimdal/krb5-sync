@@ -61,7 +61,7 @@ ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
                                 sizeof(errbuf));
     if (status != 0)
         die("AD status change for %s failed (%d): %s", user, status, errbuf);
-    notice("AD status change for %s succeeded\n", user);
+    notice("AD status change for %s succeeded", user);
 }
 
 
