@@ -6,7 +6,8 @@ krb5-sync 2.0 (unreleased)
     This package now only synchronizes with Active Directory.
 
     Add plugin support for the proposed kadmin hooks for Heimdal and
-    ported the code to Heimdal as well as MIT Kerberos.
+    ported the code to Heimdal as well as MIT Kerberos.  Add a patch for
+    Heimdal 1.3.1 to the patches directory.
 
     Add an ad_ldap_base configuration option to specify the base DN for
     Active Directory.  Patch from Andreas Johansson.
