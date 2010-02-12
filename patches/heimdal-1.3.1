@@ -15,6 +15,11 @@ kpasswdd, and kadmin (for kadmin -l).  An example setting would look like:
     [kadmin]
         hook_libraries = /usr/local/lib/kadmind/passwd_update.so
 
+This is a preliminary, and ugly, patch that adds the necessary features
+for krb5-sync in a somewhat brute-force way.  It will change in the future
+to better fit with the rest of Heimdal so that it can be integrated into
+Heimdal.  Expect the details of how it works to change in later versions.
+
 Written by Russ Allbery <rra@stanford.edu>
 Copyright 2010 Board of Trustees, Leland Stanford Jr. University
 
