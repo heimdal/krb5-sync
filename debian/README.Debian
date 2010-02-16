@@ -1,13 +1,17 @@
-krb5-passwd-sync for Debian
----------------------------
+krb5--sync for Debian
+---------------------
 
-This plugin requires a patched kadmind that loads plugins for password
-propagation.  This code will hopefully be in a future official release
-of MIT Kerberos.  It also requires krb5.conf additions as described in
-README.gz and the addition of:
+This plugin requires a patched libkadm5srv that loads plugins for password
+propagation.  Another method of accomplishing this will hopefully be in a
+future official release of Heimdal.  It is only built for Heimdal,
+although the source code supports being built against MIT Kerberos.
 
-    pwupdate_plugin = /usr/lib/kadmind/passwd_update.so
+It also requires krb5.conf additions as described in README.gz and the
+addition of:
 
-to the kdc.conf configuration section for the local realm.
+    hook_libraries = /usr/lib/kadmind/passwd_update.so
 
- -- Russ Allbery <rra@debian.org>, Thu, 14 Dec 2006 16:06:36 z
+to the kadmin section of the krb5.conf file used by kadmind, kpasswdd, and
+kadmin -l.
+
+ -- Russ Allbery <rra@debian.org>, Mon, 15 Feb 2010 19:46:24 -0800

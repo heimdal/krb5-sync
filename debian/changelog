@@ -1,3 +1,17 @@
+krb5-sync (2.0-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Drop support for AFS kaserver synchronization.
+    - Add support for Heimdal as well as MIT Kerberos.
+    - Add an ad_ldap_base configuration option to specify the base DN for
+      Active Directory.
+    - Ignore connection timeouts from AD when running the queue via
+      krb5-sync-backend in silent mode.
+    - Improve error reporting in krb5-sync.
+  * Built against Heimdal Kerberos instead of MIT Kerberos.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 15 Feb 2010 19:48:10 -0800
+
 krb5-sync (1.2-1) unstable; urgency=low
 
   * New upstream release.
