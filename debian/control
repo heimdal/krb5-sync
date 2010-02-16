@@ -3,7 +3,7 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), heimdal-dev, libldap2-dev
-Standards-Version: 3.7.3
+Standards-Version: 3.8.4
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
 
 Package: krb5-sync
