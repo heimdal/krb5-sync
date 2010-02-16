@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * The public APIs of the password update kadmind plugin.
  *
  * Provides the public pwupdate_init, pwupdate_close,
@@ -14,19 +13,21 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *
  * See LICENSE for licensing terms.
  */
 
-#include <com_err.h>
+#include <config.h>
+#include <portable/krb5.h>
+#include <portable/system.h>
+
 #include <errno.h>
-#include <krb5.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <syslog.h>
 
 #include <plugin/internal.h>
+#include <util/macros.h>
+
 
 /*
  * Load a string option from Kerberos appdefaults, setting the default to NULL
@@ -45,6 +46,7 @@ config_string(krb5_context ctx, const char *opt, char **result)
     }
 }
 
+
 /*
  * Initialize the module.  This consists solely of loading our configuration
  * options from krb5.conf into a newly allocated struct stored in the second
@@ -59,17 +61,6 @@ pwupdate_init(krb5_context ctx, void **data)
     config = malloc(sizeof(struct plugin_config));
     if (config == NULL)
         return 1;
-#ifdef HAVE_AFS
-    config_string(ctx, "afs_srvtab", &config->afs_srvtab);
-    config_string(ctx, "afs_principal", &config->afs_principal);
-    config_string(ctx, "afs_realm", &config->afs_realm);
-    config_string(ctx, "afs_instances", &config->afs_instances);
-#else
-    config->afs_srvtab = NULL;
-    config->afs_principal = NULL;
-    config->afs_realm = NULL;
-    config->afs_instances = NULL;
-#endif
     config_string(ctx, "ad_keytab", &config->ad_keytab);
     config_string(ctx, "ad_principal", &config->ad_principal);
     config_string(ctx, "ad_realm", &config->ad_realm);
@@ -81,6 +72,7 @@ pwupdate_init(krb5_context ctx, void **data)
     return 0;
 }
 
+
 /*
  * Shut down the module.  This just means freeing our configuration struct,
  * since we don't store any other local state.
@@ -90,15 +82,6 @@ pwupdate_close(void *data)
 {
     struct plugin_config *config = data;
 
-    if (config->afs_srvtab != NULL)
-        free(config->afs_srvtab);
-    if (config->afs_principal != NULL)
-        free(config->afs_principal);
-    if (config->afs_realm != NULL)
-        free(config->afs_realm);
-#ifdef HAVE_AFS
-    pwupdate_afs_close();
-#endif
     if (config->ad_keytab != NULL)
         free(config->ad_keytab);
     if (config->ad_principal != NULL)
@@ -111,6 +94,7 @@ pwupdate_close(void *data)
         free(config->queue_dir);
     free(config);
 }
+
 
 /*
  * Create a local Kerberos context and set the error appropriately if this
@@ -131,21 +115,22 @@ create_context(krb5_context *ctx, char *errstr, int errstrlen)
     return 1;
 }
 
+
 /*
  * Given the list of allowed principals as a space-delimited string and the
  * instance of a principal, returns true if that instance is allowed and false
  * otherwise.
  */
 static int
-instance_allowed(const char *allowed, const krb5_data *instance)
+instance_allowed(const char *allowed, const char *instance)
 {
     const char *p, *i, *end;
     int checking, okay;
 
     if (allowed == NULL || instance == NULL)
         return 0;
-    i = instance->data;
-    end = i + instance->length;
+    i = instance;
+    end = i + strlen(instance);
     checking = 1;
     okay = 0;
     for (p = allowed; *p != '\0'; p++) {
@@ -154,11 +139,11 @@ instance_allowed(const char *allowed, const krb5_data *instance)
                 break;
             okay = 0;
             checking = 1;
-            i = instance->data;
+            i = instance;
         } else if (checking && (i == end || *p != *i)) {
             okay = 0;
             checking = 0;
-            i = instance->data;
+            i = instance;
         } else if (checking && *p == *i) {
             okay = 1;
             i++;
@@ -169,6 +154,7 @@ instance_allowed(const char *allowed, const krb5_data *instance)
     else
         return 0;
 }
+
 
 /*
  * Check the principal for which we're changing a password.  If it contains a
@@ -181,15 +167,13 @@ static int
 principal_allowed(struct plugin_config *config, krb5_context ctx,
                   krb5_principal principal, int ad)
 {
-    if (krb5_princ_size(ctx, principal) > 1) {
+    if (krb5_principal_get_num_comp(ctx, principal) > 1) {
         char *display;
         krb5_error_code ret;
-        const krb5_data *instance;
+        const char *instance;
 
-        instance = krb5_princ_component(ctx, principal, 1);
+        instance = krb5_principal_get_comp_string(ctx, principal, 1);
         if (ad && instance_allowed(config->ad_instances, instance))
-            return 1;
-        else if (!ad && instance_allowed(config->afs_instances, instance))
             return 1;
         ret = krb5_unparse_name(ctx, principal, &display);
         if (ret != 0)
@@ -199,11 +183,12 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
                display != NULL ? display : "???",
                ad ? "Active Directory" : "AFS");
         if (display != NULL)
-            free(display);
+            krb5_free_unparsed_name(ctx, display);
         return 0;
     }
     return 1;
 }
+
 
 /*
  * Actions to take before the password is changed in the local database.
@@ -219,7 +204,7 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  */
 int
 pwupdate_precommit_password(void *data, krb5_principal principal,
-                            char *password, int pwlen,
+                            const char *password, int pwlen,
                             char *errstr, int errstrlen)
 {
     struct plugin_config *config = data;
@@ -251,71 +236,24 @@ queue:
     if (status)
         return 0;
     else {
-        snprintf(errstr, errstrlen, "queueing AD password change failed");
+        strlcpy(errstr, "queueing AD password change failed", errstrlen);
         return 1;
     }
 }
+
 
 /*
  * Actions to take after the password is changed in the local database.
- *
- * Push the new password to the AFS kaserver if we have the necessary
- * configuration information and return any error it returns, but skip any
- * principals with a non-NULL instance since those are kept separately in each
- * realm.
- *
- * If the change fails or if a password change in AFS were already queued for
- * this user, queue the password change.  Only fail if we can't even do that.
+ * Currently, there are none.
  */
-#ifdef HAVE_AFS
-int pwupdate_postcommit_password(void *data, krb5_principal principal,
-                                 char *password, int pwlen,
-				 char *errstr, int errstrlen)
-{
-    struct plugin_config *config = data;
-    krb5_context ctx;
-    int status;
-
-    if (config->afs_realm == NULL
-        || config->afs_srvtab == NULL
-        || config->afs_principal == NULL)
-        return 0;
-    if (!create_context(&ctx, errstr, errstrlen))
-        return 1;
-    if (!principal_allowed(config, ctx, principal, 0))
-        return 0;
-    if (pwupdate_queue_conflict(config, ctx, principal, "afs", "password"))
-        goto queue;
-    status = pwupdate_afs_change(config, ctx, principal, password, pwlen,
-                                 errstr, errstrlen);
-    if (status != 0) {
-        syslog(LOG_INFO, "pwupdate: AFS password change failed, queuing: %s",
-               errstr);
-        goto queue;
-    }
-    krb5_free_context(ctx);
-    return status;
-
-queue:
-    status = pwupdate_queue_write(config, ctx, principal, "afs", "password",
-                                  password);
-    krb5_free_context(ctx);
-    if (status)
-        return 0;
-    else {
-        snprintf(errstr, errstrlen, "queueing AFS password change failed");
-        return 1;
-    }
-}
-#else /* !HAVE_AFS */
-int pwupdate_postcommit_password(void *data UNUSED,
-                                 krb5_principal principal UNUSED,
-                                 char *password UNUSED, int pwlen UNUSED,
-				 char *errstr UNUSED, int errstrlen UNUSED)
+int
+pwupdate_postcommit_password(void *data UNUSED,
+                             krb5_principal principal UNUSED,
+                             const char *password UNUSED, int pwlen UNUSED,
+                             char *errstr UNUSED, int errstrlen UNUSED)
 {
     return 0;
 }
-#endif
 
 
 /*
@@ -360,7 +298,7 @@ queue:
     if (status)
         return 0;
     else {
-        snprintf(errstr, errstrlen, "queueing AD status change failed");
+        strlcpy(errstr, "queueing AD status change failed", errstrlen);
         return 1;
     }
 }

@@ -1,6 +1,6 @@
 =head1 NAME
 
-krb5-sync - Synchronize passwords and status with AD or AFS kaserver
+krb5-sync - Synchronize passwords and status with Active Directory
 
 =head1 SYNOPSIS
 
@@ -13,17 +13,16 @@ B<krb5-sync> B<-f> I<file>
 B<krb5-sync> provides a command-line interface to the same functions
 provided by the password and status synchronization plugin.  It can push a
 new password to Active Directory (actually, to any password store that
-supports the Kerberos set-password protocol) or to an AFS kaserver, or
-activate or deactivate an account in Active Directory.
+supports the Kerberos set-password protocol) or activate or deactivate an
+account in Active Directory.
 
 To synchronize passwords, provide the B<-p> option and specify the
 password.  Note that the password is given on the command line and must be
 quoted if it contains special characters, and the password will be exposed
 to any other users on the system where this command is run.  This is
 useful primarily for testing and should not be used with production
-passwords.  Synchronization to both Active Directory and to an AFS
-kaserver will be attempted based on the configuration in F<krb5.conf> (see
-below).
+passwords.  Synchronization to Active Directory will be attempted based on
+the configuration in F<krb5.conf> (see below).
 
 To enable or disable an account, provide the B<-e> or B<-d> option
 respectively.  These options can also be provided in conjunction with the
@@ -31,23 +30,22 @@ B<-p> option to take both actions at once.
 
 In either case, I<user> should be the principal name for which these
 actions should be taken.  I<user> may be either unqualified or in the
-local realm; either way, the Active Directory and AFS kaserver realms in
-which to make changes will be taken from the F<krb5.conf> configuration.
+local realm; either way, the Active Directory realm in which to make
+changes will be taken from the F<krb5.conf> configuration.
 
 Alternately, B<krb5-sync> also supports processing actions from a file.
 To do this, use the B<-f> flag and give the file on the command line.  The
 format of the file should be as follows:
 
     <account>
-    afs | ad
+    ad
     password | enable | disable
     <password>
 
 where the fourth line is present only if the <action> is C<password>.
 <account> should be the unqualified name of the account.  The second line
-should be either the string C<afs> to push the change to the AFS kaserver,
-or the string C<ad> to push the change to Windows Active Directory.  The
-third line should be one of C<password>, C<enable>, or C<disable>,
+should be the string C<ad> to push the change to Windows Active Directory.
+The third line should be one of C<password>, C<enable>, or C<disable>,
 corresponding to the B<-p>, B<-e>, and B<-d> options respectively.  The
 C<enable> and C<disable> actions are only supported for AD.
 
@@ -63,10 +61,6 @@ successful but left alone if the action failed.
 The configuration block in F<krb5.conf> should look something like this:
 
     krb5-sync = {
-        afs_srvtab      = /etc/krb5kdc/afs-srvtab
-        afs_principal   = service.sync
-        afs_realm       = AFS.EXAMPLE.COM
-
         ad_keytab       = /etc/krb5kdc/ad-keytab
         ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
         ad_realm        = WINDOWS.EXAMPLE.COM
@@ -74,23 +68,20 @@ The configuration block in F<krb5.conf> should look something like this:
         ad_ldap_base    = ou=People
     }
 
-The afs_* configuration is only required if you want to synchronize
-passwords to an AFS kaserver.  Similarly, the ad_* configuration is only
-required if you want to synchronize passwords or account status to Active
-Directory.  If the configuration required for an action is not given, that
-action will not be performed but will apparently succeed from the
-perspective of the B<krb5-sync> utility.  Therefore, if this utility
-reports success but no change is happening, double-check the configuration
-to ensure that all required options are present.
+If the configuration required for an action is not given, that action will
+not be performed but will apparently succeed from the perspective of the
+B<krb5-sync> utility.  Therefore, if this utility reports success but no
+change is happening, double-check the configuration to ensure that all
+required options are present.
 
-The *_srvtab or *_keytab option specifies the location of a srvtab or
-keytab for authenticating to the other realm, the *_principal options
-specify the principal to authenticate as (using the key in the srvtab or
-keytab), and the *_realm options specify the foreign realm.
-ad_admin_server is the host to contact via LDAP to push account status
-changes.  ad_ldap_base specifies the base tree inside Active Directory
-where account information is stored.  Omit the trailing C<dc=> part; it
-will be added automatically from ad_realm.
+The C<ad_keytab> option specifies the location of a srvtab or keytab for
+authenticating to the other realm, the C<ad_principal> option specifies
+the principal to authenticate as (using the key in the keytab), and the
+C<ad_realm> option specifies the foreign realm.  C<ad_admin_server> is the
+host to contact via LDAP to push account status changes.  C<ad_ldap_base>
+specifies the base tree inside Active Directory where account information
+is stored.  Omit the trailing C<dc=> part; it will be added automatically
+from C<ad_realm>.
 
 =head1 OPTIONS
 
@@ -117,9 +108,7 @@ be left alone.  If the action succeeds, the file will be deleted.
 
 =item B<-p> I<password>
 
-Change the user's password to I<password>.  This will be done in either or
-both the Active Directory and the AFS kaserver, depending on what
-configuration is set in F<krb5.conf>.
+Change the user's password to I<password> in Active Directory.
 
 =back
 
@@ -130,8 +119,8 @@ found in F<krb5.conf>):
 
     krb5-sync -d jdoe
 
-Change the password of the account C<testuser> in both Active Directory and
-the AFS kaserver (based on the F<krb5.conf> configuration) to C<changeme>:
+Change the password of the account C<testuser> in Active Directory to
+C<changeme>:
 
     krb5-sync -p changeme testuser@EXAMPLE.COM
 

@@ -1,16 +1,38 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 1.3 (unreleased)
+krb5-sync 2.0 (2010-02-15)
+
+    Dropped support for AFS synchronization and all Kerberos v4 support.
+    This package now only synchronizes with Active Directory.
+
+    Add plugin support for the proposed kadmin hooks for Heimdal and
+    ported the code to Heimdal as well as MIT Kerberos.  Add a patch for
+    Heimdal 1.3.1 to the patches directory.  The implementation for
+    Heimdal is preliminary and will change in later releases.
 
     Add an ad_ldap_base configuration option to specify the base DN for
     Active Directory.  Patch from Andreas Johansson.
 
-    For Kerberos libraries without krb5-config, also check for networking
-    libraries (-lsocket and friends) before checking for Kerberos
-    libraries in case shared library dependencies are broken.
-
     Ignore connection timeouts from AD when running the queue with
     krb5-sync-backend in silent mode.
+
+    Improve error reporting in the standalone krb5-sync utility.
+
+    Enable Automake silent rules.  For a quieter build, pass the
+    --enable-silent-rules option to configure or build with make V=0.
+
+    Add portability code for platforms without a working snprintf or other
+    deficiencies and updated the code to take advantage of those
+    guarantees.
+
+    Update Kerberos Autoconf macros from rra-c-util 2.3:
+
+    * Check for networking libraries before Kerberos libraries.
+    * Sanity-check the results of krb5-config before proceeding.
+    * Fall back on manual probing if krb5-config doesn't work.
+    * Prefer KRB5_CONFIG from the environment.
+    * If krb5-config isn't executable, don't use it.
+    * Add --with-krb5-lib and --with-krb5-include configure options.
 
 krb5-sync 1.2 (2007-12-25)
 
