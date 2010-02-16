@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 2.0 (unreleased)
+krb5-sync 2.0 (2010-02-15)
 
     Dropped support for AFS synchronization and all Kerberos v4 support.
     This package now only synchronizes with Active Directory.
