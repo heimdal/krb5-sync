@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 set -e
 
@@ -10,13 +9,6 @@ if [ "$1" = "configure" ] || [ "$1" = "reconfigure" ] ; then
         touch /var/spool/krb5-sync/.lock
         chmod 600 /var/spool/krb5-sync/.lock
     fi
-fi
-
-# Restart kadmind whenever the plugin is changed.
-if [ -x "`which invoke-rc.d 2>/dev/null`" ] && [ -x /usr/sbin/kadmind ] ; then
-    invoke-rc.d krb5-admin-server restart || exit $?
-else
-    /etc/init.d/krb5-admin-server restart || exit $?
 fi
 
 #DEBHELPER#

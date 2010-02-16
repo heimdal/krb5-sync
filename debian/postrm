@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 #
 # Remove the spool lock file on package purge.
 

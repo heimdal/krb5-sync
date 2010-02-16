@@ -9,6 +9,8 @@ krb5-sync (2.0-1) UNRELEASED; urgency=low
       krb5-sync-backend in silent mode.
     - Improve error reporting in krb5-sync.
   * Built against Heimdal Kerberos instead of MIT Kerberos.
+  * No longer restart kadmind on package installation, since the
+    convention for Heimdal is to run kadmind from inetd.
 
  -- Russ Allbery <rra@debian.org>  Mon, 15 Feb 2010 19:48:10 -0800
 
