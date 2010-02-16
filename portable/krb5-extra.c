@@ -77,7 +77,7 @@ krb5_get_error_message(krb5_context ctx UNUSED, krb5_error_code code UNUSED)
  * krb5_free_error_message is a subset of those with krb5_get_error_message.
  * If this assumption ever breaks, we may call the wrong free function.
  */
-static void
+void
 krb5_free_error_message(krb5_context ctx UNUSED, const char *msg)
 {
     if (msg == error_unknown)
