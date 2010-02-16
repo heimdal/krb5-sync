@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Active Directory synchronization functions.
  *
  * Implements the interface that talks to Active Directory for both password
@@ -8,25 +7,31 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *
  * See LICENSE for licensing terms.
  */
 
-#include <com_err.h>
+#include <config.h>
+#include <portable/krb5.h>
+#include <portable/system.h>
+
+/* Need to determine why this is deprecated. */
+#define LDAP_DEPRECATED 1
+
 #include <errno.h>
-#include <krb5.h>
 #include <ldap.h>
-#include <stdio.h>
-#include <string.h>
 #include <syslog.h>
 
 #include <plugin/internal.h>
+#include <util/macros.h>
 
 /* The memory cache name used to store credentials for AD. */
 #define CACHE_NAME "MEMORY:krb5_sync"
 
 /* The flag value used in Active Directory to indicate a disabled account. */
 #define UF_ACCOUNTDISABLE 0x02
+
 
 /*
  * Given the plugin options, a Kerberos context, a pointer to krb5_ccache
@@ -41,8 +46,9 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     krb5_keytab kt;
     krb5_creds creds;
     krb5_principal princ;
-    krb5_get_init_creds_opt opts;
+    krb5_get_init_creds_opt *opts;
     krb5_error_code ret;
+    const char *realm;
 
     ret = krb5_kt_resolve(ctx, config->ad_keytab, &kt);
     if (ret != 0) {
@@ -58,14 +64,23 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
                            config->ad_principal);
         return 1;
     }
-    krb5_get_init_creds_opt_init(&opts);
+    ret = krb5_get_init_creds_opt_alloc(ctx, &opts);
+    if (ret != 0) {
+        pwupdate_set_error(errstr, errstrlen, ctx, ret,
+                           "error allocating credential options");
+        return 1;
+    }
+    realm = krb5_principal_get_realm(ctx, princ);
+    krb5_get_init_creds_opt_set_default_flags(ctx, "k5start", realm, opts);
     memset(&creds, 0, sizeof(creds));
-    ret = krb5_get_init_creds_keytab(ctx, &creds, princ, kt, 0, NULL, &opts);
+    ret = krb5_get_init_creds_keytab(ctx, &creds, princ, kt, 0, NULL, opts);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to get initial credentials");
+        krb5_get_init_creds_opt_free(ctx, opts);
         return 1;
     }
+    krb5_get_init_creds_opt_free(ctx, opts);
     ret = krb5_kt_close(ctx, kt);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
@@ -95,6 +110,7 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     return 0;
 }
 
+
 /*
  * Given the krb5_principal from kadmind, convert it to the corresponding
  * principal in Active Directory.  Returns 0 on success and a Kerberos error
@@ -110,9 +126,10 @@ get_ad_principal(krb5_context ctx, const char *realm,
     ret = krb5_copy_principal(ctx, principal, ad_principal);
     if (ret != 0)
         return ret;
-    krb5_set_principal_realm(ctx, *ad_principal, realm);
+    krb5_principal_set_realm(ctx, *ad_principal, realm);
     return 0;
 }
+
 
 /*
  * Push a password change to Active Directory.  Takes the module
@@ -126,7 +143,7 @@ get_ad_principal(krb5_context ctx, const char *realm,
  */
 int
 pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
-                   krb5_principal principal, char *password,
+                   krb5_principal principal, const char *password,
                    int pwlen UNUSED, char *errstr, int errstrlen)
 {
     krb5_error_code ret;
@@ -158,9 +175,9 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     }
 
     /* Do the actual password change. */
-    ret = krb5_set_password_using_ccache(ctx, ccache, password, ad_principal,
-                                         &result_code, &result_code_string,
-                                         &result_string);
+    ret = krb5_set_password_using_ccache(ctx, ccache, (char *) password,
+                                         ad_principal, &result_code,
+                                         &result_code_string, &result_string);
     krb5_free_principal(ctx, ad_principal);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
@@ -172,16 +189,16 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (result_code != 0) {
         snprintf(errstr, errstrlen, "password change failed for %s in %s:"
                  " (%d) %.*s%s%.*s", target, config->ad_realm, result_code,
-                 result_code_string.length, result_code_string.data, 
-                 result_string.length ? ": " : "", 
-                 result_string.length, result_string.data); 
+                 result_code_string.length, (char *) result_code_string.data,
+                 result_string.length ? ": " : "",
+                 result_string.length, (char *) result_string.data);
         code = 3;
         goto done;
     }
     free(result_string.data);
     free(result_code_string.data);
     syslog(LOG_INFO, "pwupdate: %s password changed", target);
-    snprintf(errstr, errstrlen, "Password changed");
+    strlcpy(errstr, "Password changed", errstrlen);
 
 done:
     if (target != NULL)
@@ -189,6 +206,7 @@ done:
     krb5_cc_destroy(ctx, ccache);
     return code;
 }
+
 
 /*
  * Empty SASL callback function to satisfy the requirements of the LDAP SASL
@@ -201,6 +219,7 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
     return 0;
 }
 
+
 /*
  * Change the status of an account in Active Directory.  Takes the plugin
  * configuration, a Kerberos context, the principal whose status changed (only
@@ -208,16 +227,17 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
  * account is enabled, and a buffer into which to put error messages and its
  * length.
  */
-int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
-                       krb5_principal principal, int enabled, char *errstr,
-                       int errstrlen)
+int
+pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
+                   krb5_principal principal, int enabled, char *errstr,
+                   int errstrlen)
 {
     krb5_ccache ccache;
     krb5_principal ad_principal = NULL;
     LDAP *ld;
     LDAPMessage *res = NULL;
     LDAPMod mod, *mod_array[2];
-    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *dn;
+    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *end, *dn;
     char *target = NULL;
     char **vals = NULL;
     const char *attrs[] = { "userAccountControl", NULL };
@@ -273,21 +293,21 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      */
     memset(ldapbase, 0, sizeof(ldapbase));
     if (config->ad_ldap_base == NULL)
-        strcpy(ldapbase, "ou=Accounts,dc=");
+        strlcpy(ldapbase, "ou=Accounts,dc=", sizeof(ldapbase));
     else {
-        strncpy(ldapbase, config->ad_ldap_base, sizeof(ldapbase) - 5);
-        ldapbase[sizeof(ldapbase) - 5] = '\0';
-        strcat(ldapbase, ",dc=");
+        strlcpy(ldapbase, config->ad_ldap_base, sizeof(ldapbase));
+        strlcat(ldapbase, ",dc=", sizeof(ldapbase));
     }
     lb = ldapbase + strlen(ldapbase);
-    for (dname = config->ad_realm; *dname != '\0'; dname++) {
+    end = ldapbase + sizeof(ldapbase) - 1;
+    for (dname = config->ad_realm; lb < end && *dname != '\0'; dname++) {
         if (*dname == '.') {
-            strcpy(lb, ",dc=");
+            *lb = '\0';
+            strlcat(ldapbase, ",dc=", sizeof(ldapbase));
             lb += 4;
-        } else
+        } else {
             *lb++ = *dname;
-        if (strlen(ldapbase) > sizeof(ldapbase) - 5)
-            break;
+        }
     }
 
     /*
@@ -373,7 +393,7 @@ int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
 
 done:
     if (target != NULL)
-        free(target);
+        krb5_free_unparsed_name(ctx, target);
     if (res != NULL)
         ldap_msgfree(res);
     if (vals != NULL)

@@ -1,8 +1,15 @@
 #!/bin/sh
-# $Id$
 #
-# Run this shell script to bootstrap as necessary after a fresh checkout
-# from Subversion.
+# Run this shell script to bootstrap as necessary after a fresh checkout.
+
+set -e
 
 autoreconf -i --force
 rm -rf autom4te.cache
+
+# Generate manual pages.
+version=`grep '^krb5-sync' NEWS | head -1 | cut -d' ' -f2`
+pod2man --release="$version" --center="krb5-sync" tools/krb5-sync.pod \
+    > tools/krb5-sync.8
+pod2man --release="$version" --center="krb5-sync" tools/krb5-sync-backend \
+    > tools/krb5-sync-backend.8
