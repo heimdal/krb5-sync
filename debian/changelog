@@ -1,4 +1,4 @@
-krb5-sync (2.0-1) UNRELEASED; urgency=low
+krb5-sync (2.0-1) unstable; urgency=low
 
   * New upstream release.
     - Drop support for AFS kaserver synchronization.
@@ -17,7 +17,7 @@ krb5-sync (2.0-1) UNRELEASED; urgency=low
   * Add a watch file.
   * Update standards version to 3.8.4 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 15 Feb 2010 19:48:10 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 15 Feb 2010 23:21:15 -0800
 
 krb5-sync (1.2-1) unstable; urgency=low
 
