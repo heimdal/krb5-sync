@@ -7,8 +7,9 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = LICENSE autogen patches/README patches/mit-krb5-1.4.4	\
-	patches/stanford-krb5-1.4.4 tools/krb5-sync.pod
+EXTRA_DIST = .gitignore LICENSE autogen patches/README patches/heimdal-1.3.1 \
+	patches/mit-krb5-1.4.4 patches/stanford-krb5-1.4.4		     \
+	tools/krb5-sync.pod
 
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
 
