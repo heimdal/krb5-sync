@@ -11,6 +11,8 @@ krb5-sync (2.0-1) UNRELEASED; urgency=low
   * Built against Heimdal Kerberos instead of MIT Kerberos.
   * No longer restart kadmind on package installation, since the
     convention for Heimdal is to run kadmind from inetd.
+  * Update debhelper compatibility level to V7.
+    - Use debhelper rule minimization with overrides.
 
  -- Russ Allbery <rra@debian.org>  Mon, 15 Feb 2010 19:48:10 -0800
 
