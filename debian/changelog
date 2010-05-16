@@ -1,3 +1,11 @@
+krb5-sync (2.0-2) unstable; urgency=low
+
+  * Queue password changes for AD for any password change failure.
+    Heimdal may return a missing plugin error rather than the regular
+    password change failure message if the account doesn't exist.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 16 May 2010 11:13:01 -0700
+
 krb5-sync (2.0-1) unstable; urgency=low
 
   * New upstream release.

@@ -171,7 +171,8 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to parse target principal");
-        return 1;
+        code = 1;
+        goto done;
     }
 
     /* Do the actual password change. */
@@ -183,7 +184,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "password change failed for %s in %s",
                            target, config->ad_realm);
-        code = 1;
+        code = 3;
         goto done;
     }
     if (result_code != 0) {
