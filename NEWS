@@ -9,6 +9,13 @@ krb5-sync 2.1 (unreleased)
     Directory, causing the plugin to fail the whole password change rather
     than queuing it as intended for unknown users.
 
+    Fix suppression of some error messages in krb5-sync-backend when the
+    -s flag was given.  This was broken by adding the krb5-sync: prefix to
+    error messages from krb5-sync.
+
+    Suppress the Heimdal service_locator plugin error message in
+    krb5-sync-backend when the -s flag was given.
+
 krb5-sync 2.0 (2010-02-15)
 
     Dropped support for AFS synchronization and all Kerberos v4 support.
