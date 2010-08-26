@@ -16,6 +16,11 @@ krb5-sync 2.1 (unreleased)
     Suppress the Heimdal service_locator plugin error message in
     krb5-sync-backend when the -s flag was given.
 
+    Add a version of the krb5-sync patch for MIT Kerberos 1.8.3.  This is
+    a simple forward-port of the 1.4.4 patch and doesn't use any of the
+    new plugin capabilities or configuration.  Thanks to Sam Hartman for
+    the port.
+
 krb5-sync 2.0 (2010-02-15)
 
     Dropped support for AFS synchronization and all Kerberos v4 support.
