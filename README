@@ -108,10 +108,10 @@ REQUIREMENTS
 INSTALLATION
 
   First, patch MIT Kerberos or Heimdal with the patch provided in the
-  patches directory and install the new libkadm5srv library.  See
-  patches/README for more information about the patch.  If you're using a
-  different version of MIT Kerberos, you may need to adjust the patch
-  accordingly.
+  patches directory and install the new libkadm5srv or libkadm5srv_mit
+  library.  See patches/README for more information about the patch.  If
+  you're using a different version of MIT Kerberos, you may need to adjust
+  the patch accordingly.
 
   Then, you can build and install the plugin and command-line utilities
   with the standard commands:
