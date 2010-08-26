@@ -21,6 +21,9 @@ krb5-sync 2.1 (unreleased)
     new plugin capabilities or configuration.  Thanks to Sam Hartman for
     the port.
 
+    The Active Directory status manipulation code no longer uses
+    deprecated OpenLDAP library functions.
+
     Update to rra-c-util 2.6:
 
     * Fix portability to bundled Heimdal on OpenBSD.
