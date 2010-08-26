@@ -35,9 +35,9 @@
 /* Write out a string, checking that all of it was written. */
 #define WRITE_CHECK(fd, s)                              \
     do {                                                \
-        ssize_t status;                                 \
-        status = write((fd), (s), strlen(s));           \
-        if (status < 0 || (size_t) status != strlen(s)) \
+        ssize_t result;                                 \
+        result = write((fd), (s), strlen(s));           \
+        if (result < 0 || (size_t) result != strlen(s)) \
             goto fail;                                  \
     } while (0)
 
