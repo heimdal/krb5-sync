@@ -21,6 +21,11 @@ krb5-sync 2.1 (unreleased)
     new plugin capabilities or configuration.  Thanks to Sam Hartman for
     the port.
 
+    Update to rra-c-util 2.6:
+
+    * Fix portability to bundled Heimdal on OpenBSD.
+    * Fix portability for missing krb5_get_init_creds_opt_free.
+
 krb5-sync 2.0 (2010-02-15)
 
     Dropped support for AFS synchronization and all Kerberos v4 support.
