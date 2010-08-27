@@ -5,6 +5,9 @@ krb5-sync (2.1-1) UNRELEASED; urgency=low
     - Suppress Heimdal service_locator plugin error messages in
       krb5-sync-backend if -s is given.
     - Avoid deprecated OpenLDAP functions.
+  * Recommend heimdal-kdc, not krb5-admin-server, since the package is now
+    built as a Heimdal plugin.  Eventually (before uploading to Debian)
+    we'll build both plugins using the -multidev packages.
 
  -- Russ Allbery <rra@debian.org>  Thu, 26 Aug 2010 17:57:46 -0700
 

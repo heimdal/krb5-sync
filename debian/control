@@ -9,7 +9,7 @@ Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
 Package: krb5-sync
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
-Recommends: krb5-admin-server
+Recommends: heimdal-kdc
 Description: Heimdal KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign realm
  via the Kerberos v5 password change protocol.  It can also propagate
