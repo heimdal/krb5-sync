@@ -1,4 +1,4 @@
-krb5-sync (2.1-1) UNRELEASED; urgency=low
+krb5-sync (2.1-1) unstable; urgency=low
 
   * New upstream release.
     - Fix suppression of error messages in krb5-sync-backend -s.
@@ -15,7 +15,7 @@ krb5-sync (2.1-1) UNRELEASED; urgency=low
     separately would be work for no gain.
   * Update standards version to 3.9.1 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Thu, 26 Aug 2010 17:57:46 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 26 Aug 2010 18:06:27 -0700
 
 krb5-sync (2.0-2) unstable; urgency=low
 
