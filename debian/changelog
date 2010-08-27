@@ -1,3 +1,13 @@
+krb5-sync (2.1-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Fix suppression of error messages in krb5-sync-backend -s.
+    - Suppress Heimdal service_locator plugin error messages in
+      krb5-sync-backend if -s is given.
+    - Avoid deprecated OpenLDAP functions.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 26 Aug 2010 17:57:46 -0700
+
 krb5-sync (2.0-2) unstable; urgency=low
 
   * Queue password changes for AD for any password change failure.
