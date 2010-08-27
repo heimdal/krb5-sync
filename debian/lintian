@@ -1,3 +1,0 @@
-# This is unavoidable as long as we have to link in AFS support, since
-# AFS doesn't provide real shared libraries.  Bleh.
-krb5-sync: shlib-with-non-pic-code usr/lib/kadmind/passwd_update.so
