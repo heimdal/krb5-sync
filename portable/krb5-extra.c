@@ -97,7 +97,8 @@ krb5_free_error_message(krb5_context ctx UNUSED, const char *msg)
  * assumes that an all-zero bit pattern will create a NULL pointer.
  */
 krb5_error_code
-krb5_get_init_creds_opt_alloc(krb5_context ctx, krb5_get_init_creds_opt **opts)
+krb5_get_init_creds_opt_alloc(krb5_context ctx UNUSED,
+                              krb5_get_init_creds_opt **opts)
 {
     *opts = calloc(1, sizeof(krb5_get_init_creds_opt));
     if (*opts == NULL)

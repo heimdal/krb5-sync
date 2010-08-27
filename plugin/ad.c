@@ -16,10 +16,8 @@
 #include <portable/krb5.h>
 #include <portable/system.h>
 
-/* Need to determine why this is deprecated. */
-#define LDAP_DEPRECATED 1
-
 #include <errno.h>
+#include <lber.h>
 #include <ldap.h>
 #include <syslog.h>
 
@@ -171,7 +169,8 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to parse target principal");
-        return 1;
+        code = 1;
+        goto done;
     }
 
     /* Do the actual password change. */
@@ -183,7 +182,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "password change failed for %s in %s",
                            target, config->ad_realm);
-        code = 1;
+        code = 3;
         goto done;
     }
     if (result_code != 0) {
@@ -239,7 +238,8 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     LDAPMod mod, *mod_array[2];
     char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *end, *dn;
     char *target = NULL;
-    char **vals = NULL;
+    struct berval **vals = NULL;
+    char *value;
     const char *attrs[] = { "userAccountControl", NULL };
     char *strvals[2];
     int option, ret;
@@ -328,8 +328,8 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
         goto done;
     }
     snprintf(ldapdn, sizeof(ldapdn), "(userPrincipalName=%s)", target);
-    ret = ldap_search_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn,
-                        (char **) attrs, 0, &res);
+    ret = ldap_search_ext_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn,
+                            (char **) attrs, 0, NULL, NULL, NULL, 0, &res);
     if (ret != LDAP_SUCCESS) {
         snprintf(errstr, errstrlen, "LDAP search on \"%s\" failed: %s",
                  ldapdn, ldap_err2string(ret));
@@ -347,11 +347,11 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
                  " (0x61), but got type %x instead", ldap_msgtype(res));
         goto done;
     }
-    vals = ldap_get_values(ld, res, "userAccountControl");
-    if (ldap_count_values(vals) != 1) {
+    vals = ldap_get_values_len(ld, res, "userAccountControl");
+    if (ldap_count_values_len(vals) != 1) {
         snprintf(errstr, errstrlen, "expected one value for"
                  " userAccountControl for user \"%s\" and got %d", target,
-                 ldap_count_values(vals));
+                 ldap_count_values_len(vals));
         goto done;
     }
 
@@ -360,11 +360,21 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      * current flag value and modify it according to the enable, flag, and
      * then push back the modified value.
      */
-    if (sscanf(vals[0], "%u", &acctcontrol) != 1) {
-        snprintf(errstr, errstrlen, "unable to parse userAccountControl for"
-                 " user \"%s\" (%s)", target, vals[0]);
+    value = malloc(vals[0]->bv_len + 1);
+    if (value == NULL) {
+        snprintf(errstr, errstrlen, "cannot allocate memory: %s",
+                 strerror(errno));
         goto done;
     }
+    memcpy(value, vals[0]->bv_val, vals[0]->bv_len);
+    value[vals[0]->bv_len] = '\0';
+    if (sscanf(value, "%u", &acctcontrol) != 1) {
+        free(value);
+        snprintf(errstr, errstrlen, "unable to parse userAccountControl for"
+                 " user \"%s\" (%s)", target, value);
+        goto done;
+    }
+    free(value);
     if (enabled) {
         acctcontrol &= ~UF_ACCOUNTDISABLE;
     } else {
@@ -379,7 +389,7 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     mod.mod_vals.modv_strvals = strvals;
     mod_array[0] = &mod;
     mod_array[1] = NULL;
-    ret = ldap_modify_s(ld, dn, mod_array);
+    ret = ldap_modify_ext_s(ld, dn, mod_array, NULL, NULL);
     if (ret != LDAP_SUCCESS) {
         snprintf(errstr, errstrlen, "LDAP modification for user \"%s\""
                  " failed: %s", target, ldap_err2string(ret));
@@ -397,7 +407,7 @@ done:
     if (res != NULL)
         ldap_msgfree(res);
     if (vals != NULL)
-        ldap_value_free(vals);
-    ldap_unbind_s(ld);
+        ldap_value_free_len(vals);
+    ldap_unbind_ext_s(ld, NULL, NULL);
     return code;
 }

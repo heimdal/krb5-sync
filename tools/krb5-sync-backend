@@ -36,9 +36,10 @@ our $QUEUE  = '/var/spool/krb5-sync';
 
 # Regexes of error messages to ignore when running in silent mode.
 our @IGNORE =
-    (qr/^AD password change for \S+ failed \(1\):.*Connection timed out$/,
-     qr/^AD password change for \S+ failed \(3\):.*Authentication error$/,
-     qr/^AD status change for \S+ failed \(1\): user .* not found in \S+$/);
+    (qr/AD password change for \S+ failed \(3\):.*Connection timed out$/,
+     qr/AD password change for \S+ failed \(3\):.*Authentication error$/,
+     qr/AD password change for \S+ failed \(3\):.* for service_locator$/,
+     qr/AD status change for \S+ failed \(1\): user .* not found in \S+$/);
 
 ##############################################################################
 # Writing queue files
@@ -179,7 +180,7 @@ sub process {
             close SYNC;
             my $ignore;
             for my $regex (@IGNORE) {
-                $ignore = 1 if $output =~ /$regex/;
+                $ignore = 1 if $output =~ /^krb5-sync: $regex/;
             }
             if (not $silent) {
                 print $output if $output;
