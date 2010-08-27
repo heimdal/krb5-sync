@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 2.1 (unreleased)
+krb5-sync 2.1 (2010-08-26)
 
     Queue password changes on any failure to change the password in Active
     Directory, rather than only on failures returned as an error in the
