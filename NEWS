@@ -1,5 +1,34 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 2.1 (2010-08-26)
+
+    Queue password changes on any failure to change the password in Active
+    Directory, rather than only on failures returned as an error in the
+    password change protocol.  Heimdal 1.3.2 will return an error about a
+    missing service location plugin instead of the last error from Active
+    Directory, causing the plugin to fail the whole password change rather
+    than queuing it as intended for unknown users.
+
+    Fix suppression of some error messages in krb5-sync-backend when the
+    -s flag was given.  This was broken by adding the krb5-sync: prefix to
+    error messages from krb5-sync.
+
+    Suppress the Heimdal service_locator plugin error message in
+    krb5-sync-backend when the -s flag was given.
+
+    Add a version of the krb5-sync patch for MIT Kerberos 1.8.3.  This is
+    a simple forward-port of the 1.4.4 patch and doesn't use any of the
+    new plugin capabilities or configuration.  Thanks to Sam Hartman for
+    the port.
+
+    The Active Directory status manipulation code no longer uses
+    deprecated OpenLDAP library functions.
+
+    Update to rra-c-util 2.6:
+
+    * Fix portability to bundled Heimdal on OpenBSD.
+    * Fix portability for missing krb5_get_init_creds_opt_free.
+
 krb5-sync 2.0 (2010-02-15)
 
     Dropped support for AFS synchronization and all Kerberos v4 support.

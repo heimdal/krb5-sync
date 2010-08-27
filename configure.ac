@@ -7,7 +7,7 @@ dnl
 dnl See LICENSE for licensing terms.
 
 AC_PREREQ([2.64])
-AC_INIT([krb5-sync], [2.0], [rra@stanford.edu])
+AC_INIT([krb5-sync], [2.1], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AC_CONFIG_MACRO_DIR([m4])
@@ -31,6 +31,8 @@ AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
     krb5_principal_get_realm \
     krb5_principal_set_realm \
     krb5_xfree])
+AC_CHECK_FUNCS([krb5_get_init_creds_opt_free],
+    [RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS])
 RRA_LIB_KRB5_RESTORE
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
