@@ -9,6 +9,10 @@ krb5-sync (2.1-1) UNRELEASED; urgency=low
     built as a Heimdal plugin.  Eventually (before uploading to Debian)
     we'll build both plugins using the -multidev packages.
   * Direct bug reports against this package to me personally.
+  * Switch to 3.0 (quilt) source format.  Force a single Debian patch and
+    include a custom patch header explaining that it is a rollup of any
+    fixes cherry-picked from upstream and breaking those patches out
+    separately would be work for no gain.
   * Update standards version to 3.9.1 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Thu, 26 Aug 2010 17:57:46 -0700
