@@ -201,6 +201,9 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  * If a password change is already queued for this usequeue this password
  * change as well.  If the password change fails for a reason that may mean
  * that the user doesn't already exist, also queue this change.
+ *
+ * If the new password is NULL, that means that the keys are being randomized.
+ * Currently, we can't do anything in that case, so just skip it.
  */
 int
 pwupdate_precommit_password(void *data, krb5_principal principal,
@@ -212,6 +215,8 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
     int status;
 
     if (config->ad_realm == NULL)
+        return 0;
+    if (password == NULL)
         return 0;
     if (!create_context(&ctx, errstr, errstrlen))
         return 1;

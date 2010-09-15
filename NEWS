@@ -1,5 +1,12 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 2.2 (unreleased)
+
+    Current MIT Kerberos calls the password change hook with a NULL
+    password in the -randkey case, which the module wasn't prepared to
+    handle.  For now, quietly skip -randkey key changes, since we cannot
+    currently do anything sensible with them.
+
 krb5-sync 2.1 (2010-08-26)
 
     Queue password changes on any failure to change the password in Active
