@@ -3,9 +3,11 @@
 krb5-sync 2.2 (unreleased)
 
     Current MIT Kerberos calls the password change hook with a NULL
-    password in the -randkey case, which the module wasn't prepared to
-    handle.  For now, quietly skip -randkey key changes, since we cannot
-    currently do anything sensible with them.
+    password in the -randkey case, which neither the module nor the patch
+    were prepared to handle.  Pass a password of NULL and a length of 0
+    from the MIT patch to the plugin in this case and, for now, quietly
+    skip -randkey key changes in the plugin since we cannot currently do
+    anything sensible with them.  Thanks, Dominic Hargreaves.
 
 krb5-sync 2.1 (2010-08-26)
 

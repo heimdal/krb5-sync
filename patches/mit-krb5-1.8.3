@@ -158,7 +158,7 @@ index 469a8e8..aaf71a0 100644
  /*
   * XXX Functions that ought to be in libkrb5.a, but aren't.
   */
-@@ -354,6 +368,25 @@ kadm5_create_principal_3(void *server_handle,
+@@ -354,6 +368,27 @@ kadm5_create_principal_3(void *server_handle,
          return(ret);
      }
  
@@ -169,10 +169,12 @@ index 469a8e8..aaf71a0 100644
 +
 +    if (d_pwupdate_precommit_password) {
 +        char errstr[256];
++        size_t length;
 +
++        length = (password == NULL) ? 0 : strlen(password);
 +        ret = (*d_pwupdate_precommit_password)(pwupdate_context,
 +                                               entry->principal, password,
-+                                               strlen(password), errstr,
++                                               length, errstr,
 +                                               sizeof(errstr));
 +        if (ret) {
 +            krb5_klog_syslog(LOG_ERR, "External password update failed: "
@@ -184,16 +186,18 @@ index 469a8e8..aaf71a0 100644
      if ((ret = krb5_dbe_update_last_pwd_change(handle->context, &kdb, now))) {
          krb5_db_free_principal(handle->context, &kdb, 1);
          if (mask & KADM5_POLICY)
-@@ -475,6 +508,18 @@ kadm5_create_principal_3(void *server_handle,
+@@ -475,6 +508,20 @@ kadm5_create_principal_3(void *server_handle,
          return(ret);
      }
  
 +    if (d_pwupdate_postcommit_password) {
 +        char errstr[256];
++        size_t length;
 +
++        length = (password == NULL) ? 0 : strlen(password);
 +        ret = (*d_pwupdate_postcommit_password)(pwupdate_context,
 +                                                entry->principal, password,
-+                                                strlen(password), errstr,
++                                                length, errstr,
 +                                                sizeof(errstr));
 +        if (ret)
 +            krb5_klog_syslog(LOG_ERR, "WARNING: External password update "
