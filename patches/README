@@ -3,9 +3,11 @@ plugin API for performing actions before and after a password change is
 committed to the KDC database and after a change is made to the attributes
 of a principal (specifically, a change to DISALLOW_ALL_TIX).
 
-Currently, there are two patches available:
+Currently, there are four patches available:
 
+    heimdal-1.3.1       Built against stock Heimdal 1.3.1
     mit-krb5-1.4.4      Built against stock MIT Kerberos 1.4.4
+    mit-krb5-1.8.3      Built against stock MIT Kerberos 1.8.3
     stanford-krb5-1.4.4 Built against Stanford-patched MIT Kerberos 1.4.4
 
 After applying the patch, you will need to run src/util/reconf to
@@ -41,8 +43,8 @@ history, this will be harmless, since in this failure case the pre-commit
 hook would have propagated the existing password.  If, however, you store
 multiple passwords in the password history, the pre-commit hook could
 change the password in another environment even though it wasn't
-successful in the local KDC.  This will hopefully be fixed in a later
-version of the kadmind patch.
+successful in the local KDC.  This is fixed in the code incorporated into
+MIT Kerberos 1.9 and later.
 
 
 Any plugin used with this patch must implement the following two
