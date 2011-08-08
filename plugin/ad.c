@@ -46,7 +46,7 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     krb5_principal princ;
     krb5_get_init_creds_opt *opts;
     krb5_error_code ret;
-    const char *realm;
+    const char *realm UNUSED;
 
     ret = krb5_kt_resolve(ctx, config->ad_keytab, &kt);
     if (ret != 0) {
