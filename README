@@ -3,9 +3,10 @@
 
               Maintained by Russ Allbery <rra@stanford.edu>
 
-  Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford
-  Jr. University.  Originally developed by Derrick Brashear and Ken
-  Hornstein of Sine Nomine Associates, on behalf of Stanford University.
+  Copyright 2006, 2007, 2010, 2011 The Board of Trustees of the Leland
+  Stanford Junior University.  Originally developed by Derrick Brashear
+  and Ken Hornstein of Sine Nomine Associates, on behalf of Stanford
+  University.
 
   This software is distributed under a BSD-style license.  Please see the
   file LICENSE in the distribution for more information.
@@ -37,11 +38,12 @@ DESCRIPTION
 
   This toolkit consists of three basic pieces:
 
-   * Patches to MIT Kerberos and Heimdal to add a plugin system for
-     password changes and account status updates.  These patches add hooks
-     that are run prior to a password change, after a password change, and
-     after a change to an account's flags.  The code in libkadm5srv is
-     independent of what that plugin might do.
+   * Patches to MIT Kerberos (prior to 1.9; 1.9 and later do not require
+     patching) and Heimdal to add a plugin system for password changes and
+     account status updates.  These patches add hooks that are run prior
+     to a password change, after a password change, and after a change to
+     an account's flags.  The code in libkadm5srv is independent of what
+     that plugin might do.
 
    * A plugin that uses that system to push password changes and selected
      account flag changes to Active Directory.  This is done using a
@@ -67,27 +69,28 @@ DESCRIPTION
   Currently, only one Active Directory realm is supported for updates.
 
   Be aware that, due to the structure of the MIT Kerberos libkadm5srv
-  code, the pre-commit hook and hence password propagation to Active
-  Directory will happen before the password is checked for reuse.  This
-  means that the password may be changed in Active Directory but then
-  rejected by the local KDC if it is present in the account's password
-  history.  If you remember only one password in the password history,
-  this will be harmless, since it will only mean the Active Directory
-  password will be reset to the existing password.  If, however, you store
-  multiple passwords in the password history, the passwords could end up
-  being desynchronized.  This will hopefully be fixed in a later version
-  of the libkadm5srv patch.
+  code, the patch for versions prior to 1.9 runs the pre-commit hook and
+  hence password propagation to Active Directory before the password is
+  checked for reuse.  This means that the password may be changed in
+  Active Directory but then rejected by the local KDC if it is present in
+  the account's password history.  If you remember only one password in
+  the password history, this will be harmless, since it will only mean the
+  Active Directory password will be reset to the existing password.  If,
+  however, you store multiple passwords in the password history, the
+  passwords could end up being desynchronized.  This should be fixed in
+  MIT Kerberos 1.9.
 
 REQUIREMENTS
 
   The utilities provided in this package will work without any
   modifications to your KDC or kadmind, but to use this entire system, you
-  will have to apply the patch in the patches directory to MIT Kerberos or
-  Heimdal and rebuild.  Due to how kadmind is constructed, the changes are
-  actually in the libkadm5srv library, not the kadmind binary, so you'll
-  need to install the modified libraries.  It is my hope that eventually
-  an interface like this will be incorporated into the MIT Kerberos and
-  Heimdal distributions and patching will not be necessary.
+  will either need MIT Kerberos 1.9 or later or apply the patch in the
+  patches directory to MIT Kerberos or Heimdal and rebuild.  Due to how
+  kadmind is constructed, the changes are actually in the libkadm5srv
+  library, not the kadmind binary, so you'll need to install the modified
+  libraries.  It is my hope that eventually an interface like this will be
+  incorporated into the Heimdal distribution as well and patching will not
+  be necessary.
 
   To build the account status update code, you will need OpenLDAP
   installed.  To authenticate to Active Directory, you will also need
@@ -108,10 +111,10 @@ REQUIREMENTS
 INSTALLATION
 
   First, patch MIT Kerberos or Heimdal with the patch provided in the
-  patches directory and install the new libkadm5srv or libkadm5srv_mit
-  library.  See patches/README for more information about the patch.  If
-  you're using a different version of MIT Kerberos, you may need to adjust
-  the patch accordingly.
+  patches directory if necessary and install the new libkadm5srv or
+  libkadm5srv_mit library.  See patches/README for more information about
+  the patch.  If you're using a different version of MIT Kerberos, you may
+  need to adjust the patch accordingly.
 
   Then, you can build and install the plugin and command-line utilities
   with the standard commands:

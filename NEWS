@@ -2,6 +2,10 @@
 
 krb5-sync 2.2 (unreleased)
 
+    Add support for the new libkadm5 hooks provided by MIT Kerberos 1.9.
+    With that version and later, no patch to MIT Kerberos is required to
+    use this code.  Thanks to Sam Hartman for the patch.
+
     Current MIT Kerberos calls the password change hook with a NULL
     password in the -randkey case, which neither the module nor the patch
     were prepared to handle.  Pass a password of NULL and a length of 0

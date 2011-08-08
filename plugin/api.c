@@ -50,8 +50,8 @@ config_string(krb5_context ctx, const char *opt, char **result)
 /*
  * Initialize the module.  This consists solely of loading our configuration
  * options from krb5.conf into a newly allocated struct stored in the second
- * argument to this function.  Returns 0 on success, non-zero on failre.  This
- * function returns failure only if it could not allocate memory.
+ * argument to this function.  Returns 0 on success, non-zero on failure.
+ * This function returns failure only if it could not allocate memory.
  */
 int
 pwupdate_init(krb5_context ctx, void **data)

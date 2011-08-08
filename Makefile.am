@@ -30,7 +30,7 @@ moduledir = $(libdir)/kadmind
 # Rules for building the password synchronization plugin.
 module_LTLIBRARIES = plugin/passwd_update.la
 plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
-	plugin/internal.h plugin/heimdal.c plugin/kadm5_hook.c plugin/queue.c
+	plugin/internal.h plugin/heimdal.c plugin/mit.c plugin/queue.c
 plugin_passwd_update_la_LDFLAGS = -module -avoid-version $(KRB5_LDFLAGS)
 plugin_passwd_update_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
