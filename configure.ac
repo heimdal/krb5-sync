@@ -23,7 +23,7 @@ AC_PROG_LIBTOOL
 
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
-AC_CHECK_HEADERS([kadm5/kadm5_err.h])
+AC_CHECK_HEADERS([kadm5/kadm5_err.h krb5/kadm5_hook_plugin.h])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
     krb5_get_init_creds_opt_set_default_flags \
     krb5_principal_get_comp_string \
