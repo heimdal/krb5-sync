@@ -13,6 +13,11 @@ krb5-sync 2.2 (unreleased)
     skip -randkey key changes in the plugin since we cannot currently do
     anything sensible with them.  Thanks, Dominic Hargreaves.
 
+    krb5-sync-backend's password command now accepts the password on
+    standard input in addition to accepting it as a command-line
+    parameter.  This is more secure since the password is not exposed to
+    other users of the same system.
+
     Remove the patch for Stanford's patched MIT Kerberos 1.4.4 from the
     distribution.  This has not been used at Stanford for years and is old
     enough that it's unlikely to be of interest to others.

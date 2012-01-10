@@ -3,7 +3,8 @@
 # krb5-sync-backend -- Manipulate Kerberos password and status change queue.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2007, 2008, 2010 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2007, 2008, 2010, 2012
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted, provided
@@ -263,6 +264,10 @@ EOH
     die "Usage: sync process\n" unless @args == 0;
     process ($silent);
 } elsif ($function eq 'password') {
+    if (@args == 2) {
+        local $/;
+        $args[2] = <STDIN>;
+    }
     die "Usage: sync password <user> <system> <password>\n" unless @args == 3;
     queue_password (@args);
 } elsif ($function eq 'purge') {
@@ -290,7 +295,7 @@ B<krb5-sync-backend> (help|list)
 
 B<krb5-sync-backend> [B<-s>] process
 
-B<krb5-sync-backend> password I<user> ad I<password>
+B<krb5-sync-backend> password I<user> ad < I<password>
 
 B<krb5-sync-backend> purge I<days>
 
@@ -348,13 +353,17 @@ fails for a queued action, all other actions sharing the same username,
 domain, and action will be skipped and queue processing will continue with
 the next action that differs in one of those three parameters.
 
-=item password I<user> ad I<password>
+=item password I<user> ad < I<password>
 
 Queue a password change for I<user> in Active Directory, setting their
-password to I<password>.  Note that I<password> appears on the command
-line, so you don't want to invoke this command in any environment where an
-untrusted user would be in a position to see the command-line arguments of
-processes (which are generally readable to anyone on the system).
+password to I<password>.  By default, I<password> is read from standard input.
+It can also be passed as a command-line argument, but this is less secure
+since the password is then readable by anyone on the system who can see the
+command-line arguments of processes.
+
+The entire standard input is taken as the password, including any trailing
+newlines, so be careful how the password is provided.  If using something like
+B<echo>, use C<echo -n> or the C<\c> flag, depending on your system.
 
 =item purge I<days>
 
