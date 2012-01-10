@@ -1,15 +1,7 @@
                            krb5-sync To-Do List
 
- * Fix the krb5-sync utility so that it doesn't unconditionally attempt
-   to sync passwords to Active Directory even when no Active Directory
-   configuration is present.
-
  * The base DN for finding users in Active Directory probably has to be
    configurable.
-
- * After remctl has been modified to allow passing of some parameters on
-   standard input, change krb5-sync-backend to accept the password on
-   standard input to avoid exposing it on the command line.
 
  * krb5-sync-backend should get the path to Perl and krb5-sync from
    configure.
@@ -20,3 +12,14 @@
 
  * A test suite would be nice, probably drawing on the code in the wallet
    for testing Kerberos operations and keys.
+
+ * Support a list of accounts that should be synchronized instead of doing
+   the configuration by instance.
+
+ * In Heimdal, error reporting when the Active Directory configuration
+   exists but the keytab does not is horrible.  Nothing is logged and the
+   client just gets a generic failure message.
+
+ * Look at http://code.google.com/p/krb5-adsync/ (based on this code) for
+   what ideas can be incorporated back into this package.  Currently, code
+   cannot be shared due to licensing reasons.

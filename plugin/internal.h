@@ -3,8 +3,9 @@
  *
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
- * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *     Nomine Associates, on behalf of Stanford University.
+ * Copyright 2006, 2007, 2010
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */

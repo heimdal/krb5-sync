@@ -9,8 +9,9 @@
  *
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
- * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *     Nomine Associates, on behalf of Stanford University
+ * Copyright 2006, 2007, 2010, 2012
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
@@ -51,7 +52,7 @@ ad_password(void *data, krb5_context ctx, krb5_principal principal,
  * we were successful, and exit with an error message if we weren't.
  */
 static void
-ad_status(void *data, krb5_context ctx, krb5_principal principal, int enable,
+ad_status(void *data, krb5_context ctx, krb5_principal principal, bool enable,
           const char *user)
 {
     char errbuf[BUFSIZ];
@@ -101,10 +102,10 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     char *user;
     krb5_principal principal;
     krb5_error_code ret;
-    int ad = 0;
-    int enable = 0;
-    int disable = 0;
-    int password = 0;
+    bool ad = false;
+    bool enable = false;
+    bool disable = false;
+    bool password = false;
 
     queue = fopen(filename, "r");
     if (queue == NULL)
@@ -120,16 +121,16 @@ process_queue_file(void *data, krb5_context ctx, const char *filename)
     /* Get function. */
     read_line(queue, filename, buffer, sizeof(buffer));
     if (strcmp(buffer, "ad") == 0)
-        ad = 1;
+        ad = true;
     else
         die("unknown target system %s in queue file %s", buffer, filename);
     read_line(queue, filename, buffer, sizeof(buffer));
     if (strcmp(buffer, "enable") == 0)
-        enable = 1;
+        enable = true;
     else if (strcmp(buffer, "disable") == 0)
-        disable = 1;
+        disable = true;
     else if (strcmp(buffer, "password") == 0)
-        password = 1;
+        password = true;
     else
         die("unknown action %s in queue file %s", buffer, filename);
 
@@ -154,8 +155,8 @@ int
 main(int argc, char *argv[])
 {
     int option;
-    int enable = 0;
-    int disable = 0;
+    int enable = false;
+    int disable = false;
     char *password = NULL;
     char *filename = NULL;
     char *user;
@@ -173,18 +174,11 @@ main(int argc, char *argv[])
 
     while ((option = getopt(argc, argv, "def:p:")) != EOF) {
         switch (option) {
-        case 'd':
-            disable = 1;
-            break;
-        case 'e':
-            enable = 1;
-            break;
-        case 'f':
-            filename = optarg;
-            break;
-        case 'p':
-            password = optarg;
-            break;
+        case 'd': disable = true;       break;
+        case 'e': enable = true;        break;
+        case 'f': filename = optarg;    break;
+        case 'p': password = optarg;    break;
+
         default:
             fprintf(stderr, "Usage: krb5-sync [-d | -e] [-p <pass>] <user>\n");
             exit(1);
