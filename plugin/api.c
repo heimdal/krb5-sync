@@ -12,8 +12,9 @@
  *
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
- * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *     Nomine Associates, on behalf of Stanford University.
+ * Copyright 2006, 2007, 2010
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
@@ -50,8 +51,8 @@ config_string(krb5_context ctx, const char *opt, char **result)
 /*
  * Initialize the module.  This consists solely of loading our configuration
  * options from krb5.conf into a newly allocated struct stored in the second
- * argument to this function.  Returns 0 on success, non-zero on failre.  This
- * function returns failure only if it could not allocate memory.
+ * argument to this function.  Returns 0 on success, non-zero on failure.
+ * This function returns failure only if it could not allocate memory.
  */
 int
 pwupdate_init(krb5_context ctx, void **data)
@@ -201,6 +202,9 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  * If a password change is already queued for this usequeue this password
  * change as well.  If the password change fails for a reason that may mean
  * that the user doesn't already exist, also queue this change.
+ *
+ * If the new password is NULL, that means that the keys are being randomized.
+ * Currently, we can't do anything in that case, so just skip it.
  */
 int
 pwupdate_precommit_password(void *data, krb5_principal principal,
@@ -212,6 +216,8 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
     int status;
 
     if (config->ad_realm == NULL)
+        return 0;
+    if (password == NULL)
         return 0;
     if (!create_context(&ctx, errstr, errstrlen))
         return 1;

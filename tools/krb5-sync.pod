@@ -1,3 +1,6 @@
+=for stopwords
+krb5-sync keytab LDAP username jdoe jdoe's Allbery
+
 =head1 NAME
 
 krb5-sync - Synchronize passwords and status with Active Directory
@@ -74,7 +77,7 @@ B<krb5-sync> utility.  Therefore, if this utility reports success but no
 change is happening, double-check the configuration to ensure that all
 required options are present.
 
-The C<ad_keytab> option specifies the location of a srvtab or keytab for
+The C<ad_keytab> option specifies the location of a keytab for
 authenticating to the other realm, the C<ad_principal> option specifies
 the principal to authenticate as (using the key in the keytab), and the
 C<ad_realm> option specifies the foreign realm.  C<ad_admin_server> is the
