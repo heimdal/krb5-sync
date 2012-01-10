@@ -69,7 +69,7 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
         return 1;
     }
     realm = krb5_principal_get_realm(ctx, princ);
-    krb5_get_init_creds_opt_set_default_flags(ctx, "k5start", realm, opts);
+    krb5_get_init_creds_opt_set_default_flags(ctx, "krb5-sync", realm, opts);
     memset(&creds, 0, sizeof(creds));
     ret = krb5_get_init_creds_keytab(ctx, &creds, princ, kt, 0, NULL, opts);
     if (ret != 0) {
