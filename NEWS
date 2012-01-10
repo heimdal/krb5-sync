@@ -13,6 +13,18 @@ krb5-sync 2.2 (unreleased)
     skip -randkey key changes in the plugin since we cannot currently do
     anything sensible with them.  Thanks, Dominic Hargreaves.
 
+    Update to rra-c-util 4.1:
+
+    * Build on systems where krb5/krb5.h exists but krb5.h does not.
+    * Kerberos probes no longer assume transitive library dependencies.
+    * Fix removal of /usr/include from Kerberos CPPFLAGS.
+    * Include strings.h where present for more POSIX string functions.
+    * Avoid passing a NULL context to krb5_get_error_message.
+    * Fix a data type issue in the messages utility library.
+    * Fix incorrect __attribute notations in the utility library.
+    * Add replacement for a missing strndup (such as on Mac OS X).
+    * Add notices to all files copied from rra-c-util.
+
 krb5-sync 2.1 (2010-08-26)
 
     Queue password changes on any failure to change the password in Active

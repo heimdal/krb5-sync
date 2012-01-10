@@ -16,8 +16,18 @@
  * prefers the generic krb5_xfree().  In this case, this header provides
  * krb5_free_unparsed_name() for both APIs since it's the most specific call.
  *
+ * The canonical version of this file is maintained in the rra-c-util package,
+ * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
+ *
  * Written by Russ Allbery <rra@stanford.edu>
- * This work is hereby placed in the public domain by its author.
+ *
+ * The authors hereby relinquish any claim to any copyright that they may have
+ * in this work, whether granted under contract or by operation of law or
+ * international treaty, and hereby commit to the public, at large, that they
+ * shall not, at any time in the future, seek to enforce any copyright in this
+ * work against any person or entity, or prevent any person or entity from
+ * copying, publishing, distributing or creating derivative works of this
+ * work.
  */
 
 #ifndef PORTABLE_KRB5_H
@@ -32,7 +42,11 @@
 #endif
 #include <portable/macros.h>
 
-#include <krb5.h>
+#ifdef HAVE_KRB5_H
+# include <krb5.h>
+#else
+# include <krb5/krb5.h>
+#endif
 #include <stdlib.h>
 
 BEGIN_DECLS
@@ -80,7 +94,7 @@ krb5_error_code krb5_get_init_creds_opt_alloc(krb5_context,
 
 /* Heimdal-specific. */
 #ifndef HAVE_KRB5_GET_INIT_CREDS_OPT_SET_DEFAULT_FLAGS
-#define krb5_get_init_creds_opt_set_default_flags(c, p, r, o) /* empty */
+# define krb5_get_init_creds_opt_set_default_flags(c, p, r, o) /* empty */
 #endif
 
 /*

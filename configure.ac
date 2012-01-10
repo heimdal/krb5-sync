@@ -1,8 +1,8 @@
 dnl Autoconf configuration for krb5-sync.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2006, 2007, 2010
-dnl     Board of Trustees, Leland Stanford Jr. University.
+dnl Copyright 2006, 2007, 2010, 2012
+dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl See LICENSE for licensing terms.
 
@@ -37,14 +37,16 @@ RRA_LIB_KRB5_RESTORE
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([sys/bittypes.h syslog.h])
+AC_CHECK_HEADERS([strings.h sys/bittypes.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
 AC_TYPE_LONG_LONG_INT
+AC_CHECK_TYPES([ssize_t], [], [],
+    [#include <sys/types.h>])
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit])
-AC_REPLACE_FUNCS([asprintf strlcat strlcpy])
+AC_REPLACE_FUNCS([asprintf strlcat strlcpy strndup])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADER([config.h])
