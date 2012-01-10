@@ -42,6 +42,7 @@ krb5-sync 2.2 (unreleased)
     * Fix a data type issue in the messages utility library.
     * Fix incorrect __attribute notations in the utility library.
     * Add replacement for a missing strndup (such as on Mac OS X).
+    * Add krb5_appdefault_* replacement for AIX's bundled Kerberos.
     * Add notices to all files copied from rra-c-util.
 
 krb5-sync 2.1 (2010-08-26)
