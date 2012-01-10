@@ -18,9 +18,9 @@ portable_libportable_la_SOURCES = portable/dummy.c portable/krb5-extra.c \
 	portable/system.h
 portable_libportable_la_LDFLAGS = $(KRB5_LDFLAGS)
 portable_libportable_la_LIBADD = $(LTLIBOBJS) $(KRB5_LIBS)
-util_libutil_la_SOURCES = util/macros.h util/messages-krb5.c		    \
-        util/messages-krb5.h util/messages.c util/messages.h util/xmalloc.c \
-        util/xmalloc.h
+util_libutil_la_SOURCES = util/concat.c util/concat.h util/macros.h	\
+        util/messages-krb5.c util/messages-krb5.h util/messages.c	\
+        util/messages.h util/xmalloc.c util/xmalloc.h
 util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
 # Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
@@ -74,3 +74,46 @@ WARNINGS = -g -O -Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self	 \
 
 warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)'
+	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
+
+# The bits below are for the test suite, not for the main package.
+check_PROGRAMS = tests/runtests tests/portable/asprintf-t	\
+        tests/portable/snprintf-t tests/portable/strlcat-t	\
+        tests/portable/strlcpy-t tests/portable/strndup-t	\
+        tests/util/concat-t tests/util/messages-krb5-t		\
+        tests/util/messages-t tests/util/xmalloc
+check_LIBRARIES = tests/tap/libtap.a
+tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
+	-DBUILD='"$(abs_top_builddir)/tests"'
+tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
+tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
+	tests/tap/messages.c tests/tap/messages.h tests/tap/process.c	\
+	tests/tap/process.h tests/tap/string.c tests/tap/string.h
+
+# All of the test programs.
+tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
+	tests/portable/asprintf.c
+tests_portable_asprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
+	tests/portable/snprintf.c
+tests_portable_snprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_portable_strlcat_t_SOURCES = tests/portable/strlcat-t.c \
+	tests/portable/strlcat.c
+tests_portable_strlcat_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_portable_strlcpy_t_SOURCES = tests/portable/strlcpy-t.c \
+	tests/portable/strlcpy.c
+tests_portable_strlcpy_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_portable_strndup_t_SOURCES = tests/portable/strndup-t.c \
+	tests/portable/strndup.c
+tests_portable_strndup_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_util_concat_t_LDADD = tests/tap/libtap.a util/libutil.la \
+	portable/libportable.la
+tests_util_messages_krb5_t_LDFLAGS = $(KRB5_LDFLAGS)
+tests_util_messages_krb5_t_LDADD = tests/tap/libtap.a util/libutil.la \
+	portable/libportable.la $(KRB5_LIBS)
+tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.la \
+	portable/libportable.la
+tests_util_xmalloc_LDADD = util/libutil.la portable/libportable.la
+
+check-local: $(check_PROGRAMS)
+	cd tests && ./runtests $(abs_top_srcdir)/tests/TESTS
