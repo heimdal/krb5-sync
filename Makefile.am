@@ -30,8 +30,11 @@ moduledir = $(libdir)/kadmind
 module_LTLIBRARIES = plugin/passwd_update.la
 plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/mit.c plugin/queue.c
-plugin_passwd_update_la_LDFLAGS = -module -avoid-version $(KRB5_LDFLAGS)
-plugin_passwd_update_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
+plugin_passwd_update_la_CPPFLAGS = $(LDAP_CPPFLAGS)
+plugin_passwd_update_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
+	$(KRB5_LDFLAGS)
+plugin_passwd_update_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
+	$(KRB5_LIBS)
 
 # Rules for building the krb5-sync utility.  We specify the CFLAGS to work
 # around Automake's inability to link libtool objects into a program that
@@ -41,8 +44,9 @@ plugin_passwd_update_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 sbin_PROGRAMS = tools/krb5-sync
 tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
 tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
-tools_krb5_sync_LDFLAGS = $(KRB5_LDFLAGS)
-tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la $(KRB5_LIBS)
+tools_krb5_sync_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
+tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\
+	$(LDAP_LIBS) $(KRB5_LIBS)
 
 # Rules for the krb5-sync-backend script.
 dist_sbin_SCRIPTS = tools/krb5-sync-backend

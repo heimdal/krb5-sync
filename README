@@ -139,6 +139,12 @@ INSTALLATION
   change the path to the krb5-sync utility in that script unless you
   install krb5-sync in /usr/sbin.
 
+  Use --with-ldap to specify the prefix installation location of OpenLDAP
+  if it's not on the compiler's normal search paths.  Or, alternately, use
+  --with-ldap-include and --with-ldap-lib to point to the include files
+  and libraries directly if OpenLDAP isn't installed under a single prefix
+  directory.
+
   Normally, configure will use krb5-config to determine the flags to use
   to compile with your Kerberos libraries.  If krb5-config isn't found, it
   will look for the standard Kerberos libraries in locations already

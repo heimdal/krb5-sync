@@ -17,6 +17,10 @@ krb5-sync 2.2 (unreleased)
     distribution.  This has not been used at Stanford for years and is old
     enough that it's unlikely to be of interest to others.
 
+    Add --with-ldap, --with-ldap-include, and --with-ldap-lib flags to
+    configure to specify the locations of the OpenLDAP libraries if
+    they're not on the standard search path.
+
     Update to rra-c-util 4.1:
 
     * Build on systems where krb5/krb5.h exists but krb5.h does not.
