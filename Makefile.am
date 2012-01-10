@@ -6,7 +6,6 @@
 #
 # See LICENSE for licensing terms.
 
-AUTOMAKE_OPTIONS = foreign subdir-objects
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore LICENSE autogen patches/README patches/heimdal-1.3.1 \
 	patches/mit-krb5-1.4.4 patches/mit-krb5-1.8.3			     \

@@ -11,7 +11,8 @@ AC_INIT([krb5-sync], [2.1], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([1.11 check-news silent-rules -Wall -Werror])
+AM_INIT_AUTOMAKE([1.11 check-news foreign silent-rules subdir-objects
+    -Wall -Werror])
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
@@ -34,6 +35,7 @@ AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_free],
     [RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS])
 RRA_LIB_KRB5_RESTORE
+
 AC_SEARCH_LIBS([ldap_initialize], [ldap])
 
 AC_HEADER_STDBOOL
@@ -42,6 +44,7 @@ AC_CHECK_DECLS([snprintf, vsnprintf])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
 AC_TYPE_LONG_LONG_INT
+AC_TYPE_UINT32_T
 AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
 RRA_FUNC_SNPRINTF
