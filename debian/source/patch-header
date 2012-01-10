@@ -1,4 +1,4 @@
-Subject: Collected Debian patches for wallet
+Subject: Collected Debian patches for krb5-sync
 Author: Russ Allbery <rra@debian.org>
 
 Since I am also upstream for this package, there will normally not be any
