@@ -8,8 +8,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore LICENSE autogen patches/README patches/heimdal-1.3.1 \
-	patches/mit-krb5-1.4.4 patches/mit-krb5-1.8.3			     \
-	patches/stanford-krb5-1.4.4 tools/krb5-sync.pod
+	patches/mit-krb5-1.4.4 patches/mit-krb5-1.8.3 tools/krb5-sync.pod
 
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
 

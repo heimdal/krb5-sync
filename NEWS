@@ -13,6 +13,10 @@ krb5-sync 2.2 (unreleased)
     skip -randkey key changes in the plugin since we cannot currently do
     anything sensible with them.  Thanks, Dominic Hargreaves.
 
+    Remove the patch for Stanford's patched MIT Kerberos 1.4.4 from the
+    distribution.  This has not been used at Stanford for years and is old
+    enough that it's unlikely to be of interest to others.
+
     Update to rra-c-util 4.1:
 
     * Build on systems where krb5/krb5.h exists but krb5.h does not.
