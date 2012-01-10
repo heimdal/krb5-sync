@@ -184,6 +184,21 @@ INSTALLATION
   shared library migrations more difficult.  If none of the above made any
   sense to you, don't bother with this flag.
 
+TESTING
+
+  A rudimentary test suite is available, but for right now only tests the
+  portability and utility libraries and the documentation.  You can run it
+  with:
+
+      make check
+
+  If a test fails, you can run a single test with verbose output via:
+
+      tests/runtests -o <name-of-test>
+
+  Do this instead of running the test program directly since it will
+  ensure that necessary environment variables are set up.
+
 CONFIGURATION
 
   Additional configuration is required to tell the plugin and command-line
