@@ -17,11 +17,12 @@
 
 BLURB
 
-  krb5-sync is a toolkit for updating passwords and account status from an
-  MIT or Heimdal Kerberos master KDC to Active Directory.  It is
-  implemented as a patch to libkadm5srv and a plugin module that will push
-  password changes and selected account flag changes to Active Directory
-  at the same time as they are made to the local KDC database.
+  krb5-sync is a toolkit for synchronizing passwords and account status
+  from an MIT or Heimdal Kerberos master KDC to Active Directory.
+  Password changes are done via the Kerberos password change protocol, and
+  account status is updated via LDAP.  It provides a plugin for the kadmin
+  libraries and supporting command-line utilities, as well as a patch for
+  Heimdal and older versions of MIT Kerberos to add plugin support.
 
 DESCRIPTION
 
