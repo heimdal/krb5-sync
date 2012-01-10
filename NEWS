@@ -26,6 +26,9 @@ krb5-sync 2.2 (unreleased)
     configure to specify the locations of the OpenLDAP libraries if
     they're not on the standard search path.
 
+    Add a basic test suite framework.  This currently only tests
+    documentation and low-level supporting libraries.
+
     Update to rra-c-util 4.1:
 
     * Build on systems where krb5/krb5.h exists but krb5.h does not.
