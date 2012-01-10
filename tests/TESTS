@@ -1,3 +1,5 @@
+docs/pod
+docs/pod-spelling
 portable/asprintf
 portable/snprintf
 portable/strlcat

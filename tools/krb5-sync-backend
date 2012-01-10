@@ -281,6 +281,9 @@ EOH
 # Documentation
 ##############################################################################
 
+=for stopwords
+krb5-sync-backend krb5-sync UTC Allbery timestamp username propagations
+
 =head1 NAME
 
 krb5-sync-backend - Manipulate Kerberos password and status change queue
