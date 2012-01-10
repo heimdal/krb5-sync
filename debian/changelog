@@ -1,3 +1,13 @@
+krb5-sync (2.2-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Add support for the hooks provided by MIT Kerberos 1.9.
+    - Quietly skip -randkey password changes under MIT Kerberos.
+    - krb5-sync-backend accepts the password on standard input.
+    - krb5-sync diagnoses missing configuration instead of segfaulting.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 10 Jan 2012 15:29:48 -0800
+
 krb5-sync (2.1-1) unstable; urgency=low
 
   * New upstream release.
