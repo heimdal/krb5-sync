@@ -1,12 +1,12 @@
 /*
  * Error reporting routines.
  *
- * Compatibility wrappers around the Kerberos error reporting routines that
- * handle the latest MIT Kerberos interfaces, the older Heimdal interface, and
- * calling com_err directly if necessary.
+ * Set the plugin error string based on a provided error message and an
+ * optional Kerberos error to append to the end of the string.
  *
  * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ * Copyright 2006, 2007, 2010, 2012
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
@@ -34,6 +34,8 @@ pwupdate_set_error(char *buffer, size_t length, krb5_context ctx,
     va_start(args, format);
     used = vsnprintf(buffer, length, format, args);
     va_end(args);
+    if (ctx == NULL || code == 0)
+        return;
     if (used < 0 || (size_t) used >= length)
         return;
     message = krb5_get_error_message(ctx, code);

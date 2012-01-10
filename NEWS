@@ -18,6 +18,10 @@ krb5-sync 2.2 (unreleased)
     parameter.  This is more secure since the password is not exposed to
     other users of the same system.
 
+    In krb5-sync, diagnose an incomplete krb5.conf configuration and
+    report an error indicating the missing setting rather than
+    segfaulting.
+
     Fix the program name used by the plugin to load initial credential
     default flags on Heimdal to be krb5-sync, not k5start.
 

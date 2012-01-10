@@ -6,8 +6,9 @@
  *
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
- * Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007, 2010 Board of Trustees, Leland Stanford Jr. University
+ *     Nomine Associates, on behalf of Stanford University.
+ * Copyright 2006, 2007, 2010, 2012
+ *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
@@ -32,6 +33,24 @@
 
 
 /*
+ * Check a specific configuratino attribute to ensure that it's set and, if
+ * not, set the error string and return.  Assumes that the configuration
+ * struct is config and errstr and errstrlen are declared in the current
+ * scope.
+ */
+#define STRINGIFY(s) #s
+#define CHECK_CONFIG(c)                                                 \
+    do {                                                                \
+        if (config->c == NULL) {                                        \
+            pwupdate_set_error(errstr, errstrlen, NULL, 0,              \
+                               "configuration setting %s missing",      \
+                               STRINGIFY(c));                           \
+            return 1;                                                   \
+        }                                                               \
+    } while (0)
+
+
+/*
  * Given the plugin options, a Kerberos context, a pointer to krb5_ccache
  * storage, and the buffer into which to store an error message if any,
  * initialize a memory cache using the configured keytab to obtain initial
@@ -47,6 +66,9 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
     krb5_get_init_creds_opt *opts;
     krb5_error_code ret;
     const char *realm UNUSED;
+
+    CHECK_CONFIG(ad_keytab);
+    CHECK_CONFIG(ad_principal);
 
     ret = krb5_kt_resolve(ctx, config->ad_keytab, &kt);
     if (ret != 0) {
@@ -152,6 +174,8 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     krb5_data result_code_string, result_string;
     int code = 0;
 
+    CHECK_CONFIG(ad_realm);
+
     if (get_creds(config, ctx, &ccache, errstr, errstrlen) != 0)
         return 1;
 
@@ -245,6 +269,9 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
     int option, ret;
     unsigned int acctcontrol;
     int code = 1;
+
+    CHECK_CONFIG(ad_admin_server);
+    CHECK_CONFIG(ad_realm);
 
     if (get_creds(config, ctx, &ccache, errstr, errstrlen) != 0)
         return 1;
