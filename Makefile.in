@@ -120,23 +120,21 @@ am__installdirs = "$(DESTDIR)$(moduledir)" "$(DESTDIR)$(sbindir)" \
 	"$(DESTDIR)$(sbindir)" "$(DESTDIR)$(man8dir)"
 LTLIBRARIES = $(module_LTLIBRARIES) $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-plugin_passwd_update_la_DEPENDENCIES = portable/libportable.la \
+plugin_krb5_sync_la_DEPENDENCIES = portable/libportable.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-am_plugin_passwd_update_la_OBJECTS =  \
-	plugin/plugin_passwd_update_la-ad.lo \
-	plugin/plugin_passwd_update_la-api.lo \
-	plugin/plugin_passwd_update_la-error.lo \
-	plugin/plugin_passwd_update_la-heimdal.lo \
-	plugin/plugin_passwd_update_la-mit.lo \
-	plugin/plugin_passwd_update_la-queue.lo
-plugin_passwd_update_la_OBJECTS =  \
-	$(am_plugin_passwd_update_la_OBJECTS)
+am_plugin_krb5_sync_la_OBJECTS = plugin/plugin_krb5_sync_la-ad.lo \
+	plugin/plugin_krb5_sync_la-api.lo \
+	plugin/plugin_krb5_sync_la-error.lo \
+	plugin/plugin_krb5_sync_la-heimdal.lo \
+	plugin/plugin_krb5_sync_la-mit.lo \
+	plugin/plugin_krb5_sync_la-queue.lo
+plugin_krb5_sync_la_OBJECTS = $(am_plugin_krb5_sync_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
-plugin_passwd_update_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+plugin_krb5_sync_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(plugin_passwd_update_la_LDFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS) $(plugin_krb5_sync_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 LIBOBJDIR = portable/
 portable_libportable_la_DEPENDENCIES = $(LTLIBOBJS) \
@@ -253,8 +251,7 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(tests_tap_libtap_a_SOURCES) \
-	$(plugin_passwd_update_la_SOURCES) \
+SOURCES = $(tests_tap_libtap_a_SOURCES) $(plugin_krb5_sync_la_SOURCES) \
 	$(portable_libportable_la_SOURCES) $(util_libutil_la_SOURCES) \
 	$(tests_portable_asprintf_t_SOURCES) \
 	$(tests_portable_snprintf_t_SOURCES) \
@@ -265,7 +262,7 @@ SOURCES = $(tests_tap_libtap_a_SOURCES) \
 	tests/util/messages-t.c tests/util/xmalloc.c \
 	$(tools_krb5_sync_SOURCES)
 DIST_SOURCES = $(tests_tap_libtap_a_SOURCES) \
-	$(plugin_passwd_update_la_SOURCES) \
+	$(plugin_krb5_sync_la_SOURCES) \
 	$(portable_libportable_la_SOURCES) $(util_libutil_la_SOURCES) \
 	$(tests_portable_asprintf_t_SOURCES) \
 	$(tests_portable_snprintf_t_SOURCES) \
@@ -433,22 +430,23 @@ util_libutil_la_SOURCES = util/concat.c util/concat.h util/macros.h	\
 
 util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
-# Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
-moduledir = $(libdir)/kadmind
+# Put the module into /usr/local/lib/krb5/plugins by default, relative to
+# --libdir.
+moduledir = $(libdir)/krb5/plugins
 
-# Rules for building the password synchronization plugin.
-module_LTLIBRARIES = plugin/passwd_update.la
-plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
+# Rules for building the krb5-sync plugin.
+module_LTLIBRARIES = plugin/krb5_sync.la
+plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/mit.c plugin/queue.c
 
-plugin_passwd_update_la_CPPFLAGS = $(LDAP_CPPFLAGS)
-plugin_passwd_update_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
+plugin_krb5_sync_la_CPPFLAGS = $(LDAP_CPPFLAGS)
+plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
 	$(KRB5_LDFLAGS)
 
-plugin_passwd_update_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
+plugin_krb5_sync_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
 	$(KRB5_LIBS)
 
-tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
+tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_krb5_sync_la_SOURCES)
 tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
 tools_krb5_sync_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
 tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\
@@ -649,20 +647,20 @@ plugin/$(am__dirstamp):
 plugin/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) plugin/$(DEPDIR)
 	@: > plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/plugin_passwd_update_la-ad.lo: plugin/$(am__dirstamp) \
+plugin/plugin_krb5_sync_la-ad.lo: plugin/$(am__dirstamp) \
 	plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/plugin_passwd_update_la-api.lo: plugin/$(am__dirstamp) \
+plugin/plugin_krb5_sync_la-api.lo: plugin/$(am__dirstamp) \
 	plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/plugin_passwd_update_la-error.lo: plugin/$(am__dirstamp) \
+plugin/plugin_krb5_sync_la-error.lo: plugin/$(am__dirstamp) \
 	plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/plugin_passwd_update_la-heimdal.lo: plugin/$(am__dirstamp) \
+plugin/plugin_krb5_sync_la-heimdal.lo: plugin/$(am__dirstamp) \
 	plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/plugin_passwd_update_la-mit.lo: plugin/$(am__dirstamp) \
+plugin/plugin_krb5_sync_la-mit.lo: plugin/$(am__dirstamp) \
 	plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/plugin_passwd_update_la-queue.lo: plugin/$(am__dirstamp) \
+plugin/plugin_krb5_sync_la-queue.lo: plugin/$(am__dirstamp) \
 	plugin/$(DEPDIR)/$(am__dirstamp)
-plugin/passwd_update.la: $(plugin_passwd_update_la_OBJECTS) $(plugin_passwd_update_la_DEPENDENCIES) plugin/$(am__dirstamp)
-	$(AM_V_CCLD)$(plugin_passwd_update_la_LINK) -rpath $(moduledir) $(plugin_passwd_update_la_OBJECTS) $(plugin_passwd_update_la_LIBADD) $(LIBS)
+plugin/krb5_sync.la: $(plugin_krb5_sync_la_OBJECTS) $(plugin_krb5_sync_la_DEPENDENCIES) plugin/$(am__dirstamp)
+	$(AM_V_CCLD)$(plugin_krb5_sync_la_LINK) -rpath $(moduledir) $(plugin_krb5_sync_la_OBJECTS) $(plugin_krb5_sync_la_LIBADD) $(LIBS)
 portable/$(am__dirstamp):
 	@$(MKDIR_P) portable
 	@: > portable/$(am__dirstamp)
@@ -878,18 +876,18 @@ uninstall-dist_sbinSCRIPTS:
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-ad.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-ad.lo
-	-rm -f plugin/plugin_passwd_update_la-api.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-api.lo
-	-rm -f plugin/plugin_passwd_update_la-error.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-error.lo
-	-rm -f plugin/plugin_passwd_update_la-heimdal.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-heimdal.lo
-	-rm -f plugin/plugin_passwd_update_la-mit.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-mit.lo
-	-rm -f plugin/plugin_passwd_update_la-queue.$(OBJEXT)
-	-rm -f plugin/plugin_passwd_update_la-queue.lo
+	-rm -f plugin/plugin_krb5_sync_la-ad.$(OBJEXT)
+	-rm -f plugin/plugin_krb5_sync_la-ad.lo
+	-rm -f plugin/plugin_krb5_sync_la-api.$(OBJEXT)
+	-rm -f plugin/plugin_krb5_sync_la-api.lo
+	-rm -f plugin/plugin_krb5_sync_la-error.$(OBJEXT)
+	-rm -f plugin/plugin_krb5_sync_la-error.lo
+	-rm -f plugin/plugin_krb5_sync_la-heimdal.$(OBJEXT)
+	-rm -f plugin/plugin_krb5_sync_la-heimdal.lo
+	-rm -f plugin/plugin_krb5_sync_la-mit.$(OBJEXT)
+	-rm -f plugin/plugin_krb5_sync_la-mit.lo
+	-rm -f plugin/plugin_krb5_sync_la-queue.$(OBJEXT)
+	-rm -f plugin/plugin_krb5_sync_la-queue.lo
 	-rm -f plugin/tools_krb5_sync-ad.$(OBJEXT)
 	-rm -f plugin/tools_krb5_sync-api.$(OBJEXT)
 	-rm -f plugin/tools_krb5_sync-error.$(OBJEXT)
@@ -932,12 +930,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_passwd_update_la-ad.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_passwd_update_la-api.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_passwd_update_la-error.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_passwd_update_la-heimdal.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_passwd_update_la-mit.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_passwd_update_la-queue.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_krb5_sync_la-ad.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_krb5_sync_la-api.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_krb5_sync_la-error.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_krb5_sync_la-heimdal.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_krb5_sync_la-mit.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/plugin_krb5_sync_la-queue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/tools_krb5_sync-ad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/tools_krb5_sync-api.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@plugin/$(DEPDIR)/tools_krb5_sync-error.Po@am__quote@
@@ -1068,53 +1066,53 @@ tests/tap/tests_tap_libtap_a-string.obj: tests/tap/string.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_tap_libtap_a_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tests/tap/tests_tap_libtap_a-string.obj `if test -f 'tests/tap/string.c'; then $(CYGPATH_W) 'tests/tap/string.c'; else $(CYGPATH_W) '$(srcdir)/tests/tap/string.c'; fi`
 
-plugin/plugin_passwd_update_la-ad.lo: plugin/ad.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_passwd_update_la-ad.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_passwd_update_la-ad.Tpo -c -o plugin/plugin_passwd_update_la-ad.lo `test -f 'plugin/ad.c' || echo '$(srcdir)/'`plugin/ad.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_passwd_update_la-ad.Tpo plugin/$(DEPDIR)/plugin_passwd_update_la-ad.Plo
+plugin/plugin_krb5_sync_la-ad.lo: plugin/ad.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_krb5_sync_la-ad.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_krb5_sync_la-ad.Tpo -c -o plugin/plugin_krb5_sync_la-ad.lo `test -f 'plugin/ad.c' || echo '$(srcdir)/'`plugin/ad.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_krb5_sync_la-ad.Tpo plugin/$(DEPDIR)/plugin_krb5_sync_la-ad.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/ad.c' object='plugin/plugin_passwd_update_la-ad.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/ad.c' object='plugin/plugin_krb5_sync_la-ad.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_passwd_update_la-ad.lo `test -f 'plugin/ad.c' || echo '$(srcdir)/'`plugin/ad.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_krb5_sync_la-ad.lo `test -f 'plugin/ad.c' || echo '$(srcdir)/'`plugin/ad.c
 
-plugin/plugin_passwd_update_la-api.lo: plugin/api.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_passwd_update_la-api.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_passwd_update_la-api.Tpo -c -o plugin/plugin_passwd_update_la-api.lo `test -f 'plugin/api.c' || echo '$(srcdir)/'`plugin/api.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_passwd_update_la-api.Tpo plugin/$(DEPDIR)/plugin_passwd_update_la-api.Plo
+plugin/plugin_krb5_sync_la-api.lo: plugin/api.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_krb5_sync_la-api.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_krb5_sync_la-api.Tpo -c -o plugin/plugin_krb5_sync_la-api.lo `test -f 'plugin/api.c' || echo '$(srcdir)/'`plugin/api.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_krb5_sync_la-api.Tpo plugin/$(DEPDIR)/plugin_krb5_sync_la-api.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/api.c' object='plugin/plugin_passwd_update_la-api.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/api.c' object='plugin/plugin_krb5_sync_la-api.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_passwd_update_la-api.lo `test -f 'plugin/api.c' || echo '$(srcdir)/'`plugin/api.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_krb5_sync_la-api.lo `test -f 'plugin/api.c' || echo '$(srcdir)/'`plugin/api.c
 
-plugin/plugin_passwd_update_la-error.lo: plugin/error.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_passwd_update_la-error.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_passwd_update_la-error.Tpo -c -o plugin/plugin_passwd_update_la-error.lo `test -f 'plugin/error.c' || echo '$(srcdir)/'`plugin/error.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_passwd_update_la-error.Tpo plugin/$(DEPDIR)/plugin_passwd_update_la-error.Plo
+plugin/plugin_krb5_sync_la-error.lo: plugin/error.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_krb5_sync_la-error.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_krb5_sync_la-error.Tpo -c -o plugin/plugin_krb5_sync_la-error.lo `test -f 'plugin/error.c' || echo '$(srcdir)/'`plugin/error.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_krb5_sync_la-error.Tpo plugin/$(DEPDIR)/plugin_krb5_sync_la-error.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/error.c' object='plugin/plugin_passwd_update_la-error.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/error.c' object='plugin/plugin_krb5_sync_la-error.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_passwd_update_la-error.lo `test -f 'plugin/error.c' || echo '$(srcdir)/'`plugin/error.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_krb5_sync_la-error.lo `test -f 'plugin/error.c' || echo '$(srcdir)/'`plugin/error.c
 
-plugin/plugin_passwd_update_la-heimdal.lo: plugin/heimdal.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_passwd_update_la-heimdal.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_passwd_update_la-heimdal.Tpo -c -o plugin/plugin_passwd_update_la-heimdal.lo `test -f 'plugin/heimdal.c' || echo '$(srcdir)/'`plugin/heimdal.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_passwd_update_la-heimdal.Tpo plugin/$(DEPDIR)/plugin_passwd_update_la-heimdal.Plo
+plugin/plugin_krb5_sync_la-heimdal.lo: plugin/heimdal.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_krb5_sync_la-heimdal.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_krb5_sync_la-heimdal.Tpo -c -o plugin/plugin_krb5_sync_la-heimdal.lo `test -f 'plugin/heimdal.c' || echo '$(srcdir)/'`plugin/heimdal.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_krb5_sync_la-heimdal.Tpo plugin/$(DEPDIR)/plugin_krb5_sync_la-heimdal.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/heimdal.c' object='plugin/plugin_passwd_update_la-heimdal.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/heimdal.c' object='plugin/plugin_krb5_sync_la-heimdal.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_passwd_update_la-heimdal.lo `test -f 'plugin/heimdal.c' || echo '$(srcdir)/'`plugin/heimdal.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_krb5_sync_la-heimdal.lo `test -f 'plugin/heimdal.c' || echo '$(srcdir)/'`plugin/heimdal.c
 
-plugin/plugin_passwd_update_la-mit.lo: plugin/mit.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_passwd_update_la-mit.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_passwd_update_la-mit.Tpo -c -o plugin/plugin_passwd_update_la-mit.lo `test -f 'plugin/mit.c' || echo '$(srcdir)/'`plugin/mit.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_passwd_update_la-mit.Tpo plugin/$(DEPDIR)/plugin_passwd_update_la-mit.Plo
+plugin/plugin_krb5_sync_la-mit.lo: plugin/mit.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_krb5_sync_la-mit.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_krb5_sync_la-mit.Tpo -c -o plugin/plugin_krb5_sync_la-mit.lo `test -f 'plugin/mit.c' || echo '$(srcdir)/'`plugin/mit.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_krb5_sync_la-mit.Tpo plugin/$(DEPDIR)/plugin_krb5_sync_la-mit.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/mit.c' object='plugin/plugin_passwd_update_la-mit.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/mit.c' object='plugin/plugin_krb5_sync_la-mit.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_passwd_update_la-mit.lo `test -f 'plugin/mit.c' || echo '$(srcdir)/'`plugin/mit.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_krb5_sync_la-mit.lo `test -f 'plugin/mit.c' || echo '$(srcdir)/'`plugin/mit.c
 
-plugin/plugin_passwd_update_la-queue.lo: plugin/queue.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_passwd_update_la-queue.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_passwd_update_la-queue.Tpo -c -o plugin/plugin_passwd_update_la-queue.lo `test -f 'plugin/queue.c' || echo '$(srcdir)/'`plugin/queue.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_passwd_update_la-queue.Tpo plugin/$(DEPDIR)/plugin_passwd_update_la-queue.Plo
+plugin/plugin_krb5_sync_la-queue.lo: plugin/queue.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT plugin/plugin_krb5_sync_la-queue.lo -MD -MP -MF plugin/$(DEPDIR)/plugin_krb5_sync_la-queue.Tpo -c -o plugin/plugin_krb5_sync_la-queue.lo `test -f 'plugin/queue.c' || echo '$(srcdir)/'`plugin/queue.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) plugin/$(DEPDIR)/plugin_krb5_sync_la-queue.Tpo plugin/$(DEPDIR)/plugin_krb5_sync_la-queue.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/queue.c' object='plugin/plugin_passwd_update_la-queue.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugin/queue.c' object='plugin/plugin_krb5_sync_la-queue.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_passwd_update_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_passwd_update_la-queue.lo `test -f 'plugin/queue.c' || echo '$(srcdir)/'`plugin/queue.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(plugin_krb5_sync_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o plugin/plugin_krb5_sync_la-queue.lo `test -f 'plugin/queue.c' || echo '$(srcdir)/'`plugin/queue.c
 
 tests/tests_runtests-runtests.o: tests/runtests.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(tests_runtests_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tests/tests_runtests-runtests.o -MD -MP -MF tests/$(DEPDIR)/tests_runtests-runtests.Tpo -c -o tests/tests_runtests-runtests.o `test -f 'tests/runtests.c' || echo '$(srcdir)/'`tests/runtests.c
