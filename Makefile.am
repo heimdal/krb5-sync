@@ -25,17 +25,18 @@ util_libutil_la_SOURCES = util/concat.c util/concat.h util/macros.h	\
         util/messages.h util/xmalloc.c util/xmalloc.h
 util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
-# Put the module into /usr/local/lib/kadmind by default, relative to --libdir.
-moduledir = $(libdir)/kadmind
+# Put the module into /usr/local/lib/krb5/plugins by default, relative to
+# --libdir.
+moduledir = $(libdir)/krb5/plugins
 
-# Rules for building the password synchronization plugin.
-module_LTLIBRARIES = plugin/passwd_update.la
-plugin_passwd_update_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
+# Rules for building the krb5-sync plugin.
+module_LTLIBRARIES = plugin/krb5_sync.la
+plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/mit.c plugin/queue.c
-plugin_passwd_update_la_CPPFLAGS = $(LDAP_CPPFLAGS)
-plugin_passwd_update_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
+plugin_krb5_sync_la_CPPFLAGS = $(LDAP_CPPFLAGS)
+plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
 	$(KRB5_LDFLAGS)
-plugin_passwd_update_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
+plugin_krb5_sync_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
 	$(KRB5_LIBS)
 
 # Rules for building the krb5-sync utility.  We specify the CFLAGS to work
@@ -44,7 +45,7 @@ plugin_passwd_update_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
 # will cause the sources to be built twice, once with a prefix for this
 # program.
 sbin_PROGRAMS = tools/krb5-sync
-tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_passwd_update_la_SOURCES)
+tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_krb5_sync_la_SOURCES)
 tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
 tools_krb5_sync_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
 tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\

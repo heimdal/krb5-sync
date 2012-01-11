@@ -2,6 +2,11 @@
 
 krb5-sync 2.2 (2012-01-10)
 
+    The name of the plugin is now krb5_sync.so instead of passwd_update.so
+    and is installed under /usr/local/lib/krb5/plugins by default.  The
+    KDC configuration for the name of the module to load will need to
+    change accordingly.
+
     Add support for the new libkadm5 hooks provided by MIT Kerberos 1.9.
     With that version and later, no patch to MIT Kerberos is required to
     use this code.  Thanks to Sam Hartman for the patch.

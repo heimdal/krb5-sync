@@ -13,7 +13,7 @@ to the [kadmin] section in the configuration file used by kadmind,
 kpasswdd, and kadmin (for kadmin -l).  An example setting would look like:
 
     [kadmin]
-        hook_libraries = /usr/local/lib/kadmind/passwd_update.so
+        hook_libraries = /usr/local/lib/krb5/plugins/krb5_sync.so
 
 This is a preliminary, and ugly, patch that adds the necessary features
 for krb5-sync in a somewhat brute-force way.  It will change in the future
