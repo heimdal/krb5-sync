@@ -128,7 +128,7 @@ INSTALLATION
   the Linux kernel).  Use make warnings instead of make to build with full
   GCC compiler warnings (requires a relatively current version of GCC).
 
-  The plugin is installed as /usr/local/lib/kadmind/passwd_update.so by
+  The plugin is installed as /usr/local/lib/krb5/plugins/krb5_sync.so by
   default, and the utilities are installed in /usr/local/sbin.  The last
   step will probably have to be done as root.  To install in a different
   location, specify the location with the --prefix option to configure.
@@ -250,15 +250,38 @@ CONFIGURATION
   directory other than the one given, you will need to change the
   beginning of the krb5-sync-backend script as well.
 
-  The kadmind patch adds a configuration option for the kdc.conf file
-  specifying the path to the plugin.  If this option is not set, the
+  With MIT Kerberos 1.9 or later, support for kadmind plugins is built in.
+  To load this plugin, add the following to the kdc.conf or krb5.conf file
+  used by kadmind:
+
+      [plugins]
+          kadm5_hook = {
+              module = krb5_sync:/usr/local/lib/krb5/plugins/krb5_sync.so
+          }
+
+  You may wish to install krb5_sync.so under a krb5/plugins/kadm5_hook in
+  the library directory used for your Kerberos installation instead, in
+  which case you can use "kadm5_hook/krb5_sync.so" as the relative path to
+  the plugin.
+
+  The kadmind patch for Heimdal adds a configuration option for the
+  krb5.conf file in the [kadmin] section.  If this option is not set, the
   plugin will not be loaded and none of the hooks will be run.  Therefore,
-  to use the plugin, add a line like:
+  to use the plugin, add configuration like:
 
-      pwupdate_plugin = /usr/local/lib/kadmind/passwd_update.so
+      [kadmin]
+          hook_libraries = /usr/local/lib/krb5/plugins/krb5_sync.so
 
-  to the local realm sub-section of the [realms] section.  Update the path
-  for wherever the password update plugin is located.
+  to the configuration file used by kadmind and kpasswdd.  Update the path
+  for wherever the krb5-sync plugin is located.
+
+  The kadmind patch for older versions of MIT adds a similar configuration
+  option for the kdc.conf.  To use the plugin on older versions of MIT,
+  add a line like:
+
+      pwupdate_plugin = /usr/local/lib/krb5/plugins/krb5_sync.so
+
+  to the local realm sub-section of the [realms] section.
 
 ACTIVE DIRECTORY SETUP
 
