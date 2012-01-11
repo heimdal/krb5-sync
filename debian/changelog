@@ -7,6 +7,9 @@ krb5-sync (2.2-1) UNRELEASED; urgency=low
     - krb5-sync diagnoses missing configuration instead of segfaulting.
   * Split the package into krb5-sync-plugin and krb5-sync-tools packages,
     since the former needs to be multiarch.
+  * Update to experimental debhelper compatibility level V9.
+    - krb5-sync-plugin is multiarch.
+    - Enable hardening build flags.
   * Update the krb5-sync-plugin README.Debian for the built-in support for
     loading this plugin in MIT Kerberos 1.9 and later and to provide a
     sample of the krb5.conf configuration required.
