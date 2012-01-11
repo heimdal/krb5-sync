@@ -11,6 +11,8 @@ Package: krb5-sync-heimdal
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
 Recommends: heimdal-kdc
+Conflicts: krb5-sync
+Replaces: krb5-sync
 Description: Heimdal KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign realm
  via the Kerberos password change protocol.  It can also propagate changes

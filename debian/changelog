@@ -13,6 +13,7 @@ krb5-sync-heimdal (2.2-1) UNRELEASED; urgency=low
     - krb5-sync diagnoses missing configuration instead of segfaulting.
   * The module is now installed in /usr/lib/krb5/plugins/krb5_sync.so.
     The KDC configuration will have to be updated for the new path.
+  * Conflict with and replace the old krb5-sync package.
   * Update to debhelper compatibility level V8.
   * Update to standards version 3.9.2 (no changes required).
 
