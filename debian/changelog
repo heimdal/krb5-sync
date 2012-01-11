@@ -20,6 +20,8 @@ krb5-sync (2.2-1) UNRELEASED; urgency=low
     actually loaded by libkadm5srv, but otherwise we have to depend on the
     specific SONAME of libkadm5srv even though any version of the package
     will do.  This will capture the most common scenarios.
+  * Restart krb5-admin-server if it's running when the plugin is
+    configured to ensure the latest version is loaded.
   * Update the krb5-sync-plugin README.Debian for the built-in support for
     loading this plugin in MIT Kerberos 1.9 and later and to provide a
     sample of the krb5.conf configuration required.
