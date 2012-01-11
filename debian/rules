@@ -1,15 +1,24 @@
 #!/usr/bin/make -f
 
+# Enable compiler hardening flags.
+export DEB_BUILD_MAINT_OPTIONS = all
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
 %:
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-reduced-depends
+	dh_auto_configure -- --enable-reduced-depends \
+	    --libdir=/usr/$(DEB_HOST_MULTIARCH)
 
 override_dh_auto_install:
 	dh_auto_install
-	rm debian/*/usr/lib/kadmind/*.la
-	chmod 644 debian/*/usr/lib/kadmind/*.so
+	rm debian/tmp/usr/lib/*/krb5/plugins/*.la
+	chmod 644 debian/tmp/usr/lib/*/krb5/plugins/*.so
+	mkdir debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook
+	mv debian/tmp/usr/lib/*/krb5/plugins/*.so \
+	    debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook/
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS

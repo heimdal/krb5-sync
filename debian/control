@@ -7,13 +7,27 @@ Build-Depends: debhelper (>= 7.0.50~), heimdal-dev, libldap2-dev
 Standards-Version: 3.9.1
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
 
-Package: krb5-sync
+Package: krb5-sync-plugin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Recommends: krb5-kdc (>= 1.9), krb5-sync-tools
+Description: MIT Kerberos Active Directory synchronization plugin
+ This plugin synchronizes passwords changed via kadmin or kpasswd to a
+ foreign realm via the Kerberos password change protocol (normally, but
+ not necessarily, an Active Directory realm).  It can also propagate
+ changes to the DISALLOW_ALL_TIX flag to Windows Active Directory using
+ LDAP.
+ .
+ This package provides a plugin for the MIT Kerberos KDC and will not work
+ with Heimdal.
+
+Package: krb5-sync-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
-Recommends: heimdal-kdc
-Description: Heimdal KDC plugin for password synchronization
- This plugin synchronizes passwords changed via kadmind to a foreign realm
- via the Kerberos v5 password change protocol.  It can also propagate
- changes to DISALLOW_ALL_TIX flag to Windows AD using LDAP.  It is built
- against Heimdal Kerberos but requires a patched version of Heimdal's
- libkadm5srv library to be called by kadmin, kadmind, and kpasswdd.
+Recommends: krb5-sync-plugin
+Description: Kerberos Active Directory synchronization tools
+ Provides tools to enable, disable, and set the password of an account in
+ a Windows Active Directory using the same configuration used by the
+ krb5-sync-plugin package.  These supporting tools are normally used to
+ handle queued changes created by the plugin that failed due to a
+ temporary error, but can be used on their own.
