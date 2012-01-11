@@ -1,4 +1,4 @@
-krb5-sync (2.2-1) UNRELEASED; urgency=low
+krb5-sync (2.2-1) unstable; urgency=low
 
   * Initial upload to Debian.  (Closes: #655396)
   * New upstream release.
@@ -31,7 +31,7 @@ krb5-sync (2.2-1) UNRELEASED; urgency=low
     Debian proper.
   * Update standards version to 3.9.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Tue, 10 Jan 2012 15:29:48 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 11 Jan 2012 14:36:33 -0800
 
 krb5-sync (2.1-1) unstable; urgency=low
 
