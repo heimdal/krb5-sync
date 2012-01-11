@@ -1,4 +1,4 @@
-krb5-sync-heimdal (2.2-1) UNRELEASED; urgency=low
+krb5-sync-heimdal (2.2-1) stable; urgency=low
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
     main krb5-sync package is now being built against MIT Kerberos for
@@ -18,7 +18,7 @@ krb5-sync-heimdal (2.2-1) UNRELEASED; urgency=low
   * Update to debhelper compatibility level V8.
   * Update to standards version 3.9.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Tue, 10 Jan 2012 15:29:48 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 11 Jan 2012 14:28:15 -0800
 
 krb5-sync (2.1-1) unstable; urgency=low
 
