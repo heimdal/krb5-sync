@@ -12,6 +12,7 @@ krb5-sync-heimdal (2.2-1) UNRELEASED; urgency=low
     - krb5-sync-backend accepts the password on standard input.
     - krb5-sync diagnoses missing configuration instead of segfaulting.
   * Update to debhelper compatibility level V8.
+  * Update to standards version 3.9.2 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Tue, 10 Jan 2012 15:29:48 -0800
 
