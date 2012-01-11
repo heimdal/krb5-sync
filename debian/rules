@@ -8,8 +8,8 @@ override_dh_auto_configure:
 
 override_dh_auto_install:
 	dh_auto_install
-	rm debian/*/usr/lib/kadmind/*.la
-	chmod 644 debian/*/usr/lib/kadmind/*.so
+	rm debian/*/usr/lib/krb5/plugins/*.la
+	chmod 644 debian/*/usr/lib/krb5/plugins/*.so
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS
