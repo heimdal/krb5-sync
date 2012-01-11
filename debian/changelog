@@ -12,6 +12,8 @@ krb5-sync (2.2-1) UNRELEASED; urgency=low
     sample of the krb5.conf configuration required.
   * Update the package description and dependencies to reflect that it's
     now specific to MIT Kerberos.
+  * Remove the special bug reporting address, as this package is now in
+    Debian proper.
 
  -- Russ Allbery <rra@debian.org>  Tue, 10 Jan 2012 15:29:48 -0800
 
