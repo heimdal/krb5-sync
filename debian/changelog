@@ -1,4 +1,4 @@
-krb5-sync (2.2-2) UNRELEASED; urgency=low
+krb5-sync (2.2-2) unstable; urgency=low
 
   * Fix debian/rules syntax for setting hardening flags and enable bindnow
     and PIE.
@@ -9,7 +9,7 @@ krb5-sync (2.2-2) UNRELEASED; urgency=low
     local-patch-header so that they only apply to the packages I build and
     NMUs get regular version-numbered patches.
 
- -- Russ Allbery <rra@debian.org>  Tue, 07 Feb 2012 16:50:19 -0800
+ -- Russ Allbery <rra@debian.org>  Tue, 07 Feb 2012 17:14:21 -0800
 
 krb5-sync (2.2-1) unstable; urgency=low
 
