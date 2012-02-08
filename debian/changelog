@@ -1,3 +1,10 @@
+krb5-sync (2.2-2) UNRELEASED; urgency=low
+
+  * Fix debian/rules syntax for setting hardening flags and enable bindnow
+    and PIE.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 07 Feb 2012 16:50:19 -0800
+
 krb5-sync (2.2-1) unstable; urgency=low
 
   * Initial upload to Debian.  (Closes: #655396)
