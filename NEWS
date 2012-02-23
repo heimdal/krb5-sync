@@ -1,5 +1,12 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 2.3 (unreleased)
+
+    When krb5-sync-backend is running in silent mode, ignore "Operation
+    not permitted" errors from krb5_set_password.  Heimdal 1.5.2 returns
+    this error from Active Directory when attempting to change the
+    password of an account that does not exist.
+
 krb5-sync 2.2 (2012-01-10)
 
     The name of the plugin is now krb5_sync.so instead of passwd_update.so

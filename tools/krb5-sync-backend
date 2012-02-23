@@ -40,6 +40,7 @@ our @IGNORE =
     (qr/AD password change for \S+ failed \(3\):.*Connection timed out$/,
      qr/AD password change for \S+ failed \(3\):.*Authentication error$/,
      qr/AD password change for \S+ failed \(3\):.* for service_locator$/,
+     qr/AD password change for \S+ failed \(3\):.*Operation not permitted$/,
      qr/AD status change for \S+ failed \(1\): user .* not found in \S+$/);
 
 ##############################################################################
