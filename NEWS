@@ -2,6 +2,11 @@
 
 krb5-sync 2.3 (unreleased)
 
+    When handling password changes from MIT Kerberos, quietly ignore
+    changes where the password is NULL.  These are key randomizations,
+    such as from addprinc -randkey, which this module inherently can't do
+    anything with.
+
     When krb5-sync-backend is running in silent mode, ignore "Operation
     not permitted" errors from krb5_set_password.  Heimdal 1.5.2 returns
     this error from Active Directory when attempting to change the
