@@ -3,6 +3,8 @@ plugin API for performing actions before and after a password change is
 committed to the KDC database and after a change is made to the attributes
 of a principal (specifically, a change to DISALLOW_ALL_TIX).
 
+No patch is required for MIT Kerberos 1.9 or later.
+
 Currently, there are three patches available:
 
     heimdal-1.3.1       Built against stock Heimdal 1.3.1
