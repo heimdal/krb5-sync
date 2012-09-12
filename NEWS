@@ -12,6 +12,21 @@ krb5-sync 2.3 (unreleased)
     this error from Active Directory when attempting to change the
     password of an account that does not exist.
 
+    Update to rra-c-util 4.6:
+
+    * Pass --deps to krb5-config except with --enable-reduced-depends.
+    * Do not assume string is nul-terminated in replacement strdup.
+    * Avoid using local in the shell TAP library for Solaris portability.
+    * Silence __attribute__ warnings on more compilers.
+
+    Update to C TAP Harness 1.12:
+
+    * Suppress plan and summary if bail is called before any tests run.
+    * Only use feature-test macros when requested or built with gcc -ansi.
+    * Drop is_double from the C TAP library to avoid requiring -lm.
+    * Avoid using local in the shell libtap.sh library.
+    * Silence __attribute__ warnings on more compilers.
+
 krb5-sync 2.2 (2012-01-10)
 
     The name of the plugin is now krb5_sync.so instead of passwd_update.so

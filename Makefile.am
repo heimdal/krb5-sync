@@ -72,12 +72,15 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile		 \
 #
 #     -Wconversion      http://bugs.debian.org/488884 (htons warnings)
 #
-# Last checked against gcc 4.6.1 (2011-05-04).
-WARNINGS = -g -O -Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self	 \
-	-Wswitch-enum -Wdeclaration-after-statement -Wshadow		 \
-	-Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings \
-	-Wjump-misses-init -Wlogical-op -Wstrict-prototypes		 \
-	-Wmissing-prototypes -Wredundant-decls -Wnested-externs -Werror
+# Last checked against gcc 4.6.1 (2011-05-04).  -D_FORTIFY_SOURCE=2 enables
+# warn_unused_result attribute markings on glibc functions on Linux, which
+# catches a few more issues.
+WARNINGS = -g -O -D_FORTIFY_SOURCE=2 -Wall -Wextra -Wendif-labels	    \
+	-Wformat=2 -Winit-self -Wswitch-enum -Wdeclaration-after-statement  \
+	-Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align	    \
+	-Wwrite-strings -Wjump-misses-init -Wlogical-op			    \
+	-Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls	    \
+	-Wnested-externs -Werror
 
 warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)'
@@ -94,8 +97,9 @@ tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
 tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
-	tests/tap/messages.c tests/tap/messages.h tests/tap/process.c	\
-	tests/tap/process.h tests/tap/string.c tests/tap/string.h
+	tests/tap/macros.h tests/tap/messages.c tests/tap/messages.h	\
+	tests/tap/process.c tests/tap/process.h tests/tap/string.c	\
+	tests/tap/string.h
 
 # All of the test programs.
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \

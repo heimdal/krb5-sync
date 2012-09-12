@@ -11,7 +11,7 @@ AC_INIT([krb5-sync], [2.2], [rra@stanford.edu])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_LIBOBJ_DIR([portable])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([1.11 check-news foreign silent-rules subdir-objects
+AM_INIT_AUTOMAKE([1.11 check-news dist-xz foreign silent-rules subdir-objects
     -Wall -Werror])
 AM_MAINTAINER_MODE
 
@@ -20,7 +20,7 @@ AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AM_DISABLE_STATIC
-AC_PROG_LIBTOOL
+LT_INIT
 
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
@@ -43,7 +43,7 @@ RRA_LIB_KRB5_RESTORE
 RRA_LIB_LDAP
 
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([strings.h sys/bittypes.h syslog.h])
+AC_CHECK_HEADERS([sys/bittypes.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
