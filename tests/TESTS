@@ -5,7 +5,6 @@ portable/snprintf
 portable/strlcat
 portable/strlcpy
 portable/strndup
-util/concat
 util/messages
 util/messages-krb5
 util/xmalloc

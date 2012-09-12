@@ -54,8 +54,7 @@ die_krb5(krb5_context ctx, krb5_error_code code, const char *format, ...)
     if (ctx != NULL)
         k5_msg = krb5_get_error_message(ctx, code);
     va_start(args, format);
-    if (xvasprintf(&message, format, args) < 0)
-        die("internal error: unable to format error message");
+    xvasprintf(&message, format, args);
     va_end(args);
     if (k5_msg == NULL)
         die("%s", message);
@@ -77,8 +76,7 @@ warn_krb5(krb5_context ctx, krb5_error_code code, const char *format, ...)
     if (ctx != NULL)
         k5_msg = krb5_get_error_message(ctx, code);
     va_start(args, format);
-    if (xvasprintf(&message, format, args) < 0)
-        die("internal error: unable to format error message");
+    xvasprintf(&message, format, args);
     va_end(args);
     if (k5_msg == NULL)
         warn("%s", message);

@@ -110,10 +110,10 @@ ok_xmalloc "calloc fail" 1 \
     "failed to calloc 3500000 bytes at xmalloc.c line 167" \
     "c" "3500000" "3500000"
 ok_xmalloc "asprintf fail" 1 \
-    "failed to asprintf 3500000 bytes at xmalloc.c line 192" \
+    "failed to asprintf 3500000 bytes at xmalloc.c line 191" \
     "a" "3500000" "3500000"
 ok_xmalloc "vasprintf fail" 1 \
-    "failed to vasprintf 3500000 bytes at xmalloc.c line 214" \
+    "failed to vasprintf 3500000 bytes at xmalloc.c line 210" \
     "v" "3500000" "3500000"
 
 # Check our custom error handler.
@@ -127,9 +127,9 @@ ok_xmalloc "strndup custom"   1 "strndup 3500000 xmalloc.c 143" \
     "N" "3500000" "3500000"
 ok_xmalloc "calloc custom"    1 "calloc 3500000 xmalloc.c 167" \
     "C" "3500000" "3500000"
-ok_xmalloc "asprintf custom"  1 "asprintf 3500000 xmalloc.c 192" \
+ok_xmalloc "asprintf custom"  1 "asprintf 3500000 xmalloc.c 191" \
     "A" "3500000" "3500000"
-ok_xmalloc "vasprintf custom" 1 "vasprintf 3500000 xmalloc.c 214" \
+ok_xmalloc "vasprintf custom" 1 "vasprintf 3500000 xmalloc.c 210" \
     "V" "3500000" "3500000"
 
 # Check the smaller ones again just for grins.
