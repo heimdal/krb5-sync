@@ -45,10 +45,10 @@ main(void)
     if (chdir(tmpdir) < 0)
         sysbail("cannot cd to %s", tmpdir);
     krb5conf = test_file_path("data/krb5.conf");
-    if (mkdir("queue", 0777) < 0)
-        sysbail("cannot mkdir queue");
     if (krb5conf == NULL)
         bail("cannot find tests/data/krb5.conf");
+    if (mkdir("queue", 0777) < 0)
+        sysbail("cannot mkdir queue");
     basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
     if (putenv(env) < 0)
         sysbail("cannot set KRB5CCNAME");
@@ -59,7 +59,7 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(32);
+    plan(42);
 
     /* Test init. */
     is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
@@ -215,19 +215,63 @@ main(void)
     ok(unlink(queue) == 0, "Remove queued disable");
     free(queue);
 
-    /* Shut down the plugin. */
-    pwupdate_close(data);
-
     /* Unwind the queue and be sure all the right files exist. */
     ok(unlink("queue/.lock") == 0, "Lock file still exists");
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
+    /* Check failure when there's no queue directory. */
+    errstr[0] = '\0';
+    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
+                                       errstr, sizeof(errstr));
+    is_int(1, code, "pwupdate_precommit_password fails with no queue");
+    is_string("queueing AD password change failed", errstr,
+              "...with correct error");
+    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    is_int(1, code, "pwupdate_postcommit_status disable fails with no queue");
+    is_string("queueing AD status change failed", errstr,
+              "...with correct error");
+
+    /* Shut down the plugin. */
+    pwupdate_close(data);
+
+    /*
+     * Change to an empty Kerberos configuration file, and then make sure the
+     * plugin does nothing when there's no configuration.
+     */
+    krb5_free_principal(ctx, princ);
+    krb5_free_context(ctx);
+    test_file_path_free(krb5conf);
+    krb5conf = test_file_path("data/empty.conf");
+    if (krb5conf == NULL)
+        bail("cannot find tests/data/empty.conf");
+    free(env);
+    basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
+    if (putenv(env) < 0)
+        sysbail("cannot set KRB5CCNAME");
+    code = krb5_init_context(&ctx);
+    if (code != 0)
+        bail("cannot create Kerberos context (%d)", (int) code);
+    code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
+    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
+    ok(data != NULL, "...and data is non-NULL");
+    errstr[0] = '\0';
+    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
+                                       errstr, sizeof(errstr));
+    is_int(0, code, "pwupdate_precommit_password succeeds");
+    is_string("", errstr, "...and there is no error");
+    errstr[0] = '\0';
+    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
+    is_string("", errstr, "...and there is no error");
+
     /* Clean up. */
     krb5_free_principal(ctx, princ);
     krb5_free_context(ctx);
+    test_file_path_free(krb5conf);
     if (chdir("..") < 0)
         sysbail("cannot chdir to parent directory");
-    test_file_path_free(krb5conf);
     test_tmpdir_free(tmpdir);
     free(env);
     return 0;
