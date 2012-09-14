@@ -39,6 +39,7 @@ main(void)
     time_t now, try;
     struct tm *date;
     FILE *file;
+    struct stat st;
 
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
@@ -58,7 +59,7 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(10);
+    plan(11);
 
     /* Test init. */
     is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
@@ -91,8 +92,11 @@ main(void)
     }
     ok(queue != NULL, "...password change was queued");
     if (queue == NULL)
-        ok_block(4, false, "No queued change to check");
+        ok_block(5, false, "No queued change to check");
     else {
+        if (stat(queue, &st) < 0)
+            sysbail("cannot stat %s", queue);
+        is_int(0600, st.st_mode & 0777, "...mode of queue file is correct");
         file = fopen(queue, "r");
         if (file == NULL)
             sysbail("cannot open %s", queue);
