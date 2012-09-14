@@ -33,20 +33,16 @@ moduledir = $(libdir)/krb5/plugins
 module_LTLIBRARIES = plugin/krb5_sync.la
 plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/mit.c plugin/queue.c
-plugin_krb5_sync_la_CPPFLAGS = $(LDAP_CPPFLAGS)
+plugin_krb5_sync_la_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
 plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
 	$(KRB5_LDFLAGS)
 plugin_krb5_sync_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
 	$(KRB5_LIBS)
 
-# Rules for building the krb5-sync utility.  We specify the CFLAGS to work
-# around Automake's inability to link libtool objects into a program that
-# isn't otherwise using libtool.  Per the Automake manual, specifying CFLAGS
-# will cause the sources to be built twice, once with a prefix for this
-# program.
+# Rules for building the krb5-sync utility.
 sbin_PROGRAMS = tools/krb5-sync
 tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_krb5_sync_la_SOURCES)
-tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
+tools_krb5_sync_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
 tools_krb5_sync_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
 tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\
 	$(LDAP_LIBS) $(KRB5_LIBS)
@@ -87,10 +83,11 @@ warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/portable/asprintf-t		    \
-        tests/portable/snprintf-t tests/portable/strlcat-t		    \
-        tests/portable/strlcpy-t tests/portable/strndup-t		    \
-        tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/plugin/queuing-t		\
+        tests/portable/asprintf-t tests/portable/snprintf-t	\
+        tests/portable/strlcat-t tests/portable/strlcpy-t	\
+        tests/portable/strndup-t tests/util/messages-krb5-t	\
+        tests/util/messages-t tests/util/xmalloc
 check_LIBRARIES = tests/tap/libtap.a
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
@@ -101,6 +98,12 @@ tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
 	tests/tap/string.h
 
 # All of the test programs.
+tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
+	$(plugin_krb5_sync_la_SOURCES)
+tests_plugin_queuing_t_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
+tests_plugin_queuing_t_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
+tests_plugin_queuing_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+	$(LDAP_LIBS) $(KRB5_LIBS)
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
 	tests/portable/asprintf.c
 tests_portable_asprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la

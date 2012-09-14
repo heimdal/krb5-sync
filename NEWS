@@ -12,6 +12,9 @@ krb5-sync 2.3 (unreleased)
     this error from Active Directory when attempting to change the
     password of an account that does not exist.
 
+    Properly pass Kerberos preprocessor flags to the compiler when
+    building the plugin.
+
     Update to rra-c-util 4.6:
 
     * Pass --deps to krb5-config except with --enable-reduced-depends.
