@@ -29,7 +29,7 @@
 int
 main(void)
 {
-    char *tmpdir, *krb5conf, *env, *queue;
+    char *tmpdir, *krb5conf, *env, *queuepw;
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
@@ -59,7 +59,7 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(11);
+    plan(17);
 
     /* Test init. */
     is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
@@ -75,31 +75,31 @@ main(void)
     code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
                                        errstr, sizeof(errstr));
     is_int(0, code, "pwupdate_precommit_password succeeds");
-    is_int(0, access("queue/.lock", F_OK), "...lock file now exists");
+    ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
     is_string("", errstr, "...and there is no error");
-    queue = NULL;
+    queuepw = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
         date = gmtime(&try);
-        basprintf(&queue,
+        basprintf(&queuepw,
                   "queue/test-ad-password-%04d%02d%02dT%02d%02d%02dZ-00",
                   date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
                   date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
+        if (access(queuepw, F_OK) == 0)
             break;
-        free(queue);
-        queue = NULL;
+        free(queuepw);
+        queuepw = NULL;
     }
-    ok(queue != NULL, "...password change was queued");
-    if (queue == NULL)
+    ok(queuepw != NULL, "...password change was queued");
+    if (queuepw == NULL)
         ok_block(5, false, "No queued change to check");
     else {
-        if (stat(queue, &st) < 0)
-            sysbail("cannot stat %s", queue);
+        if (stat(queuepw, &st) < 0)
+            sysbail("cannot stat %s", queuepw);
         is_int(0600, st.st_mode & 0777, "...mode of queue file is correct");
-        file = fopen(queue, "r");
+        file = fopen(queuepw, "r");
         if (file == NULL)
-            sysbail("cannot open %s", queue);
+            sysbail("cannot open %s", queuepw);
         if (fgets(buffer, sizeof(buffer), file) == NULL)
             buffer[0] = '\0';
         is_string("test\n", buffer, "...queued user is correct");
@@ -114,16 +114,28 @@ main(void)
         is_string("foobar\n", buffer, "...queued password is correct");
         fclose(file);
     }
-    free(queue);
+
+    /* pwupdate_postcommit_password should do nothing, silently. */
+    code = pwupdate_postcommit_password(data, princ, "foobar",
+                                        strlen("foobar"), errstr,
+                                        sizeof(errstr));
+    is_int(0, code, "pwupdate_precommit_password succeeds");
+    is_string("", errstr, "...and there is no error");
 
     /* Shut down the plugin. */
     pwupdate_close(data);
 
+    /* Unwind the queue and be sure all the right files exist. */
+    ok(unlink("queue/test-ad-password-19700101T000000Z") == 0,
+       "Sentinel file still exists");
+    ok(unlink("queue/.lock") == 0, "Lock file still exists");
+    ok(unlink(queuepw) == 0, "Queued password change still exists");
+    ok(rmdir("queue") == 0, "No other files in queue directory");
+    free(queuepw);
+
     /* Clean up. */
     krb5_free_principal(ctx, princ);
     krb5_free_context(ctx);
-    if (system("rm -r queue") != 0)
-        bail("cannot remove queue");
     if (chdir("..") < 0)
         sysbail("cannot chdir to parent directory");
     test_file_path_free(krb5conf);
