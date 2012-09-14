@@ -1,5 +1,6 @@
 docs/pod
 docs/pod-spelling
+heimdal/plugin
 plugin/queuing
 portable/asprintf
 portable/snprintf

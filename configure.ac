@@ -42,6 +42,12 @@ RRA_LIB_KRB5_RESTORE
 
 RRA_LIB_LDAP
 
+dnl Only used for the test suite.
+save_LIBS="$LIBS"
+AC_SEARCH_LIBS([dlopen], [dl], [DL_LIBS="$LIBS"])
+LIBS="$save_LIBS"
+AC_SUBST([DL_LIBS])
+
 AC_HEADER_STDBOOL
 AC_CHECK_HEADERS([sys/bittypes.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])

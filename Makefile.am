@@ -83,11 +83,11 @@ warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/plugin/queuing-t		\
-        tests/portable/asprintf-t tests/portable/snprintf-t	\
-        tests/portable/strlcat-t tests/portable/strlcpy-t	\
-        tests/portable/strndup-t tests/util/messages-krb5-t	\
-        tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/heimdal/plugin-t			    \
+        tests/plugin/queuing-t tests/portable/asprintf-t		    \
+        tests/portable/snprintf-t tests/portable/strlcat-t		    \
+        tests/portable/strlcpy-t tests/portable/strndup-t		    \
+        tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
 check_LIBRARIES = tests/tap/libtap.a
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
@@ -98,6 +98,8 @@ tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
 	tests/tap/string.h
 
 # All of the test programs.
+tests_heimdal_plugin_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+	$(DL_LIBS)
 tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
 	$(plugin_krb5_sync_la_SOURCES)
 tests_plugin_queuing_t_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
