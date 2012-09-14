@@ -229,6 +229,8 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
      * at the same time can't get an earlier timestamp.
      */
     lock = lock_queue(config);
+    if (lock < 0)
+        goto fail;
     timestamp = queue_timestamp();
     if (timestamp == NULL)
         goto fail;
