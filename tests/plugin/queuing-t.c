@@ -29,7 +29,7 @@
 int
 main(void)
 {
-    char *tmpdir, *krb5conf, *env, *queuepw;
+    char *tmpdir, *krb5conf, *env, *queue;
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
@@ -59,7 +59,7 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(17);
+    plan(32);
 
     /* Test init. */
     is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
@@ -77,29 +77,29 @@ main(void)
     is_int(0, code, "pwupdate_precommit_password succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
     is_string("", errstr, "...and there is no error");
-    queuepw = NULL;
+    queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
         date = gmtime(&try);
-        basprintf(&queuepw,
+        basprintf(&queue,
                   "queue/test-ad-password-%04d%02d%02dT%02d%02d%02dZ-00",
                   date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
                   date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queuepw, F_OK) == 0)
+        if (access(queue, F_OK) == 0)
             break;
-        free(queuepw);
-        queuepw = NULL;
+        free(queue);
+        queue = NULL;
     }
-    ok(queuepw != NULL, "...password change was queued");
-    if (queuepw == NULL)
+    ok(queue != NULL, "...password change was queued");
+    if (queue == NULL)
         ok_block(5, false, "No queued change to check");
     else {
-        if (stat(queuepw, &st) < 0)
-            sysbail("cannot stat %s", queuepw);
+        if (stat(queue, &st) < 0)
+            sysbail("cannot stat %s", queue);
         is_int(0600, st.st_mode & 0777, "...mode of queue file is correct");
-        file = fopen(queuepw, "r");
+        file = fopen(queue, "r");
         if (file == NULL)
-            sysbail("cannot open %s", queuepw);
+            sysbail("cannot open %s", queue);
         if (fgets(buffer, sizeof(buffer), file) == NULL)
             buffer[0] = '\0';
         is_string("test\n", buffer, "...queued user is correct");
@@ -116,22 +116,111 @@ main(void)
     }
 
     /* pwupdate_postcommit_password should do nothing, silently. */
+    errstr[0] = '\0';
     code = pwupdate_postcommit_password(data, princ, "foobar",
                                         strlen("foobar"), errstr,
                                         sizeof(errstr));
-    is_int(0, code, "pwupdate_precommit_password succeeds");
+    is_int(0, code, "pwupdate_postcommit_password succeeds");
     is_string("", errstr, "...and there is no error");
+
+    /* Clean up password change queue files. */
+    ok(unlink("queue/test-ad-password-19700101T000000Z") == 0,
+       "Sentinel file still exists");
+    ok(unlink(queue) == 0, "Queued password change still exists");
+    free(queue);
+
+    /* Block processing for our test user and then test enable. */
+    fd = open("queue/test-ad-enable-19700101T000000Z", O_CREAT | O_WRONLY,
+              0666);
+    if (fd < 0)
+        sysbail("cannot create fake queue file");
+    close(fd);
+    errstr[0] = '\0';
+    code = pwupdate_postcommit_status(data, princ, 1, errstr, sizeof(errstr));
+    is_int(0, code, "pwupdate_postcommit_status enable succeeds");
+    is_string("", errstr, "...and there is no error");
+    queue = NULL;
+    now = time(NULL);
+    for (try = now - 1; try <= now; try++) {
+        date = gmtime(&try);
+        basprintf(&queue, "queue/test-ad-enable-%04d%02d%02dT%02d%02d%02dZ-00",
+                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
+                  date->tm_hour, date->tm_min, date->tm_sec);
+        if (access(queue, F_OK) == 0)
+            break;
+        free(queue);
+        queue = NULL;
+    }
+    ok(queue != NULL, "...enable was queued");
+    if (queue == NULL)
+        ok_block(3, false, "No queued change to check");
+    else {
+        file = fopen(queue, "r");
+        if (file == NULL)
+            sysbail("cannot open %s", queue);
+        if (fgets(buffer, sizeof(buffer), file) == NULL)
+            buffer[0] = '\0';
+        is_string("test\n", buffer, "...queued user is correct");
+        if (fgets(buffer, sizeof(buffer), file) == NULL)
+            buffer[0] = '\0';
+        is_string("ad\n", buffer, "...queued domain is correct");
+        if (fgets(buffer, sizeof(buffer), file) == NULL)
+            buffer[0] = '\0';
+        is_string("enable\n", buffer, "...queued operation is correct");
+        fclose(file);
+    }
+    ok(unlink(queue) == 0, "Remove queued enable");
+    free(queue);
+
+    /*
+     * Do the same thing for disables, which should still be blocked by the
+     * same marker.
+     */
+    errstr[0] = '\0';
+    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
+    is_string("", errstr, "...and there is no error");
+    queue = NULL;
+    now = time(NULL);
+    for (try = now - 1; try <= now; try++) {
+        date = gmtime(&try);
+        basprintf(&queue, "queue/test-ad-enable-%04d%02d%02dT%02d%02d%02dZ-00",
+                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
+                  date->tm_hour, date->tm_min, date->tm_sec);
+        if (access(queue, F_OK) == 0)
+            break;
+        free(queue);
+        queue = NULL;
+    }
+    ok(queue != NULL, "...enable was queued");
+    if (queue == NULL)
+        ok_block(3, false, "No queued change to check");
+    else {
+        file = fopen(queue, "r");
+        if (file == NULL)
+            sysbail("cannot open %s", queue);
+        if (fgets(buffer, sizeof(buffer), file) == NULL)
+            buffer[0] = '\0';
+        is_string("test\n", buffer, "...queued user is correct");
+        if (fgets(buffer, sizeof(buffer), file) == NULL)
+            buffer[0] = '\0';
+        is_string("ad\n", buffer, "...queued domain is correct");
+        if (fgets(buffer, sizeof(buffer), file) == NULL)
+            buffer[0] = '\0';
+        is_string("disable\n", buffer, "...queued operation is correct");
+        fclose(file);
+    }
+    ok(unlink("queue/test-ad-enable-19700101T000000Z") == 0,
+       "Sentinel file still exists");
+    ok(unlink(queue) == 0, "Remove queued disable");
+    free(queue);
 
     /* Shut down the plugin. */
     pwupdate_close(data);
 
     /* Unwind the queue and be sure all the right files exist. */
-    ok(unlink("queue/test-ad-password-19700101T000000Z") == 0,
-       "Sentinel file still exists");
     ok(unlink("queue/.lock") == 0, "Lock file still exists");
-    ok(unlink(queuepw) == 0, "Queued password change still exists");
     ok(rmdir("queue") == 0, "No other files in queue directory");
-    free(queuepw);
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);
