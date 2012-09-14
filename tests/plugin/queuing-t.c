@@ -29,7 +29,7 @@
 int
 main(void)
 {
-    char *tmpdir, *krb5conf, *env, *queue;
+    char *tmpdir, *krb5conf, *env, *old_env, *queue;
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
@@ -244,10 +244,11 @@ main(void)
     krb5conf = test_file_path("data/empty.conf");
     if (krb5conf == NULL)
         bail("cannot find tests/data/empty.conf");
-    free(env);
+    old_env = env;
     basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
     if (putenv(env) < 0)
         sysbail("cannot set KRB5CCNAME");
+    free(old_env);
     code = krb5_init_context(&ctx);
     if (code != 0)
         bail("cannot create Kerberos context (%d)", (int) code);
