@@ -15,11 +15,8 @@ override_dh_auto_configure:
 
 override_dh_auto_install:
 	dh_auto_install
-	rm debian/tmp/usr/lib/*/krb5/plugins/*.la
-	chmod 644 debian/tmp/usr/lib/*/krb5/plugins/*.so
-	mkdir debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/krb5/plugins/kadm5_hook
-	mv debian/tmp/usr/lib/*/krb5/plugins/*.so \
-	    debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook/
+	rm debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook/*.la
+	chmod 644 debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook/*.so
 
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS
