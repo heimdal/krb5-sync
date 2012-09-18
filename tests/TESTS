@@ -1,11 +1,13 @@
 docs/pod
 docs/pod-spelling
+plugin/heimdal
+plugin/mit
+plugin/queuing
 portable/asprintf
 portable/snprintf
 portable/strlcat
 portable/strlcpy
 portable/strndup
-util/concat
 util/messages
 util/messages-krb5
 util/xmalloc

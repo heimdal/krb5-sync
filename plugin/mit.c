@@ -81,6 +81,15 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
     size_t length;
     int status = 0;
 
+    /*
+     * If password is NULL, we have a new key set but no password (meaning
+     * this is an operation such as addprinc -randkey).  We can't do anything
+     * without a password, so ignore these cases.
+     */
+    if (password == NULL)
+        return 0;
+
+    /* Dispatch to the appropriate function. */
     length = strlen(password);
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
         status = pwupdate_precommit_password(data, princ, password, length,

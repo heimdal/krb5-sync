@@ -136,15 +136,34 @@ test_strdup(size_t size)
 
 /*
  * Generate a string of the size indicated plus some, call xstrndup on it, and
- * then ensure the result matches.  Returns true on success, false on any
- * failure.
+ * then ensure the result matches.  Also test xstrdup on a string that's
+ * shorter than the specified size and ensure that we don't copy too much, and
+ * on a string that's not nul-terminated.  Returns true on success, false on
+ * any failure.
  */
 static int
 test_strndup(size_t size)
 {
     char *string, *copy;
-    int match, toomuch;
+    int shortmatch, nonulmatch, match, toomuch;
 
+    /* Copy a short string. */
+    string = xmalloc(5);
+    memcpy(string, "test", 5);
+    copy = xstrndup(string, size);
+    shortmatch = strcmp(string, copy);
+    free(string);
+    free(copy);
+
+    /* Copy a string that's not nul-terminated. */
+    string = xmalloc(4);
+    memcpy(string, "test", 4);
+    copy = xstrndup(string, 4);
+    nonulmatch = strcmp(copy, "test");
+    free(string);
+    free(copy);
+
+    /* Now the test of running out of memory. */
     string = xmalloc(size + 1);
     if (string == NULL)
         return 0;
@@ -158,7 +177,7 @@ test_strndup(size_t size)
     toomuch = strcmp(string, copy);
     free(string);
     free(copy);
-    return (match == 0 && toomuch != 0);
+    return (shortmatch == 0 && nonulmatch == 0 && match == 0 && toomuch != 0);
 }
 
 
@@ -194,16 +213,13 @@ static int
 test_asprintf(size_t size)
 {
     char *copy, *string;
-    int status;
     size_t i;
 
     string = xmalloc(size);
     memset(string, 42, size - 1);
     string[size - 1] = '\0';
-    status = xasprintf(&copy, "%s", string);
+    xasprintf(&copy, "%s", string);
     free(string);
-    if (status < 0)
-        return 0;
     for (i = 0; i < size - 1; i++)
         if (copy[i] != 42)
             return 0;
@@ -215,16 +231,14 @@ test_asprintf(size_t size)
 
 
 /* Wrapper around vasprintf to do the va_list stuff. */
-static int
+static void
 xvasprintf_wrapper(char **strp, const char *format, ...)
 {
     va_list args;
-    int status;
 
     va_start(args, format);
-    status = xvasprintf(strp, format, args);
+    xvasprintf(strp, format, args);
     va_end(args);
-    return status;
 }
 
 
@@ -236,16 +250,13 @@ static int
 test_vasprintf(size_t size)
 {
     char *copy, *string;
-    int status;
     size_t i;
 
     string = xmalloc(size);
     memset(string, 42, size - 1);
     string[size - 1] = '\0';
-    status = xvasprintf_wrapper(&copy, "%s", string);
+    xvasprintf_wrapper(&copy, "%s", string);
     free(string);
-    if (status < 0)
-        return 0;
     for (i = 0; i < size - 1; i++)
         if (copy[i] != 42)
             return 0;
