@@ -229,6 +229,8 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
      * at the same time can't get an earlier timestamp.
      */
     lock = lock_queue(config);
+    if (lock < 0)
+        goto fail;
     timestamp = queue_timestamp();
     if (timestamp == NULL)
         goto fail;
@@ -279,7 +281,7 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
     /* We're done. */
     close(fd);
     unlock_queue(lock);
-    free(user);
+    krb5_free_unparsed_name(ctx, user);
     free(prefix);
     free(timestamp);
     free(path);
@@ -294,7 +296,7 @@ fail:
     if (lock >= 0)
         unlock_queue(lock);
     if (user != NULL)
-        free(user);
+        krb5_free_unparsed_name(ctx, user);
     if (prefix != NULL)
         free(prefix);
     if (timestamp != NULL)

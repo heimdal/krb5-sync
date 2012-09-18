@@ -1,5 +1,39 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 2.3 (2012-09-18)
+
+    When handling password changes from MIT Kerberos, quietly ignore
+    changes where the password is NULL.  These are key randomizations,
+    such as from addprinc -randkey, which this module inherently can't do
+    anything with.
+
+    The plugin is now installed in a kadm5_hook subdirectory under
+    krb5/plugins (under libdir in turn), matching the plugin layout used
+    by MIT Kerberos.
+
+    When krb5-sync-backend is running in silent mode, ignore "Operation
+    not permitted" errors from krb5_set_password.  Heimdal 1.5.2 returns
+    this error from Active Directory when attempting to change the
+    password of an account that does not exist.
+
+    Properly pass Kerberos preprocessor flags to the compiler when
+    building the plugin.
+
+    Update to rra-c-util 4.6:
+
+    * Pass --deps to krb5-config except with --enable-reduced-depends.
+    * Do not assume string is nul-terminated in replacement strdup.
+    * Avoid using local in the shell TAP library for Solaris portability.
+    * Silence __attribute__ warnings on more compilers.
+
+    Update to C TAP Harness 1.12:
+
+    * Suppress plan and summary if bail is called before any tests run.
+    * Only use feature-test macros when requested or built with gcc -ansi.
+    * Drop is_double from the C TAP library to avoid requiring -lm.
+    * Avoid using local in the shell libtap.sh library.
+    * Silence __attribute__ warnings on more compilers.
+
 krb5-sync 2.2 (2012-01-10)
 
     The name of the plugin is now krb5_sync.so instead of passwd_update.so

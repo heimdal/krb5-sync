@@ -9,8 +9,9 @@
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore LICENSE autogen patches/README			    \
 	patches/heimdal-1.3.1 patches/mit-krb5-1.4.4 patches/mit-krb5-1.8.3 \
-	tests/README tests/TESTS tests/docs/pod-spelling-t tests/docs/pod-t \
-	tests/tap/libtap.sh tests/util/xmalloc-t tools/krb5-sync.pod
+	tests/README tests/TESTS tests/data/empty.conf tests/data/krb5.conf \
+	tests/docs/pod-spelling-t tests/docs/pod-t tests/tap/libtap.sh	    \
+	tests/util/xmalloc-t tools/krb5-sync.pod
 
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
 
@@ -20,33 +21,29 @@ portable_libportable_la_SOURCES = portable/dummy.c portable/krb5-extra.c \
 	portable/system.h
 portable_libportable_la_LDFLAGS = $(KRB5_LDFLAGS)
 portable_libportable_la_LIBADD = $(LTLIBOBJS) $(KRB5_LIBS)
-util_libutil_la_SOURCES = util/concat.c util/concat.h util/macros.h	\
-        util/messages-krb5.c util/messages-krb5.h util/messages.c	\
-        util/messages.h util/xmalloc.c util/xmalloc.h
+util_libutil_la_SOURCES = util/macros.h util/messages-krb5.c		    \
+        util/messages-krb5.h util/messages.c util/messages.h util/xmalloc.c \
+        util/xmalloc.h
 util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
-# Put the module into /usr/local/lib/krb5/plugins by default, relative to
-# --libdir.
-moduledir = $(libdir)/krb5/plugins
+# Put the module into /usr/local/lib/krb5/plugins/kadm5_hook by default,
+# relative to --libdir.
+moduledir = $(libdir)/krb5/plugins/kadm5_hook
 
 # Rules for building the krb5-sync plugin.
 module_LTLIBRARIES = plugin/krb5_sync.la
 plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c \
 	plugin/internal.h plugin/heimdal.c plugin/mit.c plugin/queue.c
-plugin_krb5_sync_la_CPPFLAGS = $(LDAP_CPPFLAGS)
+plugin_krb5_sync_la_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
 plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(LDAP_LDFLAGS) \
 	$(KRB5_LDFLAGS)
 plugin_krb5_sync_la_LIBADD = portable/libportable.la $(LDAP_LIBS) \
 	$(KRB5_LIBS)
 
-# Rules for building the krb5-sync utility.  We specify the CFLAGS to work
-# around Automake's inability to link libtool objects into a program that
-# isn't otherwise using libtool.  Per the Automake manual, specifying CFLAGS
-# will cause the sources to be built twice, once with a prefix for this
-# program.
+# Rules for building the krb5-sync utility.
 sbin_PROGRAMS = tools/krb5-sync
 tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_krb5_sync_la_SOURCES)
-tools_krb5_sync_CFLAGS = $(AM_CFLAGS)
+tools_krb5_sync_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
 tools_krb5_sync_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
 tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\
 	$(LDAP_LIBS) $(KRB5_LIBS)
@@ -72,32 +69,46 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/compile		 \
 #
 #     -Wconversion      http://bugs.debian.org/488884 (htons warnings)
 #
-# Last checked against gcc 4.6.1 (2011-05-04).
-WARNINGS = -g -O -Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self	 \
-	-Wswitch-enum -Wdeclaration-after-statement -Wshadow		 \
-	-Wpointer-arith -Wbad-function-cast -Wcast-align -Wwrite-strings \
-	-Wjump-misses-init -Wlogical-op -Wstrict-prototypes		 \
-	-Wmissing-prototypes -Wredundant-decls -Wnested-externs -Werror
+# Last checked against gcc 4.6.1 (2011-05-04).  -D_FORTIFY_SOURCE=2 enables
+# warn_unused_result attribute markings on glibc functions on Linux, which
+# catches a few more issues.
+WARNINGS = -g -O -D_FORTIFY_SOURCE=2 -Wall -Wextra -Wendif-labels	    \
+	-Wformat=2 -Winit-self -Wswitch-enum -Wdeclaration-after-statement  \
+	-Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align	    \
+	-Wwrite-strings -Wjump-misses-init -Wlogical-op			    \
+	-Wstrict-prototypes -Wmissing-prototypes -Wredundant-decls	    \
+	-Wnested-externs -Werror
 
 warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)'
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/portable/asprintf-t	\
-        tests/portable/snprintf-t tests/portable/strlcat-t	\
-        tests/portable/strlcpy-t tests/portable/strndup-t	\
-        tests/util/concat-t tests/util/messages-krb5-t		\
-        tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t   \
+        tests/plugin/queuing-t tests/portable/asprintf-t		    \
+        tests/portable/snprintf-t tests/portable/strlcat-t		    \
+        tests/portable/strlcpy-t tests/portable/strndup-t		    \
+        tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
 check_LIBRARIES = tests/tap/libtap.a
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
 tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
-	tests/tap/messages.c tests/tap/messages.h tests/tap/process.c	\
-	tests/tap/process.h tests/tap/string.c tests/tap/string.h
+	tests/tap/macros.h tests/tap/messages.c tests/tap/messages.h	\
+	tests/tap/process.c tests/tap/process.h tests/tap/string.c	\
+	tests/tap/string.h
 
 # All of the test programs.
+tests_plugin_heimdal_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+	$(DL_LIBS)
+tests_plugin_mit_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+	$(DL_LIBS)
+tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
+	$(plugin_krb5_sync_la_SOURCES)
+tests_plugin_queuing_t_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
+tests_plugin_queuing_t_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
+tests_plugin_queuing_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+	$(LDAP_LIBS) $(KRB5_LIBS)
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
 	tests/portable/asprintf.c
 tests_portable_asprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
@@ -113,8 +124,6 @@ tests_portable_strlcpy_t_LDADD = tests/tap/libtap.a portable/libportable.la
 tests_portable_strndup_t_SOURCES = tests/portable/strndup-t.c \
 	tests/portable/strndup.c
 tests_portable_strndup_t_LDADD = tests/tap/libtap.a portable/libportable.la
-tests_util_concat_t_LDADD = tests/tap/libtap.a util/libutil.la \
-	portable/libportable.la
 tests_util_messages_krb5_t_LDFLAGS = $(KRB5_LDFLAGS)
 tests_util_messages_krb5_t_LDADD = tests/tap/libtap.a util/libutil.la \
 	portable/libportable.la $(KRB5_LIBS)
