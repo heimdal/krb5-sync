@@ -8,6 +8,7 @@ krb5-sync (2.3-1) UNRELEASED; urgency=low
     Debian packages.
   * Mark krb5-sync-tools Multi-Arch: foreign.
   * Convert debian/copyright to copyright-format 1.0.
+  * Update standards version to 3.9.3 (no changes required).
   
  -- Russ Allbery <rra@debian.org>  Tue, 18 Sep 2012 12:58:09 -0700
 
