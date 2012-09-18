@@ -7,6 +7,7 @@ krb5-sync (2.3-1) UNRELEASED; urgency=low
   * Switch to xz compression for the upstream and Debian tarballs and the
     Debian packages.
   * Mark krb5-sync-tools Multi-Arch: foreign.
+  * Remove debugging display of config.log from the build rules.
   * Convert debian/copyright to copyright-format 1.0.
   * Update standards version to 3.9.3 (no changes required).
   
