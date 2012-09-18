@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 2.3 (unreleased)
+krb5-sync 2.3 (2012-09-18)
 
     When handling password changes from MIT Kerberos, quietly ignore
     changes where the password is NULL.  These are key randomizations,
