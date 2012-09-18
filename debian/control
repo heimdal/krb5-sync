@@ -24,6 +24,7 @@ Description: MIT Kerberos Active Directory synchronization plugin
 
 Package: krb5-sync-tools
 Architecture: any
+Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
 Recommends: krb5-sync-plugin
 Breaks: krb5-sync
