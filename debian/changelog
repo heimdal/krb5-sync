@@ -1,4 +1,4 @@
-krb5-sync (2.3-1) UNRELEASED; urgency=low
+krb5-sync (2.3-1) experimental; urgency=low
 
   * New upstream release.
     - Also protect against a NULL password on Heimdal.
@@ -11,7 +11,7 @@ krb5-sync (2.3-1) UNRELEASED; urgency=low
   * Convert debian/copyright to copyright-format 1.0.
   * Update standards version to 3.9.3 (no changes required).
   
- -- Russ Allbery <rra@debian.org>  Tue, 18 Sep 2012 12:58:09 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 18 Sep 2012 13:17:43 -0700
 
 krb5-sync (2.2-3) unstable; urgency=low
 
