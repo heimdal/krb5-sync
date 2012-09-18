@@ -1,3 +1,13 @@
+krb5-sync (2.2-3) unstable; urgency=low
+
+  * Apply upstream commit to silently ignore password changes with a NULL
+    password, only new keys.  This represents a key randomization, such as
+    from addprinc -randkey, which is outside the synchronization scope of
+    this package.  Without this change, the plugin would segfault on that
+    operation.  (Closes: #687346)
+
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Sep 2012 20:24:01 -0700
+
 krb5-sync (2.2-2) unstable; urgency=low
 
   * Fix debian/rules syntax for setting hardening flags and enable bindnow
