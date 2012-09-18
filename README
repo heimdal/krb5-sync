@@ -128,12 +128,16 @@ INSTALLATION
   the Linux kernel).  Use make warnings instead of make to build with full
   GCC compiler warnings (requires a relatively current version of GCC).
 
-  The plugin is installed as /usr/local/lib/krb5/plugins/krb5_sync.so by
-  default, and the utilities are installed in /usr/local/sbin.  The last
-  step will probably have to be done as root.  To install in a different
-  location, specify the location with the --prefix option to configure.
+  By default, the plugin is installed as:
+
+      /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+
+  and the utilities are installed in /usr/local/sbin.  The last step will
+  probably have to be done as root.  To install in a different location,
+  specify the location with the --prefix option to configure.
   Alternately, --libdir, --sbindir, and --mandir can be given to change
   the installation locations of the binaries and manual pages separately.
+  The plugin is installed in krb5/plugins/kadm5_hook relative to libdir.
 
   If /usr/bin/perl is not the path to Perl on your system, you will need
   to change the first line of krb5-sync-backend.  You will also need to

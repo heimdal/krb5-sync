@@ -25,9 +25,9 @@ util_libutil_la_SOURCES = util/macros.h util/messages-krb5.c		    \
         util/xmalloc.h
 util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 
-# Put the module into /usr/local/lib/krb5/plugins by default, relative to
-# --libdir.
-moduledir = $(libdir)/krb5/plugins
+# Put the module into /usr/local/lib/krb5/plugins/kadm5_hook by default,
+# relative to --libdir.
+moduledir = $(libdir)/krb5/plugins/kadm5_hook
 
 # Rules for building the krb5-sync plugin.
 module_LTLIBRARIES = plugin/krb5_sync.la

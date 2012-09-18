@@ -7,6 +7,10 @@ krb5-sync 2.3 (unreleased)
     such as from addprinc -randkey, which this module inherently can't do
     anything with.
 
+    The plugin is now installed in a kadm5_hook subdirectory under
+    krb5/plugins (under libdir in turn), matching the plugin layout used
+    by MIT Kerberos.
+
     When krb5-sync-backend is running in silent mode, ignore "Operation
     not permitted" errors from krb5_set_password.  Heimdal 1.5.2 returns
     this error from Active Directory when attempting to change the
