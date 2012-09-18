@@ -87,7 +87,16 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
     size_t length;
     int status = 0;
 
+    /*
+     * If password is NULL, we have a new key set but no password (meaning
+     * this is an operation such as add -r).  We can't do anything without a
+     * password, so ignore these cases.
+     */
+    if (password == NULL)
+        return 0;
     length = strlen(password);
+
+    /* Dispatch to the appropriate function. */
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
         status = pwupdate_precommit_password(data, princ, password, length,
                                              error, sizeof(error));
@@ -115,25 +124,7 @@ create(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
        kadm5_principal_ent_t entry, uint32_t mask UNUSED,
        const char *password)
 {
-    char error[BUFSIZ];
-    size_t length;
-    int status = 0;
-
-    length = strlen(password);
-    if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        status = pwupdate_precommit_password(data, entry->principal, password,
-                                             length, error, sizeof(error));
-    else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        status = pwupdate_postcommit_password(data, entry->principal,
-                                              password, length, error,
-                                              sizeof(error));
-    if (status == 0)
-        return 0;
-    else {
-        krb5_set_error_message(ctx, KADM5_FAILURE,
-                               "cannot synchronize password: %s", error);
-        return KADM5_FAILURE;
-    }
+    return chpass(ctx, data, stage, entry->principal, password);
 }
 
 
