@@ -83,7 +83,7 @@ warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/heimdal/plugin-t tests/mit/plugin-t   \
+check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t   \
         tests/plugin/queuing-t tests/portable/asprintf-t		    \
         tests/portable/snprintf-t tests/portable/strlcat-t		    \
         tests/portable/strlcpy-t tests/portable/strndup-t		    \
@@ -98,9 +98,9 @@ tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
 	tests/tap/string.h
 
 # All of the test programs.
-tests_heimdal_plugin_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+tests_plugin_heimdal_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(DL_LIBS)
-tests_mit_plugin_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+tests_plugin_mit_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(DL_LIBS)
 tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
 	$(plugin_krb5_sync_la_SOURCES)
