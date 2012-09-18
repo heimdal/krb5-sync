@@ -134,3 +134,13 @@ int pwupdate_postcommit_status(void *data, krb5_principal principal,
     kadmind will log an error with the return status and the error message
     from the errstr buffer.  The change will not be aborted or rolled
     back.
+
+-----
+
+Copyright 2012
+    The Board of Trustees of the Leland Stanford Junior University
+
+Copying and distribution of this file, with or without modification, are
+permitted in any medium without royalty provided the copyright notice and
+this notice are preserved.  This file is offered as-is, without any
+warranty.
