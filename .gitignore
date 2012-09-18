@@ -16,6 +16,7 @@
 /m4/lt~obsolete.m4
 /stamp-h1
 /tests/heimdal/plugin-t
+/tests/mit/plugin-t
 /tests/plugin/queuing-t
 /tests/portable/asprintf-t
 /tests/portable/snprintf-t
