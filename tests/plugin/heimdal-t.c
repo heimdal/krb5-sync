@@ -88,7 +88,7 @@ main(void)
     if (plugin == NULL)
         skip_all("unknown plugin naming scheme");
 
-    plan(13);
+    plan(15);
 
     /* Load the module and find the correct symbol. */
     handle = dlopen(plugin, RTLD_NOW);
@@ -128,6 +128,11 @@ main(void)
                   " failed", krb5_get_error_message(ctx, code),
                   "...with correct error message");
 
+        /* Test chpass with a NULL password. */
+        code = hook->chpass(ctx, data, KADM5_HOOK_STAGE_PRECOMMIT, princ,
+                            NULL);
+        is_int(0, code, "chpass with NULL password");
+
         /*
          * Everything in the entity is ignored except the principal and
          * attributes, so don't bother to fake much up here.
@@ -147,6 +152,13 @@ main(void)
         is_string("cannot synchronize status: queueing AD status change"
                   " failed", krb5_get_error_message(ctx, code),
                   "...with correct error message");
+
+        /* Test create with a NULL password. */
+        code = hook->create(ctx, data, KADM5_HOOK_STAGE_PRECOMMIT, &entity,
+                            0, NULL);
+        is_int(0, code, "create");
+
+        /* Close down the module. */
         hook->fini(ctx, data);
     }
 
