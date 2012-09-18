@@ -6,14 +6,8 @@
   Copyright 2006, 2007, 2010, 2011, 2012 The Board of Trustees of the
   Leland Stanford Junior University.  Originally developed by Derrick
   Brashear and Ken Hornstein of Sine Nomine Associates, on behalf of
-  Stanford University.
-
-  This software is distributed under a BSD-style license.  Please see the
-  file LICENSE in the distribution for more information.
-
-  This code is running in production at Stanford, but will likely require
-  modifications to fit any other environment.  Feedback and improvements
-  will be gratefully accepted.
+  Stanford University.  This software is distributed under a BSD-style
+  license.  Please see the section LICENSE below for more information.
 
 BLURB
 
@@ -37,14 +31,11 @@ DESCRIPTION
   replicated to the other environments.  Bidirectional replication is
   outside the scope of this toolkit.
 
-  This toolkit consists of three basic pieces:
+  This code is running in production at Stanford, but will likely require
+  modifications to fit any other environment.  Feedback and improvements
+  will be gratefully accepted.
 
-   * Patches to MIT Kerberos (prior to 1.9; 1.9 and later do not require
-     patching) and Heimdal to add a plugin system for password changes and
-     account status updates.  These patches add hooks that are run prior
-     to a password change, after a password change, and after a change to
-     an account's flags.  The code in libkadm5srv is independent of what
-     that plugin might do.
+  This toolkit consists of three basic pieces:
 
    * A plugin that uses that system to push password changes and selected
      account flag changes to Active Directory.  This is done using a
@@ -56,6 +47,14 @@ DESCRIPTION
      and status updates as the plugin but from the command-line.  These
      can be used to process failed synchronizations later, to test the
      system, or to make manual changes as required.
+
+   * Patches to Heimdal and to versions of MIT Kerberos prior to 1.9 to
+     add a plugin system for password changes and account status updates.
+     MIT Kerberos 1.9 and later do not require patching.  These patches
+     add hooks that are run prior to a password change, after a password
+     change, and after a change to an account's flags.  The code added by
+     these patches to libkadm5srv is independent of what that plugin might
+     do.
 
   The plugin and system are designed so that operations done in the hook
   prior to the password change can abort the password change if they fail.
@@ -78,7 +77,7 @@ DESCRIPTION
   the password history, this will be harmless, since it will only mean the
   Active Directory password will be reset to the existing password.  If,
   however, you store multiple passwords in the password history, the
-  passwords could end up being desynchronized.  This should be fixed in
+  passwords could end up being desynchronized.  I believe this is fixed in
   MIT Kerberos 1.9.
 
 REQUIREMENTS
@@ -89,9 +88,10 @@ REQUIREMENTS
   patches directory to MIT Kerberos or Heimdal and rebuild.  Due to how
   kadmind is constructed, the changes are actually in the libkadm5srv
   library, not the kadmind binary, so you'll need to install the modified
-  libraries.  It is my hope that eventually an interface like this will be
-  incorporated into the Heimdal distribution as well and patching will not
-  be necessary.
+  libraries.  It is my hope that eventually the hooks necessary to do this
+  will be incorporated into the Heimdal distribution as well, and these
+  tools will be modified to support the Heimdal interfaces, and then
+  patching will not be necessary.
 
   To build the account status update code, you will need OpenLDAP
   installed.  To authenticate to Active Directory, you will also need
@@ -111,11 +111,12 @@ REQUIREMENTS
 
 INSTALLATION
 
-  First, patch MIT Kerberos or Heimdal with the patch provided in the
-  patches directory if necessary and install the new libkadm5srv or
-  libkadm5srv_mit library.  See patches/README for more information about
-  the patch.  If you're using a different version of MIT Kerberos, you may
-  need to adjust the patch accordingly.
+  First, for Heimdal or versions of MIT Kerberos prior to 1.9, patch MIT
+  Kerberos or Heimdal with the patch provided in the patches directory and
+  install the new libkadm5srv or libkadm5srv_mit library.  See
+  patches/README for more information about the patch.  If you're using a
+  different version of MIT Kerberos or Heimdal, you may need to adjust the
+  patch accordingly.
 
   Then, you can build and install the plugin and command-line utilities
   with the standard commands:
@@ -191,9 +192,9 @@ INSTALLATION
 
 TESTING
 
-  A rudimentary test suite is available, but for right now only tests the
-  portability and utility libraries and the documentation.  You can run it
-  with:
+  A basic test suite is available, but for right now only tests some of
+  the machinery and API and does some rudimentary testing of the change
+  queuing system.  You can run it with:
 
       make check
 
@@ -258,23 +259,23 @@ CONFIGURATION
   To load this plugin, add the following to the kdc.conf or krb5.conf file
   used by kadmind:
 
-      [plugins]
-          kadm5_hook = {
-              module = krb5_sync:/usr/local/lib/krb5/plugins/krb5_sync.so
-          }
+    [plugins]
+      kadm5_hook = {
+        module = krb5_sync:/usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+      }
 
   You may wish to install krb5_sync.so under a krb5/plugins/kadm5_hook in
-  the library directory used for your Kerberos installation instead, in
-  which case you can use "kadm5_hook/krb5_sync.so" as the relative path to
-  the plugin.
+  the library directory used for your Kerberos installation instead, if
+  that is not /usr/local/lib, in which case you can use
+  "kadm5_hook/krb5_sync.so" as the relative path to the plugin.
 
   The kadmind patch for Heimdal adds a configuration option for the
   krb5.conf file in the [kadmin] section.  If this option is not set, the
   plugin will not be loaded and none of the hooks will be run.  Therefore,
   to use the plugin, add configuration like:
 
-      [kadmin]
-          hook_libraries = /usr/local/lib/krb5/plugins/krb5_sync.so
+    [kadmin]
+      hook_libraries = /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
 
   to the configuration file used by kadmind and kpasswdd.  Update the path
   for wherever the krb5-sync plugin is located.
@@ -283,7 +284,7 @@ CONFIGURATION
   option for the kdc.conf.  To use the plugin on older versions of MIT,
   add a line like:
 
-      pwupdate_plugin = /usr/local/lib/krb5/plugins/krb5_sync.so
+    pwupdate_plugin = /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
 
   to the local realm sub-section of the [realms] section.
 
@@ -323,3 +324,64 @@ ACTIVE DIRECTORY SETUP
   (all on one line).
 
   Thanks to Ross Wilper for this setup information.
+
+HOMEPAGE AND SOURCE REPOSITORY
+
+  The krb5-sync web page at:
+
+      http://www.eyrie.org/~eagle/software/krb5-sync/
+
+  will always have the current version of this package, the current
+  documentation, and pointers to any additional resources.
+
+  krb5-sync is maintained using Git.  You can access the current source by
+  cloning the repository at:
+
+      git://git.eyrie.org/devel/krb5-sync.git
+
+  or view the repository via the web at:
+
+      http://git.eyrie.org/?p=devel/krb5-sync.git
+
+  Please send any bug reports, patches, or questions to rra@stanford.edu.
+
+LICENSE
+
+  The krb5-sync package as a whole is covered by the following copyright
+  statement and license:
+
+    Copyright 2006, 2007, 2008, 2010, 2011, 2012
+        The Board of Trustees of the Leland Stanford Junior University
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+  All individual files without an explicit exception below are released
+  under this license.  Some files may have additional copyright holders as
+  noted in those files.  There is detailed information about the licensing
+  of each file in the LICENSE file in this distribution.
+
+  Some files in this distribution are individually released under
+  different licenses, all of which are compatible with the above general
+  package license but which may require preservation of additional
+  notices.  All required notices are preserved in the LICENSE file.  Each
+  file intended for copying into other software packages contains a
+  copyright and license notice at the top or bottom of the file.  Please
+  take note of any attribution and notice requirements specified in that
+  license.
