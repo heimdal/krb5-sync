@@ -9,8 +9,9 @@
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore LICENSE autogen patches/README			    \
 	patches/heimdal-1.3.1 patches/mit-krb5-1.4.4 patches/mit-krb5-1.8.3 \
-	tests/README tests/TESTS tests/docs/pod-spelling-t tests/docs/pod-t \
-	tests/tap/libtap.sh tests/util/xmalloc-t tools/krb5-sync.pod
+	tests/README tests/TESTS tests/data/empty.conf tests/data/krb5.conf \
+	tests/docs/pod-spelling-t tests/docs/pod-t tests/tap/libtap.sh	    \
+	tests/util/xmalloc-t tools/krb5-sync.pod
 
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
 
