@@ -3,8 +3,10 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 9), dh-autoreconf, libkrb5-dev, libldap2-dev
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
+Vcs-Browser: http://git.eyrie.org/?p=kerberos/krb5-sync.git
+Vcs-Git: git://git.eyrie.org/kerberos/krb5-sync.git -b debian
 
 Package: krb5-sync-plugin
 Architecture: any

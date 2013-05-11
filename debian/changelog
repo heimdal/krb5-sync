@@ -1,3 +1,10 @@
+krb5-sync (2.3-2) UNRELEASED; urgency=low
+
+  * Update standards version to 3.9.4.
+    - Add Vcs-Git and Vcs-Browser control fields.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 11 May 2013 16:52:59 -0700
+
 krb5-sync (2.3-1) experimental; urgency=low
 
   * New upstream release.
