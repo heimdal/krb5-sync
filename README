@@ -37,11 +37,11 @@ DESCRIPTION
 
   This toolkit consists of three basic pieces:
 
-   * A plugin that uses that system to push password changes and selected
-     account flag changes to Active Directory.  This is done using a
-     separate keytab for authentication.  Active Directory password
-     updates are done via the Kerberos set-password protocol and status
-     updates are done via LDAP.
+   * A plugin that pushes password changes and selected account flag
+     changes to Active Directory.  This is done using a separate keytab
+     for authentication.  Active Directory password updates are done via
+     the Kerberos set-password protocol and status updates are done via
+     LDAP.
 
    * A set of command-line utilities that can perform the same password
      and status updates as the plugin but from the command-line.  These
