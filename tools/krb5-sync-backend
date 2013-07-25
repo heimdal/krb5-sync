@@ -3,7 +3,7 @@
 # krb5-sync-backend -- Manipulate Kerberos password and status change queue.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2007, 2008, 2010, 2012
+# Copyright 2007, 2008, 2010, 2012, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -169,6 +169,7 @@ sub process {
     unlock_queue;
     my %skipped;
     for my $file (@files) {
+        next unless -f $file;
         my ($id) = ($file =~ /^([^-]+-[^-]+-[^-]+)-/);
         $id ||= 'UNKNOWN';
         next if $skipped{$id};
