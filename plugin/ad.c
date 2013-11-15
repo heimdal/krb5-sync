@@ -174,8 +174,6 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
     krb5_data result_code_string, result_string;
     int code = 0;
 
-    if (ad_keytab == NULL)
-        return 3;
     CHECK_CONFIG(ad_realm);
 
     if (get_creds(config, ctx, &ccache, errstr, errstrlen) != 0)
