@@ -1,5 +1,11 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 2.4 (unreleased)
+
+    krb5-sync-backend supports a new flag, -d, which specifies the
+    location of the queue directory, changing the default of
+    /var/spool/krb5-sync.
+
 krb5-sync 2.3 (2012-09-18)
 
     When handling password changes from MIT Kerberos, quietly ignore

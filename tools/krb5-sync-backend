@@ -236,8 +236,11 @@ $0 =~ s%.*/%%;
 # Read command-line options.
 my ($help, $silent) = @_;
 Getopt::Long::config ('bundling', 'require_order');
-GetOptions ('h|help'   => \$help,
-            's|silent' => \$silent);
+GetOptions (
+    'd|directory=s' => \$QUEUE,
+    'h|help'        => \$help,
+    's|silent'      => \$silent
+);
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $fullpath);
@@ -296,17 +299,17 @@ krb5-sync-backend - Manipulate Kerberos password and status change queue
 
 =head1 SYNOPSIS
 
-B<krb5-sync-backend> B<-h>
+B<krb5-sync-backend> B<-h> [help]
 
-B<krb5-sync-backend> (disable|enable) I<user>
+B<krb5-sync-backend> [B<-d> I<queue>] (disable|enable) I<user>
 
-B<krb5-sync-backend> (help|list)
+B<krb5-sync-backend> [B<-d> I<queue>] list
 
-B<krb5-sync-backend> [B<-s>] process
+B<krb5-sync-backend> [B<-s>] [B<-d> I<queue>] process
 
-B<krb5-sync-backend> password I<user> ad < I<password>
+B<krb5-sync-backend> [B<-d> I<queue>] password I<user> ad < I<password>
 
-B<krb5-sync-backend> purge I<days>
+B<krb5-sync-backend> [B<-d> I<queue>] purge I<days>
 
 =head1 DESCRIPTION
 
@@ -386,6 +389,11 @@ removed and never created in other environments.
 =head1 OPTIONS
 
 =over 4
+
+=item B<-d> I<queue>, B<--directory>=I<queue>
+
+Use I<queue> as the queue directory instead of the default of
+F</var/spool/krb5-sync>.  This also changes the lock file accordingly.
 
 =item B<-h>, B<--help>
 
