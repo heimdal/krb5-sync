@@ -6,6 +6,10 @@ krb5-sync 2.4 (unreleased)
     location of the queue directory, changing the default of
     /var/spool/krb5-sync.
 
+    When processing events in krb5-sync-backend, skip event files which no
+    longer exist by the time we get to them.  This makes krb5-sync-backend
+    more robust against multiple copies running at the same time.
+
 krb5-sync 2.3 (2012-09-18)
 
     When handling password changes from MIT Kerberos, quietly ignore
