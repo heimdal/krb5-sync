@@ -2,6 +2,7 @@ docs/pod
 docs/pod-spelling
 plugin/heimdal
 plugin/mit
+plugin/queue-only
 plugin/queuing
 portable/asprintf
 portable/snprintf

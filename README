@@ -220,6 +220,7 @@ CONFIGURATION
           ad_admin_server = dc1.windows.example.com
           ad_ldap_base    = ou=People
           ad_instances    = root ipass
+          ad_queue_only   = false
 
           queue_dir       = /var/spool/krb5-sync
       }
@@ -245,6 +246,14 @@ CONFIGURATION
   If ad_realm is not set, the plugin will not attempt to push changes to
   Active Directory, so you can deactivate this plugin while still loading
   it by removing that part of the configuration.
+
+  The ad_queue_only option controls whether we attempt to push changes
+  directly to Active Directory or always queue them.  It can be set to
+  true to write all changes to the queue where they can be processed later
+  (by krb5-sync-backend, for example).  This may be helpful if the delay
+  from pushing changes to Active Directory causes problems for clients
+  (such as kpasswd clients, which are aggressive about retries and don't
+  like long delays).
 
   The queue_dir setting specifies where to queue changes that couldn't be
   made.  If password changes fail in AD, the whole password change is

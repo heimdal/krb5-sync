@@ -17,6 +17,7 @@
 /stamp-h1
 /tests/plugin/heimdal-t
 /tests/plugin/mit-t
+/tests/plugin/queue-only-t
 /tests/plugin/queuing-t
 /tests/portable/asprintf-t
 /tests/portable/snprintf-t

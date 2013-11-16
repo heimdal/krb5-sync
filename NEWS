@@ -2,6 +2,13 @@
 
 krb5-sync 2.4 (unreleased)
 
+    Add a new boolean krb5.conf option, ad_queue_only, which, if set to
+    true, forces all changes to be queued even if there are no conflicting
+    changes already queued.  The changes can then be processed later with
+    krb5-sync-backend.  This can be useful if real-time updates to Active
+    Directory cause performance issues in kadmind or kpasswdd.  kpasswd
+    clients in particular are often intolerant of delays.
+
     krb5-sync-backend supports a new flag, -d, which specifies the
     location of the queue directory, changing the default of
     /var/spool/krb5-sync.

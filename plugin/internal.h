@@ -4,7 +4,7 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  *     Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007, 2010
+ * Copyright 2006, 2007, 2010, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -32,6 +32,7 @@ struct plugin_config {
     char *ad_admin_server;
     char *ad_ldap_base;
     char *ad_instances;
+    bool ad_queue_only;
     char *queue_dir;
 };
 

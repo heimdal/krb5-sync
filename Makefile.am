@@ -1,7 +1,7 @@
 # Automake makefile for krb5-sync.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2006, 2007, 2010, 2012
+# Copyright 2006, 2007, 2010, 2012, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # See LICENSE for licensing terms.
@@ -10,8 +10,8 @@ ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore LICENSE autogen patches/README			    \
 	patches/heimdal-1.3.1 patches/mit-krb5-1.4.4 patches/mit-krb5-1.8.3 \
 	tests/README tests/TESTS tests/data/empty.conf tests/data/krb5.conf \
-	tests/docs/pod-spelling-t tests/docs/pod-t tests/tap/libtap.sh	    \
-	tests/util/xmalloc-t tools/krb5-sync.pod
+	tests/data/queue.conf tests/docs/pod-spelling-t tests/docs/pod-t    \
+	tests/tap/libtap.sh tests/util/xmalloc-t tools/krb5-sync.pod
 
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
 
@@ -84,11 +84,12 @@ warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t   \
-        tests/plugin/queuing-t tests/portable/asprintf-t		    \
-        tests/portable/snprintf-t tests/portable/strlcat-t		    \
-        tests/portable/strlcpy-t tests/portable/strndup-t		    \
-        tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t \
+        tests/plugin/queue-only-t tests/plugin/queuing-t		  \
+        tests/portable/asprintf-t tests/portable/snprintf-t		  \
+        tests/portable/strlcat-t tests/portable/strlcpy-t		  \
+        tests/portable/strndup-t tests/util/messages-krb5-t		  \
+        tests/util/messages-t tests/util/xmalloc
 check_LIBRARIES = tests/tap/libtap.a
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
@@ -103,6 +104,12 @@ tests_plugin_heimdal_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(DL_LIBS)
 tests_plugin_mit_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(DL_LIBS)
+tests_plugin_queue_only_t_SOURCES = tests/plugin/queue-only-t.c \
+	$(plugin_krb5_sync_la_SOURCES)
+tests_plugin_queue_only_t_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
+tests_plugin_queue_only_t_LDFLAGS = $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
+tests_plugin_queue_only_t_LDADD = tests/tap/libtap.a portable/libportable.la \
+	$(LDAP_LIBS) $(KRB5_LIBS)
 tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
 	$(plugin_krb5_sync_la_SOURCES)
 tests_plugin_queuing_t_CPPFLAGS = $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
