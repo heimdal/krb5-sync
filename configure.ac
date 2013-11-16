@@ -1,7 +1,7 @@
 dnl Autoconf configuration for krb5-sync.
 dnl
 dnl Written by Russ Allbery <rra@stanford.edu>
-dnl Copyright 2006, 2007, 2010, 2012
+dnl Copyright 2006, 2007, 2010, 2012, 2013
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl See LICENSE for licensing terms.
@@ -19,6 +19,7 @@ AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AM_DISABLE_STATIC
 LT_INIT
 
