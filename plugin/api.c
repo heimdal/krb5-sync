@@ -62,7 +62,7 @@ config_boolean(krb5_context ctx, const char *opt, bool *result)
      * Heimdal version takes a krb5_boolean *, so hope that Heimdal always
      * defines krb5_boolean to int or this will require more portability work.
      */
-    krb5_appdefault_boolean(ctx, "krb5-strength", NULL, opt, *result, &tmp);
+    krb5_appdefault_boolean(ctx, "krb5-sync", NULL, opt, *result, &tmp);
     *result = tmp;
 }
 
@@ -86,6 +86,7 @@ pwupdate_init(krb5_context ctx, void **data)
     config_string(ctx, "ad_realm", &config->ad_realm);
     config_string(ctx, "ad_admin_server", &config->ad_admin_server);
     config_string(ctx, "ad_ldap_base", &config->ad_ldap_base);
+    config_string(ctx, "ad_base_instance", &config->ad_base_instance);
     config_string(ctx, "ad_instances", &config->ad_instances);
     config_boolean(ctx, "ad_queue_only", &config->ad_queue_only);
     config_string(ctx, "queue_dir", &config->queue_dir);
@@ -111,6 +112,8 @@ pwupdate_close(void *data)
         free(config->ad_realm);
     if (config->ad_admin_server != NULL)
         free(config->ad_admin_server);
+    if (config->ad_base_instance != NULL)
+        free(config->ad_base_instance);
     if (config->queue_dir != NULL)
         free(config->queue_dir);
     free(config);
@@ -178,31 +181,62 @@ instance_allowed(const char *allowed, const char *instance)
 
 
 /*
- * Check the principal for which we're changing a password.  If it contains a
- * non-null instance, we don't want to propagate the change; we only want to
- * change passwords for regular users.  Returns true if we should proceed,
- * false otherwise.  If we shouldn't proceed, logs a debug-level message to
- * syslog.
+ * Check the principal for which we're changing a password or the enable
+ * status.  Takes a flag, which is true for a password change and false for
+ * other types of changes, since password changes use ad_base_instance.
+ *
+ * If it contains a non-null instance, we don't want to propagate the change;
+ * we only want to change passwords for regular users.
+ *
+ * If it is a single-part principal name, ad_base_instance is set, and the
+ * equivalent principal with that instance also exists, we don't propagate
+ * this change because the instance's password is propagated as the base
+ * account in Active Directory instead.
+ *
+ * Returns true if we should proceed, false otherwise.  If we shouldn't
+ * proceed, logs a debug-level message to syslog.
  */
 static int
 principal_allowed(struct plugin_config *config, krb5_context ctx,
-                  krb5_principal principal, int ad)
+                  krb5_principal principal, int pwchange)
 {
-    if (krb5_principal_get_num_comp(ctx, principal) > 1) {
-        char *display;
-        krb5_error_code ret;
+    char *display;
+    krb5_error_code code;
+    int ncomp, okay;
+
+    /* Get the number of components. */
+    ncomp = krb5_principal_get_num_comp(ctx, principal);
+
+    /*
+     * If the principal is single-part, check against ad_base_instance.
+     * Otherwise, if the principal is multi-part, check the instance.
+     */
+    if (pwchange && ncomp == 1 && config->ad_base_instance != NULL) {
+        okay = !pwupdate_instance_exists(principal, config->ad_base_instance);
+        if (!okay) {
+            code = krb5_unparse_name(ctx, principal, &display);
+            if (code != 0)
+                display = NULL;
+            syslog(LOG_DEBUG, "account synchronization skipping principal"
+                   " \"%s\" for Active Directory because %s instance exists",
+                   display != NULL ? display : "???",
+                   config->ad_base_instance);
+            if (display != NULL)
+                krb5_free_unparsed_name(ctx, display);
+        }
+        return okay;
+    } else if (ncomp > 1) {
         const char *instance;
 
         instance = krb5_principal_get_comp_string(ctx, principal, 1);
-        if (ad && instance_allowed(config->ad_instances, instance))
+        if (instance_allowed(config->ad_instances, instance))
             return 1;
-        ret = krb5_unparse_name(ctx, principal, &display);
-        if (ret != 0)
+        code = krb5_unparse_name(ctx, principal, &display);
+        if (code != 0)
             display = NULL;
         syslog(LOG_DEBUG, "account synchronization skipping principal \"%s\""
-               " with non-null instance for %s",
-               display != NULL ? display : "???",
-               ad ? "Active Directory" : "AFS");
+               " with non-null instance for Active Directory",
+               display != NULL ? display : "???");
         if (display != NULL)
             krb5_free_unparsed_name(ctx, display);
         return 0;
@@ -308,7 +342,7 @@ pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
         return 0;
     if (!create_context(&ctx, errstr, errstrlen))
         return 1;
-    if (!principal_allowed(config, ctx, principal, 1))
+    if (!principal_allowed(config, ctx, principal, 0))
         return 0;
     if (pwupdate_queue_conflict(config, ctx, principal, "ad", "enable"))
         goto queue;

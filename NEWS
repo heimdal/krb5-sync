@@ -2,6 +2,21 @@
 
 krb5-sync 2.4 (unreleased)
 
+    Add a new string krb5.conf option, ad_base_instance, which, if set,
+    changes the way that password synchronization is handled.  When this
+    option is set, the password for the principal formed by appending that
+    instance to a base principal is propagated to Active Directory as the
+    password for the base principal.  So, for instance, if this is set to
+    the string "windows", the password of the principal "user/windows" is
+    propagated to Active Directory as the password for the principal
+    "user" and password changes for the principal "user" are ignored.
+    This special behavior only happens if "user/windows" exists in the
+    local Kerberos KDC database; if not, password propagation for the
+    principal "user" happens normally, just as if this option weren't set.
+    This allows the Active Directory principal to be treated as an
+    instance rather than a main account for specific users without
+    affecting behavior for other users.
+
     Add a new boolean krb5.conf option, ad_queue_only, which, if set to
     true, forces all changes to be queued even if there are no conflicting
     changes already queued.  The changes can then be processed later with

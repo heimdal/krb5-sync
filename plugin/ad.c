@@ -7,7 +7,7 @@
  * Written by Russ Allbery <rra@stanford.edu>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  *     Nomine Associates, on behalf of Stanford University.
- * Copyright 2006, 2007, 2010, 2012
+ * Copyright 2006, 2007, 2010, 2012, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -133,20 +133,49 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
 
 /*
  * Given the krb5_principal from kadmind, convert it to the corresponding
- * principal in Active Directory.  Returns 0 on success and a Kerberos error
- * code on failure.  Currently, all this does is change the realm.
+ * principal in Active Directory.  This may involve removing ad_base_instance
+ * and always involves changing the realm.  Returns 0 on success and a
+ * Kerberos error code on failure.
  */
 static krb5_error_code
-get_ad_principal(krb5_context ctx, const char *realm,
-                 krb5_const_principal principal,
-                 krb5_principal *ad_principal)
+get_ad_principal(krb5_context ctx, struct plugin_config *config,
+                 krb5_const_principal principal, krb5_principal *ad_principal)
 {
     krb5_error_code ret;
+    int ncomp;
 
-    ret = krb5_copy_principal(ctx, principal, ad_principal);
-    if (ret != 0)
-        return ret;
-    krb5_principal_set_realm(ctx, *ad_principal, realm);
+    /*
+     * Set ad_principal to NULL to start.  We fall back on copy and realm
+     * setting if we don't have to build it, and use whether it's NULL as a
+     * flag.
+     */
+    *ad_principal = NULL;
+
+    /* Get the number of components. */
+    ncomp = krb5_principal_get_num_comp(ctx, principal);
+
+    /* See if this is an ad_base_instance principal that needs a rewrite. */
+    if (config->ad_base_instance != NULL && ncomp == 2) {
+        const char *base, *instance;
+
+        instance = krb5_principal_get_comp_string(ctx, principal, 1);
+        if (strcmp(instance, config->ad_base_instance) == 0) {
+            base = krb5_principal_get_comp_string(ctx, principal, 0);
+            ret = krb5_build_principal(ctx, ad_principal,
+                                       strlen(config->ad_realm),
+                                       config->ad_realm, base, (char *) 0);
+            if (ret != 0)
+                return ret;
+        }
+    }
+
+    /* Otherwise, copy the principal and set the realm. */
+    if (*ad_principal == NULL) {
+        ret = krb5_copy_principal(ctx, principal, ad_principal);
+        if (ret != 0)
+            return ret;
+        krb5_principal_set_realm(ctx, *ad_principal, config->ad_realm);
+    }
     return 0;
 }
 
@@ -180,7 +209,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         return 1;
 
     /* Get the corresponding Active Directory principal. */
-    ret = get_ad_principal(ctx, config->ad_realm, principal, &ad_principal);
+    ret = get_ad_principal(ctx, config, principal, &ad_principal);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to get AD principal");
@@ -342,7 +371,7 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      * the AD principal and then query Active Directory via LDAP to get back
      * the CN for the user to construct the full DN.
      */
-    ret = get_ad_principal(ctx, config->ad_realm, principal, &ad_principal);
+    ret = get_ad_principal(ctx, config, principal, &ad_principal);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to get AD principal");

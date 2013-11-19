@@ -31,6 +31,7 @@ struct plugin_config {
     char *ad_realm;
     char *ad_admin_server;
     char *ad_ldap_base;
+    char *ad_base_instance;
     char *ad_instances;
     bool ad_queue_only;
     char *queue_dir;
@@ -57,6 +58,9 @@ int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
 int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
                        krb5_principal principal, int enabled, char *errstr,
                        int errstrlen);
+
+/* Instance lookups. */
+int pwupdate_instance_exists(krb5_principal principal, const char *instance);
 
 /* Queuing. */
 int pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,

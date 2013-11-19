@@ -41,6 +41,11 @@ AC_CHECK_FUNCS([krb5_appdefault_string], [],
      AC_LIBOBJ([krb5-profile])])
 RRA_LIB_KRB5_RESTORE
 
+RRA_LIB_KADM5SRV
+RRA_LIB_KADM5SRV_SWITCH
+AC_CHECK_FUNCS([kadm5_init_with_skey_ctx])
+RRA_LIB_KADM5SRV_RESTORE
+
 RRA_LIB_LDAP
 
 dnl Only used for the test suite.

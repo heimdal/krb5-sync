@@ -214,15 +214,16 @@ CONFIGURATION
   example:
 
       krb5-sync = {
-          ad_keytab       = /etc/krb5kdc/ad-keytab
-          ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
-          ad_realm        = WINDOWS.EXAMPLE.COM
-          ad_admin_server = dc1.windows.example.com
-          ad_ldap_base    = ou=People
-          ad_instances    = root ipass
-          ad_queue_only   = false
+          ad_keytab        = /etc/krb5kdc/ad-keytab
+          ad_principal     = service/sync@WINDOWS.EXAMPLE.COM
+          ad_realm         = WINDOWS.EXAMPLE.COM
+          ad_admin_server  = dc1.windows.example.com
+          ad_ldap_base     = ou=People
+          ad_instances     = root ipass
+          ad_base_instance = windows
+          ad_queue_only    = false
 
-          queue_dir       = /var/spool/krb5-sync
+          queue_dir        = /var/spool/krb5-sync
       }
 
   The ad_keytab option specifies the location of a srvtab or keytab for
@@ -242,6 +243,19 @@ CONFIGURATION
   is not used by the command-line utility.  Any principals passed to the
   command-line utility will be acted on, even if they have non-empty
   instances.
+
+  If ad_base_instance is set, then any password change for a
+  single-component principal (such as user@EXAMPLE.COM) will be handled
+  somewhat specially.  First, the instance set in ad_base_instance will be
+  added and a check against the local Kerberos database will be done to
+  see if that instance (in this case, user/windows@EXAMPLE.COM) exists.
+  If it doesn't, the password change is processed as normal.  If it does,
+  the password change will be ignored.  Instead, if the password for
+  user/windows@EXAMPLE.COM is changed, that will be propagated as the
+  password for the main account in Active Directory (in this case,
+  user@WINDOWS.EXAMPLE.COM).  This allows the Active Directory principal
+  to be linked to a separate instance, rather than the main account, in
+  the MIT or Heimdal Kerberos realm for particular users.
 
   If ad_realm is not set, the plugin will not attempt to push changes to
   Active Directory, so you can deactivate this plugin while still loading

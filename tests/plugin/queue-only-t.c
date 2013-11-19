@@ -48,7 +48,7 @@ main(void)
         sysbail("cannot mkdir queue");
     basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
     if (putenv(env) < 0)
-        sysbail("cannot set KRB5CCNAME");
+        sysbail("cannot set KRB5_CONFIG");
     code = krb5_init_context(&ctx);
     if (code != 0)
         bail("cannot create Kerberos context (%d)", (int) code);
@@ -56,16 +56,18 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(26);
+    plan(27);
 
     /* Test init. */
     is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
 
     /* Create a password change and be sure it's queued. */
+    errstr[0] = '\0';
     code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
                                        errstr, sizeof(errstr));
     is_int(0, code, "pwupdate_precommit_password succeeds");
+    is_string("", errstr, "...and there is no error string");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
