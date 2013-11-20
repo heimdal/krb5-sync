@@ -214,6 +214,12 @@ CONFIGURATION
           queue_dir        = /var/spool/krb5-sync
       }
 
+  It is possible to add realm-specific configuration here following the
+  normal krb5.conf syntax, but be aware that the plugin only looks for
+  configuration for the *default* realm, not for the realm of the affected
+  principal.  In other words, it's not possible to have multiple
+  configurations based on the realm of the principal affected.
+
   The ad_keytab option specifies the location of a srvtab or keytab for
   authenticating to the other realm, the ad_principal option specifies the
   principal to authenticate as (using the key in the srvtab or keytab),
