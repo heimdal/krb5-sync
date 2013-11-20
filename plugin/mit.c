@@ -7,8 +7,8 @@
  * for the Heimdal hook API.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- *     and updated by Sam Hartman <hartmans@painless-security.com>
- * Copyright 2010, 2011
+ * Contributions by Sam Hartman <hartmans@painless-security.com>
+ * Copyright 2010, 2011, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  * Copyright 2010 The Massachusetts Institute of Technology
  *
@@ -16,24 +16,23 @@
  */
 
 #include <config.h>
+#include <portable/kadmin.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
+
+#include <errno.h>
+#ifdef HAVE_KRB5_KADM5_HOOK_PLUGIN_H
+# include <krb5/kadm5_hook_plugin.h>
+#endif
+
+#include <plugin/internal.h>
+#include <util/macros.h>
 
 /*
  * Skip this entire file if the relevant MIT Kerberos header isn't available,
  * since without that header we don't have the data types that we need.
  */
 #ifdef HAVE_KRB5_KADM5_HOOK_PLUGIN_H
-
-#include <errno.h>
-#include <kadm5/admin.h>
-#ifdef HAVE_KADM5_KADM5_ERR_H
-# include <kadm5/kadm5_err.h>
-#endif
-#include <krb5.h>
-#include <krb5/kadm5_hook_plugin.h>
-
-#include <plugin/internal.h>
-#include <util/macros.h>
 
 /*
  * The public function that the MIT kadm5 library looks for.  It contains the

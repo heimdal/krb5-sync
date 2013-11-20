@@ -7,21 +7,18 @@
  * future.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2010
+ * Copyright 2010, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
+#include <portable/kadmin.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
 #include <errno.h>
-#include <kadm5/admin.h>
-#ifdef HAVE_KADM5_KADM5_ERR_H
-# include <kadm5/kadm5_err.h>
-#endif
-#include <krb5.h>
 
 #include <plugin/internal.h>
 #include <util/macros.h>
