@@ -10,7 +10,7 @@ Copyright: 2006-2008, 2010-2011
 License: Expat
 
 Files: *
-Copyright: 2000-2002, 2004-2012 Russ Allbery <rra@stanford.edu>
+Copyright: 2000-2002, 2004-2012 Russ Allbery <eagle@eyrie.org>
   2001-2002, 2004-2012
     The Board of Trustees of the Leland Stanford Junior University
   2010 The Massachusetts Institute of Technology
@@ -83,7 +83,7 @@ License: FSF-unlimited, and GPL-2+ with Libtool exception or Expat
 Files: patches/README tests/README tools/krb5-sync.8 tools/krb5-sync.pod
 Copyright: 2007-2008, 2010, 2012
     The Board of Trustees of the Leland Stanford Junior University
-  2010 Russ Allbery <rra@stanford.edu>
+  2010 Russ Allbery <eagle@eyrie.org>
 License: all-permissive
  Copying and distribution of this file, with or without modification, are
  permitted in any medium without royalty provided the copyright notice and
@@ -146,7 +146,7 @@ License: MIT-Kerberos
 
 Files: portable/snprintf.c tests/portable/snprintf-t.c
 Copyright: 1995 Patrick Powell
-  2000-2006 Russ Allbery <rra@stanford.edu>
+  2000-2006 Russ Allbery <eagle@eyrie.org>
   2001 Hrvoje Niksic
   2009-2010 The Board of Trustees of the Leland Stanford Junior University
 License: Powell-snprintf

@@ -6,7 +6,7 @@
  * released with MIT Kerberos 1.9, which was based on a preliminary proposal
  * for the Heimdal hook API.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  *     and updated by Sam Hartman <hartmans@painless-security.com>
  * Copyright 2010, 2011
  *     The Board of Trustees of the Leland Stanford Junior University

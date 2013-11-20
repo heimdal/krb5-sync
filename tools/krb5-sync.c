@@ -7,7 +7,7 @@
  * plugin.  It's primarily intended for testing, but can also be used to
  * synchronize changes when the plugin previously failed for some reason.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  *     Nomine Associates, on behalf of Stanford University
  * Copyright 2006, 2007, 2010, 2012

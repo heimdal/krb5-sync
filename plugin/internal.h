@@ -1,7 +1,7 @@
 /*
  * Internal prototypes and structures for the kadmind password update plugin.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  *     Nomine Associates, on behalf of Stanford University.
  * Copyright 2006, 2007, 2010, 2013

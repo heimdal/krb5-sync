@@ -6,7 +6,7 @@
  * the Heimdal hook API, so the interface exposed here may change in the
  * future.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  * Copyright 2010
  *     The Board of Trustees of the Leland Stanford Junior University
  *

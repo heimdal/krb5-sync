@@ -1,7 +1,7 @@
                               krb5-sync 2.3
             (Kerberos Active Directory synchronization plugin)
 
-              Maintained by Russ Allbery <rra@stanford.edu>
+               Maintained by Russ Allbery <eagle@eyrie.org>
 
   Copyright 2006, 2007, 2010, 2011, 2012 The Board of Trustees of the
   Leland Stanford Junior University.  Originally developed by Derrick
@@ -366,7 +366,7 @@ HOMEPAGE AND SOURCE REPOSITORY
 
       http://git.eyrie.org/?p=devel/krb5-sync.git
 
-  Please send any bug reports, patches, or questions to rra@stanford.edu.
+  Please send any bug reports, patches, or questions to eagle@eyrie.org.
 
 LICENSE
 

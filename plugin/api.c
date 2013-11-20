@@ -10,7 +10,7 @@
  * Directory synchronization fails, the update fails, but if AFS kaserver
  * synchronization fails, everything else still succeeds.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  *     Nomine Associates, on behalf of Stanford University.
  * Copyright 2006, 2007, 2010, 2013
