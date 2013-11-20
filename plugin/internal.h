@@ -10,12 +10,13 @@
  * See LICENSE for licensing terms.
  */
 
-#ifndef INTERNAL_H
-#define INTERNAL_H 1
+#ifndef PLUGIN_INTERNAL_H
+#define PLUGIN_INTERNAL_H 1
 
 #include <config.h>
+#include <portable/krb5.h>
+#include <portable/macros.h>
 
-#include <krb5.h>
 #include <sys/types.h>
 
 /*
@@ -37,6 +38,8 @@ struct plugin_config {
     char *queue_dir;
 };
 
+BEGIN_DECLS
+
 /* General public API. */
 int pwupdate_init(krb5_context ctx, void **data);
 void pwupdate_close(void *data);
@@ -48,6 +51,9 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
 				 char *errstr, int errstrlen);
 int pwupdate_postcommit_status(void *data, krb5_principal principal,
                                int enabled, char *errstr, int errstrlen);
+
+/* Default to a hidden visibility for all internal functions. */
+#pragma GCC visibility push(hidden)
 
 /* Password changing. */
 int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
@@ -74,4 +80,9 @@ int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
 void pwupdate_set_error(char *, size_t, krb5_context, krb5_error_code,
                         const char *, ...);
 
-#endif /* !INTERNAL_H */
+/* Undo default visibility change. */
+#pragma GCC visibility pop
+
+END_DECLS
+
+#endif /* !PLUGIN_INTERNAL_H */
