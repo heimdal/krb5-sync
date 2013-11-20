@@ -32,9 +32,9 @@ moduledir = $(libdir)/krb5/plugins/kadm5_hook
 
 # Rules for building the krb5-sync plugin.
 module_LTLIBRARIES = plugin/krb5_sync.la
-plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/api.c plugin/error.c	  \
-	plugin/internal.h plugin/heimdal.c plugin/instance.c plugin/mit.c \
-	plugin/queue.c
+plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/api.c plugin/config.c	    \
+	plugin/error.c plugin/internal.h plugin/heimdal.c plugin/instance.c \
+	plugin/mit.c plugin/queue.c
 plugin_krb5_sync_la_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(KADM5SRV_LDFLAGS) \

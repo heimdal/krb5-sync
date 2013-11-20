@@ -31,43 +31,6 @@
 
 
 /*
- * Load a string option from Kerberos appdefaults, setting the default to NULL
- * if the setting was not found.  This requires an annoying workaround because
- * one cannot specify a default value of NULL.
- */
-static void
-config_string(krb5_context ctx, const char *opt, char **result)
-{
-    const char *defval = "";
-
-    krb5_appdefault_string(ctx, "krb5-sync", NULL, opt, defval, result);
-    if (*result != NULL && (*result)[0] == '\0') {
-        free(*result);
-        *result = NULL;
-    }
-}
-
-
-/*
- * Load a boolean option from Kerberos appdefaults, setting the default to
- * false if the setting was not found.
- */
-static void
-config_boolean(krb5_context ctx, const char *opt, bool *result)
-{
-    int tmp;
-
-    /*
-     * The MIT version of krb5_appdefault_boolean takes an int * and the
-     * Heimdal version takes a krb5_boolean *, so hope that Heimdal always
-     * defines krb5_boolean to int or this will require more portability work.
-     */
-    krb5_appdefault_boolean(ctx, "krb5-sync", NULL, opt, *result, &tmp);
-    *result = tmp;
-}
-
-
-/*
  * Initialize the module.  This consists solely of loading our configuration
  * options from krb5.conf into a newly allocated struct stored in the second
  * argument to this function.  Returns 0 on success, non-zero on failure.
@@ -78,18 +41,31 @@ pwupdate_init(krb5_context ctx, void **data)
 {
     struct plugin_config *config;
 
-    config = malloc(sizeof(struct plugin_config));
+    /* Allocate our internal data. */
+    config = calloc(1, sizeof(struct plugin_config));
     if (config == NULL)
         return 1;
-    config_string(ctx, "ad_keytab", &config->ad_keytab);
-    config_string(ctx, "ad_principal", &config->ad_principal);
-    config_string(ctx, "ad_realm", &config->ad_realm);
-    config_string(ctx, "ad_admin_server", &config->ad_admin_server);
-    config_string(ctx, "ad_ldap_base", &config->ad_ldap_base);
-    config_string(ctx, "ad_base_instance", &config->ad_base_instance);
-    config_string(ctx, "ad_instances", &config->ad_instances);
-    config_boolean(ctx, "ad_queue_only", &config->ad_queue_only);
-    config_string(ctx, "queue_dir", &config->queue_dir);
+
+    /* Get Active Directory connection information from krb5.conf. */
+    sync_config_string(ctx, "ad_keytab", &config->ad_keytab);
+    sync_config_string(ctx, "ad_principal", &config->ad_principal);
+    sync_config_string(ctx, "ad_realm", &config->ad_realm);
+    sync_config_string(ctx, "ad_admin_server", &config->ad_admin_server);
+    sync_config_string(ctx, "ad_ldap_base", &config->ad_ldap_base);
+
+    /* Get allowed instances from krb5.conf. */
+    sync_config_string(ctx, "ad_instances", &config->ad_instances);
+
+    /* See if we're propagating an instance to the base account in AD. */
+    sync_config_string(ctx, "ad_base_instance", &config->ad_base_instance);
+
+    /* See if we're forcing queuing of all changes. */
+    sync_config_boolean(ctx, "ad_queue_only", &config->ad_queue_only);
+
+    /* Get the directory for queued changes from krb5.conf. */
+    sync_config_string(ctx, "queue_dir", &config->queue_dir);
+
+    /* Initialized.  Set data and return. */
     *data = config;
     return 0;
 }

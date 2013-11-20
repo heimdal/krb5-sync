@@ -33,6 +33,7 @@ AC_CHECK_FUNCS([krb5_get_init_creds_opt_alloc \
     krb5_principal_get_realm \
     krb5_principal_set_realm \
     krb5_xfree])
+AC_CHECK_TYPES([krb5_realm], [], [], [RRA_INCLUDES_KRB5])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_free],
     [RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS])
 AC_CHECK_FUNCS([krb5_appdefault_string], [],

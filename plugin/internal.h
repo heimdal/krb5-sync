@@ -80,6 +80,17 @@ int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
 void pwupdate_set_error(char *, size_t, krb5_context, krb5_error_code,
                         const char *, ...);
 
+/*
+ * Obtain configuration settings from krb5.conf.  These are wrappers around
+ * the krb5_appdefault_* APIs that handle setting the section name, obtaining
+ * the local default realm and using it to find settings, and doing any
+ * necessary conversion.
+ */
+void sync_config_boolean(krb5_context, const char *, bool *)
+    __attribute__((__nonnull__));
+void sync_config_string(krb5_context, const char *, char **)
+    __attribute__((__nonnull__));
+
 /* Undo default visibility change. */
 #pragma GCC visibility pop
 
