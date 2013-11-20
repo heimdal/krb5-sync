@@ -157,16 +157,17 @@ INSTALLATION
   searched by your compiler.  If the the krb5-config script first in your
   path is not the one corresponding to the Kerberos libraries you want to
   use or if your Kerberos libraries and includes aren't in a location
-  searched by default by your compiler, you need to specify
-  --with-krb5=PATH:
+  searched by default by your compiler, you need to specify the flags
+  --with-krb5=PATH and --with-kadm-server=PATH:
 
-      ./configure --with-krb5=/usr/pubsw
+      ./configure --with-krb5=/usr/pubsw --with-kadm-server=/usr/pubsw
 
   You can also individually set the paths to the include directory and the
-  library directory with --with-krb5-include and --with-krb5-lib.  You may
-  need to do this if Autoconf can't figure out whether to use lib, lib32,
-  or lib64 on your platform.  Note that these settings aren't used if a
-  krb5-config script is found.
+  library directory with --with-krb5-include and --with-krb5-lib, and with
+  --with-kadm-server-include and --with-kadm-server-lib.  You may need to
+  do this if Autoconf can't figure out whether to use lib, lib32, or lib64
+  on your platform.  Note that these settings aren't used if a krb5-config
+  script is found.
 
   To specify a particular krb5-config script to use, either set the
   KRB5_CONFIG environment variable or pass it to configure like:
