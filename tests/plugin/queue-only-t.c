@@ -31,7 +31,7 @@ main(void)
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
-    void *data;
+    struct plugin_config *config;
     char errstr[BUFSIZ], buffer[BUFSIZ];
     time_t now, try;
     struct tm *date;
@@ -59,13 +59,14 @@ main(void)
     plan(27);
 
     /* Test init. */
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
-    ok(data != NULL, "...and data is non-NULL");
+    is_int(0, pwupdate_init(&config, ctx), "pwupdate_init succeeds");
+    ok(config != NULL, "...and config is non-NULL");
 
     /* Create a password change and be sure it's queued. */
     errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
+    code = pwupdate_precommit_password(config, ctx, princ, "foobar",
+                                       strlen("foobar"), errstr,
+                                       sizeof(errstr));
     is_int(0, code, "pwupdate_precommit_password succeeds");
     is_string("", errstr, "...and there is no error string");
     queue = NULL;
@@ -110,7 +111,8 @@ main(void)
 
     /* Test queuing of enable. */
     errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 1, errstr, sizeof(errstr));
+    code = pwupdate_postcommit_status(config, ctx, princ, 1, errstr,
+                                      sizeof(errstr));
     is_int(0, code, "pwupdate_postcommit_status enable succeeds");
     is_string("", errstr, "...and there is no error");
     queue = NULL;
@@ -146,8 +148,9 @@ main(void)
     ok(unlink(queue) == 0, "Remove queued enable");
 
     /* Test queuing of disable. */
-        errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    errstr[0] = '\0';
+    code = pwupdate_postcommit_status(config, ctx, princ, 0, errstr,
+                                      sizeof(errstr));
     is_int(0, code, "pwupdate_postcommit_status disable succeeds");
     is_string("", errstr, "...and there is no error");
     queue = NULL;
@@ -188,7 +191,7 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Shut down the plugin. */
-    pwupdate_close(data);
+    pwupdate_close(config);
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);

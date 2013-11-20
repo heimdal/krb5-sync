@@ -138,7 +138,7 @@ get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc,
  * Kerberos error code on failure.
  */
 static krb5_error_code
-get_ad_principal(krb5_context ctx, struct plugin_config *config,
+get_ad_principal(struct plugin_config *config, krb5_context ctx,
                  krb5_const_principal principal, krb5_principal *ad_principal)
 {
     krb5_error_code ret;
@@ -209,7 +209,7 @@ pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
         return 1;
 
     /* Get the corresponding Active Directory principal. */
-    ret = get_ad_principal(ctx, config, principal, &ad_principal);
+    ret = get_ad_principal(config, ctx, principal, &ad_principal);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to get AD principal");
@@ -371,7 +371,7 @@ pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
      * the AD principal and then query Active Directory via LDAP to get back
      * the CN for the user to construct the full DN.
      */
-    ret = get_ad_principal(ctx, config, principal, &ad_principal);
+    ret = get_ad_principal(config, ctx, principal, &ad_principal);
     if (ret != 0) {
         pwupdate_set_error(errstr, errstrlen, ctx, ret,
                            "unable to get AD principal");

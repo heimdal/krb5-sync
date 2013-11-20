@@ -44,37 +44,38 @@ BEGIN_DECLS
 #pragma GCC visibility push(hidden)
 
 /* General public API. */
-int pwupdate_init(krb5_context ctx, void **data);
-void pwupdate_close(void *data);
-int pwupdate_precommit_password(void *data, krb5_principal principal,
-                                const char *password, int pwlen,
-				char *errstr, int errstrlen);
-int pwupdate_postcommit_password(void *data, krb5_principal principal,
-                                 const char *password, int pwlen,
-				 char *errstr, int errstrlen);
-int pwupdate_postcommit_status(void *data, krb5_principal principal,
-                               int enabled, char *errstr, int errstrlen);
+int pwupdate_init(struct plugin_config **, krb5_context);
+void pwupdate_close(struct plugin_config *);
+int pwupdate_precommit_password(struct plugin_config *, krb5_context,
+                                krb5_principal, const char *password,
+                                int pwlen, char *errstr, int errstrlen);
+int pwupdate_postcommit_password(struct plugin_config *, krb5_context,
+                                 krb5_principal, const char *password,
+                                 int pwlen, char *errstr, int errstrlen);
+int pwupdate_postcommit_status(struct plugin_config *, krb5_context,
+                               krb5_principal, int enabled, char *errstr,
+                               int errstrlen);
 
 /* Password changing. */
-int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
-                       krb5_principal principal, const char *password,
-                       int pwlen, char *errstr, int errstrlen);
-
-/* Account status update. */
-int pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
-                       krb5_principal principal, int enabled, char *errstr,
+int pwupdate_ad_change(struct plugin_config *, krb5_context, krb5_principal,
+                       const char *password, int pwlen, char *errstr,
                        int errstrlen);
 
+/* Account status update. */
+int pwupdate_ad_status(struct plugin_config *, krb5_context, krb5_principal,
+                       int enabled, char *errstr, int errstrlen);
+
 /* Instance lookups. */
-int pwupdate_instance_exists(krb5_principal principal, const char *instance);
+int pwupdate_instance_exists(struct plugin_config *, krb5_context,
+                             krb5_principal, const char *instance);
 
 /* Queuing. */
-int pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,
-                            krb5_principal principal, const char *domain,
+int pwupdate_queue_conflict(struct plugin_config *, krb5_context,
+                            krb5_principal, const char *domain,
                             const char *operation);
-int pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
-                         krb5_principal principal, const char *domain,
-                         const char *operation, const char *password);
+int pwupdate_queue_write(struct plugin_config *, krb5_context, krb5_principal,
+                         const char *domain, const char *operation,
+                         const char *password);
 
 /* Error handling. */
 void pwupdate_set_error(char *, size_t, krb5_context, krb5_error_code,

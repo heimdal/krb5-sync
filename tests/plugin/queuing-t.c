@@ -7,7 +7,7 @@
  * to queue.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2012
+ * Copyright 2012, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -33,7 +33,7 @@ main(void)
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
-    void *data;
+    struct plugin_config *data;
     int fd;
     char errstr[BUFSIZ], buffer[BUFSIZ];
     time_t now, try;
@@ -62,7 +62,7 @@ main(void)
     plan(42);
 
     /* Test init. */
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
+    is_int(0, pwupdate_init(&data, ctx), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
 
     /* Block processing for our test user and then test password change. */
@@ -72,8 +72,9 @@ main(void)
         sysbail("cannot create fake queue file");
     close(fd);
     errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
+    code = pwupdate_precommit_password(data, ctx, princ, "foobar",
+                                       strlen("foobar"), errstr,
+                                       sizeof(errstr));
     is_int(0, code, "pwupdate_precommit_password succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
     is_string("", errstr, "...and there is no error");
@@ -117,7 +118,7 @@ main(void)
 
     /* pwupdate_postcommit_password should do nothing, silently. */
     errstr[0] = '\0';
-    code = pwupdate_postcommit_password(data, princ, "foobar",
+    code = pwupdate_postcommit_password(data, ctx, princ, "foobar",
                                         strlen("foobar"), errstr,
                                         sizeof(errstr));
     is_int(0, code, "pwupdate_postcommit_password succeeds");
@@ -136,7 +137,8 @@ main(void)
         sysbail("cannot create fake queue file");
     close(fd);
     errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 1, errstr, sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 1, errstr,
+                                      sizeof(errstr));
     is_int(0, code, "pwupdate_postcommit_status enable succeeds");
     is_string("", errstr, "...and there is no error");
     queue = NULL;
@@ -177,7 +179,8 @@ main(void)
      * same marker.
      */
     errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 0, errstr,
+                                      sizeof(errstr));
     is_int(0, code, "pwupdate_postcommit_status disable succeeds");
     is_string("", errstr, "...and there is no error");
     queue = NULL;
@@ -221,12 +224,14 @@ main(void)
 
     /* Check failure when there's no queue directory. */
     errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
+    code = pwupdate_precommit_password(data, ctx, princ, "foobar",
+                                       strlen("foobar"), errstr,
+                                       sizeof(errstr));
     is_int(1, code, "pwupdate_precommit_password fails with no queue");
     is_string("queueing AD password change failed", errstr,
               "...with correct error");
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 0, errstr,
+                                      sizeof(errstr));
     is_int(1, code, "pwupdate_postcommit_status disable fails with no queue");
     is_string("queueing AD status change failed", errstr,
               "...with correct error");
@@ -255,15 +260,17 @@ main(void)
     code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
+    is_int(0, pwupdate_init(&data, ctx), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
     errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
+    code = pwupdate_precommit_password(data, ctx, princ, "foobar",
+                                       strlen("foobar"), errstr,
+                                       sizeof(errstr));
     is_int(0, code, "pwupdate_precommit_password succeeds");
     is_string("", errstr, "...and there is no error");
     errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 0, errstr,
+                                      sizeof(errstr));
     is_int(0, code, "pwupdate_postcommit_status disable succeeds");
     is_string("", errstr, "...and there is no error");
 

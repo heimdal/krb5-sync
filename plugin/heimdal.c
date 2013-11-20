@@ -57,7 +57,7 @@ init(krb5_context ctx, void **data)
 {
     krb5_error_code code = 0;
 
-    if (pwupdate_init(ctx, data) != 0)
+    if (pwupdate_init((struct plugin_config **) data, ctx) != 0)
         code = errno;
     return code;
 }
@@ -95,11 +95,11 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
 
     /* Dispatch to the appropriate function. */
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        status = pwupdate_precommit_password(data, princ, password, length,
-                                             error, sizeof(error));
+        status = pwupdate_precommit_password(data, ctx, princ, password,
+                                             length, error, sizeof(error));
     else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        status = pwupdate_postcommit_password(data, princ, password, length,
-                                              error, sizeof(error));
+        status = pwupdate_postcommit_password(data, ctx, princ, password,
+                                              length, error, sizeof(error));
     if (status == 0)
         return 0;
     else {
@@ -141,8 +141,8 @@ modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
-        status = pwupdate_postcommit_status(data, entry->principal, enabled,
-                                            error, sizeof(error));
+        status = pwupdate_postcommit_status(data, ctx, entry->principal,
+                                            enabled, error, sizeof(error));
         if (status == 0)
             return 0;
         else {

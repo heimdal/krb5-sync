@@ -28,9 +28,10 @@
  * or on any other error.
  */
 int
-pwupdate_instance_exists(krb5_principal base, const char *instance)
+pwupdate_instance_exists(struct plugin_config *config UNUSED,
+                         krb5_context ctx, krb5_principal base,
+                         const char *instance)
 {
-    krb5_context ctx;
     krb5_principal princ = NULL;
     krb5_error_code code;
     const char *realm;
@@ -38,11 +39,6 @@ pwupdate_instance_exists(krb5_principal base, const char *instance)
     void *handle = NULL;
     int mask;
     kadm5_principal_ent_rec ent;
-
-    /* Get a Kerberos context.  Eventually, this will be passed in. */
-    code = krb5_init_context(&ctx);
-    if (code != 0)
-        return 0;
 
     /* Principals must have exactly one component. */
     if (krb5_principal_get_num_comp(ctx, base) != 1)
@@ -74,11 +70,9 @@ pwupdate_instance_exists(krb5_principal base, const char *instance)
     kadm5_destroy(handle);
     krb5_free_principal(ctx, princ);
     princ = NULL;
-    krb5_free_context(ctx);
     return (code == 0);
 
 fail:
     krb5_free_principal(ctx, princ);
-    krb5_free_context(ctx);
     return 0;
 }

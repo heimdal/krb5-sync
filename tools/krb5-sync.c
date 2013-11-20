@@ -10,7 +10,7 @@
  * Written by Russ Allbery <eagle@eyrie.org>
  * Based on code developed by Derrick Brashear and Ken Hornstein of Sine
  *     Nomine Associates, on behalf of Stanford University
- * Copyright 2006, 2007, 2010, 2012
+ * Copyright 2006, 2007, 2010, 2012, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -33,8 +33,8 @@
  * successful, and exit with an error message if we weren't.
  */
 static void
-ad_password(void *data, krb5_context ctx, krb5_principal principal,
-            char *password, const char *user)
+ad_password(struct plugin_config *data, krb5_context ctx,
+            krb5_principal principal, char *password, const char *user)
 {
     char errbuf[BUFSIZ];
     int status;
@@ -52,8 +52,8 @@ ad_password(void *data, krb5_context ctx, krb5_principal principal,
  * we were successful, and exit with an error message if we weren't.
  */
 static void
-ad_status(void *data, krb5_context ctx, krb5_principal principal, bool enable,
-          const char *user)
+ad_status(struct plugin_config *data, krb5_context ctx,
+          krb5_principal principal, bool enable, const char *user)
 {
     char errbuf[BUFSIZ];
     int status;
@@ -95,7 +95,8 @@ read_line(FILE *file, const char *filename, char *buffer, size_t bufsiz)
  * supported for AFS.
  */
 static void
-process_queue_file(void *data, krb5_context ctx, const char *filename)
+process_queue_file(struct plugin_config *data, krb5_context ctx,
+                   const char *filename)
 {
     FILE *queue;
     char buffer[BUFSIZ];
@@ -160,7 +161,7 @@ main(int argc, char *argv[])
     char *password = NULL;
     char *filename = NULL;
     char *user;
-    void *data;
+    struct plugin_config *config;
     krb5_context ctx;
     krb5_error_code ret;
     krb5_principal principal;
@@ -208,20 +209,20 @@ main(int argc, char *argv[])
         die_krb5(ctx, ret, "cannot initialize Kerberos context");
 
     /* Initialize the plugin. */
-    if (pwupdate_init(ctx, &data))
+    if (pwupdate_init(&config, ctx))
         die("plugin initialization failed");
 
     /* Now, do whatever we were supposed to do. */
     if (filename != NULL)
-        process_queue_file(data, ctx, filename);
+        process_queue_file(config, ctx, filename);
     else {
         ret = krb5_parse_name(ctx, user, &principal);
         if (ret != 0)
             die_krb5(ctx, ret, "cannot parse user %s into principal", user);
         if (password != NULL)
-            ad_password(data, ctx, principal, password, user);
+            ad_password(config, ctx, principal, password, user);
         if (enable || disable)
-            ad_status(data, ctx, principal, enable, user);
+            ad_status(config, ctx, principal, enable, user);
     }
 
     exit(0);

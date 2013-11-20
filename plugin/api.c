@@ -37,7 +37,7 @@
  * This function returns failure only if it could not allocate memory.
  */
 int
-pwupdate_init(krb5_context ctx, void **data)
+pwupdate_init(struct plugin_config **result, krb5_context ctx)
 {
     struct plugin_config *config;
 
@@ -66,7 +66,7 @@ pwupdate_init(krb5_context ctx, void **data)
     sync_config_string(ctx, "queue_dir", &config->queue_dir);
 
     /* Initialized.  Set data and return. */
-    *data = config;
+    *result = config;
     return 0;
 }
 
@@ -76,10 +76,8 @@ pwupdate_init(krb5_context ctx, void **data)
  * since we don't store any other local state.
  */
 void
-pwupdate_close(void *data)
+pwupdate_close(struct plugin_config *config)
 {
-    struct plugin_config *config = data;
-
     if (config->ad_keytab != NULL)
         free(config->ad_keytab);
     if (config->ad_principal != NULL)
@@ -93,26 +91,6 @@ pwupdate_close(void *data)
     if (config->queue_dir != NULL)
         free(config->queue_dir);
     free(config);
-}
-
-
-/*
- * Create a local Kerberos context and set the error appropriately if this
- * fails.  Return true on success, false otherwise.  Puts the error message in
- * errstr on failure.
- */
-static int
-create_context(krb5_context *ctx, char *errstr, int errstrlen)
-{
-    krb5_error_code ret;
-
-    ret = krb5_init_context(ctx);
-    if (ret != 0) {
-        pwupdate_set_error(errstr, errstrlen, *ctx, ret,
-                           "failure initializing Kerberos library");
-        return 0;
-    }
-    return 1;
 }
 
 
@@ -188,7 +166,8 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
      * Otherwise, if the principal is multi-part, check the instance.
      */
     if (pwchange && ncomp == 1 && config->ad_base_instance != NULL) {
-        okay = !pwupdate_instance_exists(principal, config->ad_base_instance);
+        okay = !pwupdate_instance_exists(config, ctx, principal,
+                                         config->ad_base_instance);
         if (!okay) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
@@ -237,20 +216,17 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  * Currently, we can't do anything in that case, so just skip it.
  */
 int
-pwupdate_precommit_password(void *data, krb5_principal principal,
+pwupdate_precommit_password(struct plugin_config *config, krb5_context ctx,
+                            krb5_principal principal,
                             const char *password, int pwlen,
                             char *errstr, int errstrlen)
 {
-    struct plugin_config *config = data;
-    krb5_context ctx;
     int status;
 
     if (config->ad_realm == NULL)
         return 0;
     if (password == NULL)
         return 0;
-    if (!create_context(&ctx, errstr, errstrlen))
-        return 1;
     if (!principal_allowed(config, ctx, principal, 1))
         return 0;
     if (pwupdate_queue_conflict(config, ctx, principal, "ad", "password"))
@@ -264,13 +240,11 @@ pwupdate_precommit_password(void *data, krb5_principal principal,
                errstr);
         goto queue;
     }
-    krb5_free_context(ctx);
     return status;
 
 queue:
     status = pwupdate_queue_write(config, ctx, principal, "ad", "password",
                                   password);
-    krb5_free_context(ctx);
     if (status)
         return 0;
     else {
@@ -285,7 +259,8 @@ queue:
  * Currently, there are none.
  */
 int
-pwupdate_postcommit_password(void *data UNUSED,
+pwupdate_postcommit_password(struct plugin_config *config UNUSED,
+                             krb5_context ctx UNUSED,
                              krb5_principal principal UNUSED,
                              const char *password UNUSED, int pwlen UNUSED,
                              char *errstr UNUSED, int errstrlen UNUSED)
@@ -304,11 +279,10 @@ pwupdate_postcommit_password(void *data UNUSED,
  * queue it for later processing.
  */
 int
-pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
+pwupdate_postcommit_status(struct plugin_config *config, krb5_context ctx,
+                           krb5_principal principal, int enabled,
                            char *errstr, int errstrlen)
 {
-    struct plugin_config *config = data;
-    krb5_context ctx;
     int status;
 
     if (config->ad_admin_server == NULL
@@ -316,8 +290,6 @@ pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
         || config->ad_principal == NULL
         || config->ad_realm == NULL)
         return 0;
-    if (!create_context(&ctx, errstr, errstrlen))
-        return 1;
     if (!principal_allowed(config, ctx, principal, 0))
         return 0;
     if (pwupdate_queue_conflict(config, ctx, principal, "ad", "enable"))
@@ -328,13 +300,11 @@ pwupdate_postcommit_status(void *data, krb5_principal principal, int enabled,
                                 errstrlen);
     if (status != 0)
         goto queue;
-    krb5_free_context(ctx);
     return status;
 
 queue:
     status = pwupdate_queue_write(config, ctx, principal, "ad",
                                   enabled ? "enable" : "disable", NULL);
-    krb5_free_context(ctx);
     if (status)
         return 0;
     else {

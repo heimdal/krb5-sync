@@ -51,7 +51,7 @@ init(krb5_context ctx, kadm5_hook_modinfo **data)
 {
     krb5_error_code code = 0;
 
-    if (pwupdate_init(ctx, (void **) data) != 0)
+    if (pwupdate_init((struct plugin_config **) data, ctx) != 0)
         code = errno;
     return code;
 }
@@ -63,7 +63,7 @@ init(krb5_context ctx, kadm5_hook_modinfo **data)
 static void
 fini(krb5_context ctx UNUSED, kadm5_hook_modinfo *data)
 {
-    pwupdate_close(data);
+    pwupdate_close((struct plugin_config *) data);
 }
 
 
@@ -91,11 +91,13 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
     /* Dispatch to the appropriate function. */
     length = strlen(password);
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        status = pwupdate_precommit_password(data, princ, password, length,
-                                             error, sizeof(error));
+        status = pwupdate_precommit_password((struct plugin_config *) data,
+                                             ctx, princ, password,
+                                             length, error, sizeof(error));
     else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        status = pwupdate_postcommit_password(data, princ, password, length,
-                                              error, sizeof(error));
+        status = pwupdate_postcommit_password((struct plugin_config *) data,
+                                              ctx, princ, password,
+                                              length, error, sizeof(error));
     if (status == 0)
         return 0;
     else {
@@ -138,8 +140,9 @@ modify(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
-        status = pwupdate_postcommit_status(data, entry->principal, enabled,
-                                            error, sizeof(error));
+        status = pwupdate_postcommit_status((struct plugin_config *) data,
+                                            ctx, entry->principal,
+                                            enabled, error, sizeof(error));
         if (status == 0)
             return 0;
         else {
