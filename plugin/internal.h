@@ -40,6 +40,9 @@ struct plugin_config {
 
 BEGIN_DECLS
 
+/* Default to a hidden visibility for all internal functions. */
+#pragma GCC visibility push(hidden)
+
 /* General public API. */
 int pwupdate_init(krb5_context ctx, void **data);
 void pwupdate_close(void *data);
@@ -51,9 +54,6 @@ int pwupdate_postcommit_password(void *data, krb5_principal principal,
 				 char *errstr, int errstrlen);
 int pwupdate_postcommit_status(void *data, krb5_principal principal,
                                int enabled, char *errstr, int errstrlen);
-
-/* Default to a hidden visibility for all internal functions. */
-#pragma GCC visibility push(hidden)
 
 /* Password changing. */
 int pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,

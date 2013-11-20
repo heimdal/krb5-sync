@@ -2,6 +2,13 @@
 
 krb5-sync 2.4 (unreleased)
 
+    Drop support for MIT Kerberos versions prior to 1.9.  All major
+    distributions are now shipping with a newer version of MIT Kerberos
+    than this, and supporting older versions requires supporting patches
+    and maintaining handicapped internal APIs.  MIT Kerberos 1.9 and later
+    do not require patches to use this module.  Patches for Heimdal are
+    still provided.
+
     Add a new string krb5.conf option, ad_base_instance, which, if set,
     changes the way that password synchronization is handled.  When this
     option is set, the password for the principal formed by appending that
