@@ -63,6 +63,7 @@ main(void)
     struct kadm5_hook *hook = NULL;
     kadm5_principal_ent_rec entity;
     const char *message;
+    char *wanted;
 
     krb5conf = test_file_path("data/krb5.conf");
     if (krb5conf == NULL)
@@ -120,15 +121,15 @@ main(void)
     if (hook == NULL)
         ok_block(8, false, "No symbol in plugin");
     else {
+        basprintf(&wanted, "cannot open lock file queue/.lock: %s",
+                  strerror(ENOENT));
         is_int(0, hook->init(ctx, &config), "init");
         ok(config != NULL, "...and config is not NULL");
         code = hook->chpass(ctx, config, KADM5_HOOK_STAGE_PRECOMMIT, princ,
                             "test");
         is_int(ENOENT, code, "chpass");
         message = krb5_get_error_message(ctx, code);
-        is_int(strncmp("cannot lock queue", message,
-                       strlen("cannot lock queue")),
-               0, "...with correct error message");
+        is_string(wanted, message, "...with correct error message");
         krb5_free_error_message(ctx, message);
 
         /* Test chpass with a NULL password. */
@@ -147,17 +148,13 @@ main(void)
                             0, "test");
         is_int(ENOENT, code, "create");
         message = krb5_get_error_message(ctx, code);
-        is_int(strncmp("cannot lock queue", message,
-                       strlen("cannot lock queue")),
-               0, "...with correct error message");
+        is_string(wanted, message, "...with correct error message");
         krb5_free_error_message(ctx, message);
         code = hook->modify(ctx, config, KADM5_HOOK_STAGE_POSTCOMMIT, &entity,
                             KADM5_ATTRIBUTES);
         is_int(ENOENT, code, "modify");
         message = krb5_get_error_message(ctx, code);
-        is_int(strncmp("cannot lock queue", message,
-                       strlen("cannot lock queue")),
-               0, "...with correct error message");
+        is_string(wanted, message, "...with correct error message");
         krb5_free_error_message(ctx, message);
 
         /* Test create with a NULL password. */
@@ -167,6 +164,7 @@ main(void)
 
         /* Close down the module. */
         hook->fini(ctx, config);
+        free(wanted);
     }
 
     /* Clean up. */

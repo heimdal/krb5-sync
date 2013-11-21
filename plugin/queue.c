@@ -46,35 +46,40 @@
 
 
 /*
- * Lock the queue directory.  Returns a file handle to the lock file, which
- * must then be passed into unlock_queue when the queue should be unlocked, or
- * -1 on failure to lock.
+ * Lock the queue directory and stores the file descriptor of the lock in the
+ * secon argument.  This must be passed into unlock_queue when the queue
+ * should be unlocked.  Returns a Kerberos status code.
  *
  * We have to use flock for compatibility with the Perl krb5-sync-backend
  * script.  Perl makes it very annoying to use fcntl locking on Linux.
  */
-static int
-lock_queue(kadm5_hook_modinfo *config)
+static krb5_error_code
+lock_queue(kadm5_hook_modinfo *config, krb5_context ctx, int *result)
 {
     char *lockpath = NULL;
     int fd = -1;
+    krb5_error_code code;
 
     if (asprintf(&lockpath, "%s/.lock", config->queue_dir) < 0)
-        return -1;
+        return sync_error_system(ctx, "cannot allocate memory");
     fd = open(lockpath, O_RDWR | O_CREAT, 0644);
-    if (fd < 0)
+    if (fd < 0) {
+        code = sync_error_system(ctx, "cannot open lock file %s", lockpath);
         goto fail;
+    }
+    if (flock(fd, LOCK_EX) < 0) {
+        code = sync_error_system(ctx, "cannot flock lock file %s", lockpath);
+        goto fail;
+    }
     free(lockpath);
-    lockpath = NULL;
-    if (flock(fd, LOCK_EX) < 0)
-        goto fail;
-    return fd;
+    *result = fd;
+    return 0;
 
 fail:
     free(lockpath);
     if (fd >= 0)
         close(fd);
-    return -1;
+    return code;
 }
 
 
@@ -167,14 +172,15 @@ sync_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
     DIR *queue = NULL;
     struct dirent *entry;
     int found = 0;
+    krb5_error_code code;
 
     if (config->queue_dir == NULL)
         return -1;
     prefix = queue_prefix(ctx, principal, domain, operation);
     if (prefix == NULL)
         return -1;
-    lock = lock_queue(config);
-    if (lock < 0)
+    code = lock_queue(config, ctx, &lock);
+    if (code != 0)
         goto fail;
     queue = opendir(config->queue_dir);
     if (queue == NULL)
@@ -227,11 +233,9 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
      * Lock the queue before the timestamp so that another writer coming up
      * at the same time can't get an earlier timestamp.
      */
-    lock = lock_queue(config);
-    if (lock < 0) {
-        code = sync_error_system(ctx, "cannot lock queue");
+    code = lock_queue(config, ctx, &lock);
+    if (code != 0)
         goto fail;
-    }
     timestamp = queue_timestamp();
     if (timestamp == NULL) {
         code = sync_error_system(ctx, "cannot generate timestamp");

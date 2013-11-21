@@ -43,6 +43,7 @@ main(void)
     FILE *file;
     struct stat st;
     const char *message;
+    char *wanted;
 
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
@@ -208,21 +209,22 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Check failure when there's no queue directory. */
+    basprintf(&wanted, "cannot open lock file queue/.lock: %s",
+              strerror(ENOENT));
     code = sync_chpass(data, ctx, princ, "foobar");
     is_int(ENOENT, code, "sync_chpass fails with no queue");
     message = krb5_get_error_message(ctx, code);
-    is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
-           0, "...with correct error message");
+    is_string(wanted, message, "...with correct error message");
     krb5_free_error_message(ctx, message);
     code = sync_status(data, ctx, princ, false);
     is_int(ENOENT, code, "sync_status disable fails with no queue");
     message = krb5_get_error_message(ctx, code);
-    is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
-           0, "...with correct error message");
+    is_string(wanted, message, "...with correct error message");
     krb5_free_error_message(ctx, message);
 
     /* Shut down the plugin. */
     sync_close(data);
+    free(wanted);
 
     /*
      * Change to an empty Kerberos configuration file, and then make sure the
