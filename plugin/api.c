@@ -259,6 +259,7 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
 
     if (config->ad_admin_server == NULL
         || config->ad_keytab == NULL
+        || config->ad_ldap_base == NULL
         || config->ad_principal == NULL
         || config->ad_realm == NULL)
         return 0;

@@ -1,6 +1,15 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 2.4 (unreleased)
+krb5-sync 3.0 (unreleased)
+
+    The meaning of the ad_ldap_base configuration option has changed, and
+    it's now mandatory for status synchronization.  This setting should
+    now contain the full DN of the tree in Active Directory where account
+    information is stored (such as cn=Accounts,dc=example,dc=com).
+    Previously, the dc components should be omitted and were derived from
+    the realm; this is no longer done.  If this configuration option is
+    not set, principal status will not be synchronized to Active
+    Directory.
 
     Drop support for MIT Kerberos versions prior to 1.9.  All major
     distributions are now shipping with a newer version of MIT Kerberos

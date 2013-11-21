@@ -206,7 +206,7 @@ CONFIGURATION
           ad_principal     = service/sync@WINDOWS.EXAMPLE.COM
           ad_realm         = WINDOWS.EXAMPLE.COM
           ad_admin_server  = dc1.windows.example.com
-          ad_ldap_base     = ou=People
+          ad_ldap_base     = ou=People,dc=windows,dc=example,dc=com
           ad_instances     = root ipass
           ad_base_instance = windows
           ad_queue_only    = false
@@ -220,23 +220,26 @@ CONFIGURATION
   principal.  In other words, it's not possible to have multiple
   configurations based on the realm of the principal affected.
 
-  The ad_keytab option specifies the location of a srvtab or keytab for
+  The ad_keytab option specifies the location of a keytab for
   authenticating to the other realm, the ad_principal option specifies the
   principal to authenticate as (using the key in the srvtab or keytab),
-  and the ad_realm option specifies the foreign realm.  ad_admin_server is
-  the host to contact via LDAP to push account status changes.
-  ad_ldap_base specifies the base tree inside Active Directory where
-  account information is stored.  Omit the trailing "dc=" part; it will be
-  added automatically from ad_realm.  The default is "dc=Accounts".
+  and the ad_realm option specifies the foreign realm.  These options must
+  be set.
+
+  ad_admin_server is the host to contact via LDAP to push account status
+  changes.  ad_ldap_base specifies the root of the tree inside Active
+  Directory where account information is stored.  These options must be
+  set in order to synchronize status changes, but can be omitted to only
+  synchronize passwords.
 
   The ad_instances option specifies which instances have passwords and
-  account status propagated to that environment.  By default, all
-  principals with non-empty instances are not propagated.  You can list a
-  specific set of instances (space-separated) which are propagated to the
-  AD environment.  The ad_instances option is only used by the plugin and
-  is not used by the command-line utility.  Any principals passed to the
-  command-line utility will be acted on, even if they have non-empty
-  instances.
+  account status propagated to that environment.  By default, only
+  principals no instances (single-part principals) are propagated.  You
+  can list a specific set of instances (space-separated), which will then
+  also be propagated to Active Directory.  The ad_instances option is only
+  used by the plugin and is not used by the command-line utility.  Any
+  principals passed to the command-line utility will be acted on, even if
+  they have non-empty instances.
 
   If ad_base_instance is set, then any password change for a
   single-component principal (such as user@EXAMPLE.COM) will be handled

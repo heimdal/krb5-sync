@@ -268,8 +268,7 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     LDAP *ld = NULL;
     LDAPMessage *res = NULL;
     LDAPMod mod, *mod_array[2];
-    char *dname, *lb, *end, *dn;
-    char ldapbase[256];
+    char *dn;
     char *ldapuri = NULL, *ldapdn = NULL, *control = NULL, *target = NULL;
     struct berval **vals = NULL;
     char *value;
@@ -281,7 +280,7 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
 
     /* Ensure the configuration is sane. */
     CHECK_CONFIG(ad_admin_server);
-    CHECK_CONFIG(ad_realm);
+    CHECK_CONFIG(ad_ldap_base);
 
     /* Get the credentials we'll use to make the change in AD. */
     code = get_creds(config, ctx, &ccache);
@@ -325,30 +324,6 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     }
 
     /*
-     * Convert the domain name to a DN.  The default is ou=Accounts, which
-     * is what Stanford uses, but the base DN prior to the dc portion for
-     * the realm can be changed with a configuration option.
-     */
-    memset(ldapbase, 0, sizeof(ldapbase));
-    if (config->ad_ldap_base == NULL)
-        strlcpy(ldapbase, "ou=Accounts,dc=", sizeof(ldapbase));
-    else {
-        strlcpy(ldapbase, config->ad_ldap_base, sizeof(ldapbase));
-        strlcat(ldapbase, ",dc=", sizeof(ldapbase));
-    }
-    lb = ldapbase + strlen(ldapbase);
-    end = ldapbase + sizeof(ldapbase) - 1;
-    for (dname = config->ad_realm; lb < end && *dname != '\0'; dname++) {
-        if (*dname == '.') {
-            *lb = '\0';
-            strlcat(ldapbase, ",dc=", sizeof(ldapbase));
-            lb += 4;
-        } else {
-            *lb++ = *dname;
-        }
-    }
-
-    /*
      * Since all we know is the local principal, we have to convert that to
      * the AD principal and then query Active Directory via LDAP to get back
      * the CN for the user to construct the full DN.
@@ -363,8 +338,9 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
         code = sync_error_system(ctx, "cannot allocate memory");
         goto done;
     }
-    code = ldap_search_ext_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn,
-                            (char **) attrs, 0, NULL, NULL, NULL, 0, &res);
+    code = ldap_search_ext_s(ld, config->ad_ldap_base, LDAP_SCOPE_SUBTREE,
+                             ldapdn, (char **) attrs, 0, NULL, NULL, NULL, 0,
+                             &res);
     if (code != LDAP_SUCCESS) {
         code = sync_error_ldap(ctx, code, "LDAP search for \"%s\" failed",
                                ldapdn);
