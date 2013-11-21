@@ -49,11 +49,7 @@ krb5_error_code kadm5_hook_krb5_sync_initvt(krb5_context, int, int,
 static kadm5_ret_t
 init(krb5_context ctx, kadm5_hook_modinfo **data)
 {
-    krb5_error_code code = 0;
-
-    if (pwupdate_init((struct plugin_config **) data, ctx) != 0)
-        code = errno;
-    return code;
+    return pwupdate_init((struct plugin_config **) data, ctx);
 }
 
 
@@ -76,9 +72,8 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
        int n_ks_tuple UNUSED, krb5_key_salt_tuple *ks_tuple UNUSED,
        const char *password)
 {
-    char error[BUFSIZ];
     size_t length;
-    int status = 0;
+    krb5_error_code code = 0;
 
     /*
      * If password is NULL, we have a new key set but no password (meaning
@@ -91,20 +86,12 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
     /* Dispatch to the appropriate function. */
     length = strlen(password);
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        status = pwupdate_precommit_password((struct plugin_config *) data,
-                                             ctx, princ, password,
-                                             length, error, sizeof(error));
+        code = pwupdate_precommit_password((struct plugin_config *) data,
+                                           ctx, princ, password, length);
     else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        status = pwupdate_postcommit_password((struct plugin_config *) data,
-                                              ctx, princ, password,
-                                              length, error, sizeof(error));
-    if (status == 0)
-        return 0;
-    else {
-        krb5_set_error_message(ctx, KADM5_FAILURE,
-                               "cannot synchronize password: %s", error);
-        return KADM5_FAILURE;
-    }
+        code = pwupdate_postcommit_password((struct plugin_config *) data,
+                                            ctx, princ, password, length);
+    return code;
 }
 
 
@@ -135,21 +122,12 @@ static kadm5_ret_t
 modify(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
        kadm5_principal_ent_t entry, long mask)
 {
-    char error[BUFSIZ];
-    int enabled, status;
+    int enabled;
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
-        status = pwupdate_postcommit_status((struct plugin_config *) data,
-                                            ctx, entry->principal,
-                                            enabled, error, sizeof(error));
-        if (status == 0)
-            return 0;
-        else {
-            krb5_set_error_message(ctx, KADM5_FAILURE,
-                                   "cannot synchronize status: %s", error);
-            return KADM5_FAILURE;
-        }
+        return pwupdate_postcommit_status((struct plugin_config *) data,
+                                          ctx, entry->principal, enabled);
     }
     return 0;
 }

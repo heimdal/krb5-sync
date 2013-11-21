@@ -15,6 +15,7 @@
 #include <portable/krb5.h>
 #include <portable/system.h>
 
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -32,7 +33,7 @@ main(void)
     krb5_principal princ;
     krb5_error_code code;
     struct plugin_config *config;
-    char errstr[BUFSIZ], buffer[BUFSIZ];
+    char buffer[BUFSIZ];
     time_t now, try;
     struct tm *date;
     FILE *file;
@@ -56,19 +57,16 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(27);
+    plan(24);
 
     /* Test init. */
     is_int(0, pwupdate_init(&config, ctx), "pwupdate_init succeeds");
     ok(config != NULL, "...and config is non-NULL");
 
     /* Create a password change and be sure it's queued. */
-    errstr[0] = '\0';
     code = pwupdate_precommit_password(config, ctx, princ, "foobar",
-                                       strlen("foobar"), errstr,
-                                       sizeof(errstr));
+                                       strlen("foobar"));
     is_int(0, code, "pwupdate_precommit_password succeeds");
-    is_string("", errstr, "...and there is no error string");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -110,11 +108,8 @@ main(void)
     free(queue);
 
     /* Test queuing of enable. */
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(config, ctx, princ, 1, errstr,
-                                      sizeof(errstr));
+    code = pwupdate_postcommit_status(config, ctx, princ, 1);
     is_int(0, code, "pwupdate_postcommit_status enable succeeds");
-    is_string("", errstr, "...and there is no error");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -148,11 +143,8 @@ main(void)
     ok(unlink(queue) == 0, "Remove queued enable");
 
     /* Test queuing of disable. */
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(config, ctx, princ, 0, errstr,
-                                      sizeof(errstr));
+    code = pwupdate_postcommit_status(config, ctx, princ, 0);
     is_int(0, code, "pwupdate_postcommit_status disable succeeds");
-    is_string("", errstr, "...and there is no error");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {

@@ -36,7 +36,7 @@
  * argument to this function.  Returns 0 on success, non-zero on failure.
  * This function returns failure only if it could not allocate memory.
  */
-int
+krb5_error_code
 pwupdate_init(struct plugin_config **result, krb5_context ctx)
 {
     struct plugin_config *config;
@@ -44,7 +44,7 @@ pwupdate_init(struct plugin_config **result, krb5_context ctx)
     /* Allocate our internal data. */
     config = calloc(1, sizeof(struct plugin_config));
     if (config == NULL)
-        return 1;
+        return sync_error_system(ctx, "cannot allocate memory");
 
     /* Get Active Directory connection information from krb5.conf. */
     sync_config_string(ctx, "ad_keytab", &config->ad_keytab);
@@ -215,13 +215,13 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  * If the new password is NULL, that means that the keys are being randomized.
  * Currently, we can't do anything in that case, so just skip it.
  */
-int
+krb5_error_code
 pwupdate_precommit_password(struct plugin_config *config, krb5_context ctx,
                             krb5_principal principal,
-                            const char *password, int pwlen,
-                            char *errstr, int errstrlen)
+                            const char *password, int pwlen)
 {
-    int status;
+    krb5_error_code code;
+    const char *message;
 
     if (config->ad_realm == NULL)
         return 0;
@@ -233,24 +233,19 @@ pwupdate_precommit_password(struct plugin_config *config, krb5_context ctx,
         goto queue;
     if (config->ad_queue_only)
         goto queue;
-    status = pwupdate_ad_change(config, ctx, principal, password, pwlen,
-                                errstr, errstrlen);
-    if (status == 3) {
-        syslog(LOG_INFO, "pwupdate: AD password change failed, queuing: %s",
-               errstr);
+    code = pwupdate_ad_change(config, ctx, principal, password, pwlen);
+    if (code != 0) {
+        message = krb5_get_error_message(ctx, code);
+        syslog(LOG_INFO, "krb5-sync: AD password change failed, queuing: %s",
+               message);
+        krb5_free_error_message(ctx, message);
         goto queue;
     }
-    return status;
+    return 0;
 
 queue:
-    status = pwupdate_queue_write(config, ctx, principal, "ad", "password",
-                                  password);
-    if (status)
-        return 0;
-    else {
-        strlcpy(errstr, "queueing AD password change failed", errstrlen);
-        return 1;
-    }
+    return pwupdate_queue_write(config, ctx, principal, "ad", "password",
+                                password);
 }
 
 
@@ -258,12 +253,11 @@ queue:
  * Actions to take after the password is changed in the local database.
  * Currently, there are none.
  */
-int
+krb5_error_code
 pwupdate_postcommit_password(struct plugin_config *config UNUSED,
                              krb5_context ctx UNUSED,
                              krb5_principal principal UNUSED,
-                             const char *password UNUSED, int pwlen UNUSED,
-                             char *errstr UNUSED, int errstrlen UNUSED)
+                             const char *password UNUSED, int pwlen UNUSED)
 {
     return 0;
 }
@@ -278,12 +272,11 @@ pwupdate_postcommit_password(struct plugin_config *config UNUSED,
  * If a status change is already queued, or if making the status change fails,
  * queue it for later processing.
  */
-int
+krb5_error_code
 pwupdate_postcommit_status(struct plugin_config *config, krb5_context ctx,
-                           krb5_principal principal, int enabled,
-                           char *errstr, int errstrlen)
+                           krb5_principal principal, int enabled)
 {
-    int status;
+    krb5_error_code code;
 
     if (config->ad_admin_server == NULL
         || config->ad_keytab == NULL
@@ -296,19 +289,12 @@ pwupdate_postcommit_status(struct plugin_config *config, krb5_context ctx,
         goto queue;
     if (config->ad_queue_only)
         goto queue;
-    status = pwupdate_ad_status(config, ctx, principal, enabled, errstr,
-                                errstrlen);
-    if (status != 0)
+    code = pwupdate_ad_status(config, ctx, principal, enabled);
+    if (code != 0)
         goto queue;
-    return status;
+    return 0;
 
 queue:
-    status = pwupdate_queue_write(config, ctx, principal, "ad",
-                                  enabled ? "enable" : "disable", NULL);
-    if (status)
-        return 0;
-    else {
-        strlcpy(errstr, "queueing AD status change failed", errstrlen);
-        return 1;
-    }
+    return pwupdate_queue_write(config, ctx, principal, "ad",
+                                enabled ? "enable" : "disable", NULL);
 }

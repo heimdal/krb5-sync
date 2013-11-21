@@ -14,9 +14,11 @@
  */
 
 #include <config.h>
+#include <portable/kadmin.h>
 #include <portable/krb5.h>
 #include <portable/system.h>
 
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -35,11 +37,12 @@ main(void)
     krb5_error_code code;
     struct plugin_config *data;
     int fd;
-    char errstr[BUFSIZ], buffer[BUFSIZ];
+    char buffer[BUFSIZ];
     time_t now, try;
     struct tm *date;
     FILE *file;
     struct stat st;
+    const char *message;
 
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
@@ -59,7 +62,7 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(42);
+    plan(36);
 
     /* Test init. */
     is_int(0, pwupdate_init(&data, ctx), "pwupdate_init succeeds");
@@ -71,13 +74,10 @@ main(void)
     if (fd < 0)
         sysbail("cannot create fake queue file");
     close(fd);
-    errstr[0] = '\0';
     code = pwupdate_precommit_password(data, ctx, princ, "foobar",
-                                       strlen("foobar"), errstr,
-                                       sizeof(errstr));
+                                       strlen("foobar"));
     is_int(0, code, "pwupdate_precommit_password succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
-    is_string("", errstr, "...and there is no error");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -117,12 +117,9 @@ main(void)
     }
 
     /* pwupdate_postcommit_password should do nothing, silently. */
-    errstr[0] = '\0';
     code = pwupdate_postcommit_password(data, ctx, princ, "foobar",
-                                        strlen("foobar"), errstr,
-                                        sizeof(errstr));
+                                        strlen("foobar"));
     is_int(0, code, "pwupdate_postcommit_password succeeds");
-    is_string("", errstr, "...and there is no error");
 
     /* Clean up password change queue files. */
     ok(unlink("queue/test-ad-password-19700101T000000Z") == 0,
@@ -136,11 +133,8 @@ main(void)
     if (fd < 0)
         sysbail("cannot create fake queue file");
     close(fd);
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, ctx, princ, 1, errstr,
-                                      sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 1);
     is_int(0, code, "pwupdate_postcommit_status enable succeeds");
-    is_string("", errstr, "...and there is no error");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -178,11 +172,8 @@ main(void)
      * Do the same thing for disables, which should still be blocked by the
      * same marker.
      */
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, ctx, princ, 0, errstr,
-                                      sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 0);
     is_int(0, code, "pwupdate_postcommit_status disable succeeds");
-    is_string("", errstr, "...and there is no error");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -223,18 +214,21 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Check failure when there's no queue directory. */
-    errstr[0] = '\0';
     code = pwupdate_precommit_password(data, ctx, princ, "foobar",
-                                       strlen("foobar"), errstr,
-                                       sizeof(errstr));
-    is_int(1, code, "pwupdate_precommit_password fails with no queue");
-    is_string("queueing AD password change failed", errstr,
-              "...with correct error");
-    code = pwupdate_postcommit_status(data, ctx, princ, 0, errstr,
-                                      sizeof(errstr));
-    is_int(1, code, "pwupdate_postcommit_status disable fails with no queue");
-    is_string("queueing AD status change failed", errstr,
-              "...with correct error");
+                                       strlen("foobar"));
+    is_int(ENOENT, code,
+           "pwupdate_precommit_password fails with no queue");
+    message = krb5_get_error_message(ctx, code);
+    is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
+           0, "...with correct error message");
+    krb5_free_error_message(ctx, message);
+    code = pwupdate_postcommit_status(data, ctx, princ, 0);
+    is_int(ENOENT, code,
+           "pwupdate_postcommit_status disable fails with no queue");
+    message = krb5_get_error_message(ctx, code);
+    is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
+           0, "...with correct error message");
+    krb5_free_error_message(ctx, message);
 
     /* Shut down the plugin. */
     pwupdate_close(data);
@@ -262,17 +256,11 @@ main(void)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
     is_int(0, pwupdate_init(&data, ctx), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
-    errstr[0] = '\0';
     code = pwupdate_precommit_password(data, ctx, princ, "foobar",
-                                       strlen("foobar"), errstr,
-                                       sizeof(errstr));
+                                       strlen("foobar"));
     is_int(0, code, "pwupdate_precommit_password succeeds");
-    is_string("", errstr, "...and there is no error");
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, ctx, princ, 0, errstr,
-                                      sizeof(errstr));
+    code = pwupdate_postcommit_status(data, ctx, princ, 0);
     is_int(0, code, "pwupdate_postcommit_status disable succeeds");
-    is_string("", errstr, "...and there is no error");
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);

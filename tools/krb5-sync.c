@@ -36,13 +36,12 @@ static void
 ad_password(struct plugin_config *data, krb5_context ctx,
             krb5_principal principal, char *password, const char *user)
 {
-    char errbuf[BUFSIZ];
-    int status;
+    krb5_error_code code;
 
-    status = pwupdate_ad_change(data, ctx, principal, password,
-                                strlen(password), errbuf, sizeof(errbuf));
-    if (status != 0)
-        die("AD password change for %s failed (%d): %s", user, status, errbuf);
+    code = pwupdate_ad_change(data, ctx, principal, password,
+                              strlen(password));
+    if (code != 0)
+        die_krb5(ctx, code, "AD password change for %s failed", user);
     notice("AD password change for %s succeeded", user);
 }
 
@@ -55,13 +54,11 @@ static void
 ad_status(struct plugin_config *data, krb5_context ctx,
           krb5_principal principal, bool enable, const char *user)
 {
-    char errbuf[BUFSIZ];
-    int status;
+    krb5_error_code code;
 
-    status = pwupdate_ad_status(data, ctx, principal, enable, errbuf,
-                                sizeof(errbuf));
-    if (status != 0)
-        die("AD status change for %s failed (%d): %s", user, status, errbuf);
+    code = pwupdate_ad_status(data, ctx, principal, enable);
+    if (code != 0)
+        die_krb5(ctx, code, "AD status change for %s failed", user);
     notice("AD status change for %s succeeded", user);
 }
 
@@ -108,6 +105,7 @@ process_queue_file(struct plugin_config *data, krb5_context ctx,
     bool disable = false;
     bool password = false;
 
+    /* Open the queue file. */
     queue = fopen(filename, "r");
     if (queue == NULL)
         sysdie("cannot open queue file %s", filename);
@@ -163,7 +161,7 @@ main(int argc, char *argv[])
     char *user;
     struct plugin_config *config;
     krb5_context ctx;
-    krb5_error_code ret;
+    krb5_error_code code;
     krb5_principal principal;
 
     /*
@@ -173,6 +171,7 @@ main(int argc, char *argv[])
     openlog("krb5-sync", LOG_PID, LOG_AUTH);
     message_program_name = "krb5-sync";
 
+    /* Parse command-line options. */
     while ((option = getopt(argc, argv, "def:p:")) != EOF) {
         switch (option) {
         case 'd': disable = true;       break;
@@ -204,26 +203,26 @@ main(int argc, char *argv[])
         die("must specify queue file or action, not both");
 
     /* Create a Kerberos context for plugin initialization. */
-    ret = krb5_init_context(&ctx);
-    if (ret != 0)
-        die_krb5(ctx, ret, "cannot initialize Kerberos context");
+    code = krb5_init_context(&ctx);
+    if (code != 0)
+        die_krb5(ctx, code, "cannot initialize Kerberos context");
 
     /* Initialize the plugin. */
-    if (pwupdate_init(&config, ctx))
-        die("plugin initialization failed");
+    code = pwupdate_init(&config, ctx);
+    if (code != 0)
+        die_krb5(ctx, code, "plugin initialization failed");
 
     /* Now, do whatever we were supposed to do. */
     if (filename != NULL)
         process_queue_file(config, ctx, filename);
     else {
-        ret = krb5_parse_name(ctx, user, &principal);
-        if (ret != 0)
-            die_krb5(ctx, ret, "cannot parse user %s into principal", user);
+        code = krb5_parse_name(ctx, user, &principal);
+        if (code != 0)
+            die_krb5(ctx, code, "cannot parse user %s into principal", user);
         if (password != NULL)
             ad_password(config, ctx, principal, password, user);
         if (enable || disable)
             ad_status(config, ctx, principal, enable, user);
     }
-
     exit(0);
 }

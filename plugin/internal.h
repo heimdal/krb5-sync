@@ -44,26 +44,28 @@ BEGIN_DECLS
 #pragma GCC visibility push(hidden)
 
 /* General public API. */
-int pwupdate_init(struct plugin_config **, krb5_context);
+krb5_error_code pwupdate_init(struct plugin_config **, krb5_context);
 void pwupdate_close(struct plugin_config *);
-int pwupdate_precommit_password(struct plugin_config *, krb5_context,
-                                krb5_principal, const char *password,
-                                int pwlen, char *errstr, int errstrlen);
-int pwupdate_postcommit_password(struct plugin_config *, krb5_context,
-                                 krb5_principal, const char *password,
-                                 int pwlen, char *errstr, int errstrlen);
-int pwupdate_postcommit_status(struct plugin_config *, krb5_context,
-                               krb5_principal, int enabled, char *errstr,
-                               int errstrlen);
+krb5_error_code pwupdate_precommit_password(struct plugin_config *,
+                                            krb5_context, krb5_principal,
+                                            const char *password,
+                                            int pwlen);
+krb5_error_code pwupdate_postcommit_password(struct plugin_config *,
+                                             krb5_context, krb5_principal,
+                                             const char *password,
+                                             int pwlen);
+krb5_error_code pwupdate_postcommit_status(struct plugin_config *,
+                                           krb5_context, krb5_principal,
+                                           int enabled);
 
 /* Password changing. */
-int pwupdate_ad_change(struct plugin_config *, krb5_context, krb5_principal,
-                       const char *password, int pwlen, char *errstr,
-                       int errstrlen);
+krb5_error_code pwupdate_ad_change(struct plugin_config *, krb5_context,
+                                   krb5_principal, const char *password,
+                                   int pwlen);
 
 /* Account status update. */
-int pwupdate_ad_status(struct plugin_config *, krb5_context, krb5_principal,
-                       int enabled, char *errstr, int errstrlen);
+krb5_error_code pwupdate_ad_status(struct plugin_config *, krb5_context,
+                                   krb5_principal, int enabled);
 
 /* Instance lookups. */
 int pwupdate_instance_exists(struct plugin_config *, krb5_context,
@@ -73,13 +75,10 @@ int pwupdate_instance_exists(struct plugin_config *, krb5_context,
 int pwupdate_queue_conflict(struct plugin_config *, krb5_context,
                             krb5_principal, const char *domain,
                             const char *operation);
-int pwupdate_queue_write(struct plugin_config *, krb5_context, krb5_principal,
-                         const char *domain, const char *operation,
-                         const char *password);
-
-/* Error handling. */
-void pwupdate_set_error(char *, size_t, krb5_context, krb5_error_code,
-                        const char *, ...);
+krb5_error_code pwupdate_queue_write(struct plugin_config *, krb5_context,
+                                     krb5_principal, const char *domain,
+                                     const char *operation,
+                                     const char *password);
 
 /*
  * Obtain configuration settings from krb5.conf.  These are wrappers around
@@ -91,6 +90,20 @@ void sync_config_boolean(krb5_context, const char *, bool *)
     __attribute__((__nonnull__));
 void sync_config_string(krb5_context, const char *, char **)
     __attribute__((__nonnull__));
+
+/*
+ * Store a configuration, generic, or system error in the Kerberos context,
+ * appending the strerror results to the message in the _system case and the
+ * LDAP error string in the _ldap case.  Returns the error code set.
+ */
+krb5_error_code sync_error_config(krb5_context, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
+krb5_error_code sync_error_generic(krb5_context, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
+krb5_error_code sync_error_ldap(krb5_context, int, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 3, 4)));
+krb5_error_code sync_error_system(krb5_context, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
 
 /* Undo default visibility change. */
 #pragma GCC visibility pop

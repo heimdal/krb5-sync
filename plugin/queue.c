@@ -9,7 +9,7 @@
  * undone.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2006, 2007, 2010
+ * Copyright 2006, 2007, 2010, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -34,12 +34,14 @@
 #define MAX_QUEUE_STR "99"
 
 /* Write out a string, checking that all of it was written. */
-#define WRITE_CHECK(fd, s)                              \
-    do {                                                \
-        ssize_t result;                                 \
-        result = write((fd), (s), strlen(s));           \
-        if (result < 0 || (size_t) result != strlen(s)) \
-            goto fail;                                  \
+#define WRITE_CHECK(fd, s)                                              \
+    do {                                                                \
+        ssize_t result;                                                 \
+        result = write((fd), (s), strlen(s));                           \
+        if (result < 0 || (size_t) result != strlen(s)) {               \
+            code = sync_error_system(ctx, "cannot write queue file");   \
+            goto fail;                                                  \
+        }                                                               \
     } while (0)
 
 
@@ -100,13 +102,13 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
 {
     char *user = NULL, *prefix = NULL;
     char *p;
-    krb5_error_code retval;
+    krb5_error_code code;
 
     /* Enable and disable should go into the same queue. */
     if (strcmp(operation, "disable") == 0)
         operation = "enable";
-    retval = krb5_unparse_name(ctx, principal, &user);
-    if (retval != 0)
+    code = krb5_unparse_name(ctx, principal, &user);
+    if (code != 0)
         return NULL;
     p = strchr(user, '@');
     if (p != NULL)
@@ -204,9 +206,9 @@ fail:
 /*
  * Queue an action.  Takes the plugin configuration, the Kerberos context, the
  * principal, the domain, the operation, and a password (which may be NULL for
- * enable and disable).  Returns true on success, false on failure.
+ * enable and disable).  Returns a Kerberos error code.
  */
-int
+krb5_error_code
 pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
                      krb5_principal principal, const char *domain,
                      const char *operation, const char *password)
@@ -214,26 +216,30 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
     char *prefix = NULL, *timestamp = NULL, *path = NULL, *user = NULL;
     char *p;
     unsigned int i;
-    int status;
+    krb5_error_code code;
     int lock = -1, fd = -1;
-    krb5_error_code retval;
 
     if (config->queue_dir == NULL)
-        return 0;
+        return sync_error_config(ctx, "configuration setting queue_dir"
+                                 " missing");
     prefix = queue_prefix(ctx, principal, domain, operation);
     if (prefix == NULL)
-        return 0;
+        return sync_error_system(ctx, "cannot generate queue prefix");
 
     /*
      * Lock the queue before the timestamp so that another writer coming up
      * at the same time can't get an earlier timestamp.
      */
     lock = lock_queue(config);
-    if (lock < 0)
+    if (lock < 0) {
+        code = sync_error_system(ctx, "cannot lock queue");
         goto fail;
+    }
     timestamp = queue_timestamp();
-    if (timestamp == NULL)
+    if (timestamp == NULL) {
+        code = sync_error_system(ctx, "cannot generate timestamp");
         goto fail;
+    }
 
     /* Find a unique filename for the queue file. */
     for (i = 0; i < MAX_QUEUE; i++) {
@@ -241,10 +247,12 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
             free(path);
             path = NULL;
         }
-        status = asprintf(&path, "%s/%s%s-%02d", config->queue_dir, prefix,
-                          timestamp, i);
-        if (status < 0)
+        code = asprintf(&path, "%s/%s%s-%02d", config->queue_dir, prefix,
+                        timestamp, i);
+        if (code < 0) {
+            code = sync_error_system(ctx, "cannot create queue file name");
             goto fail;
+        }
         fd = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
         if (fd >= 0)
             break;
@@ -254,8 +262,8 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
      * Get the username from the principal and chop off the realm, dealing
      * properly with escaped @ characters.
      */
-    retval = krb5_unparse_name(ctx, principal, &user);
-    if (retval != 0)
+    code = krb5_unparse_name(ctx, principal, &user);
+    if (code != 0)
         goto fail;
     for (p = user; *p != '\0'; p++) {
         if (p[0] == '\\' && p[1] != '\0') {
@@ -285,7 +293,7 @@ pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
     free(prefix);
     free(timestamp);
     free(path);
-    return 1;
+    return 0;
 
 fail:
     if (fd >= 0) {
@@ -303,5 +311,5 @@ fail:
         free(timestamp);
     if (path != NULL)
         free(path);
-    return 0;
+    return code;
 }

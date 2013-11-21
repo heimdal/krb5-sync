@@ -50,6 +50,11 @@
 # define KADM5_PASS_Q_GENERIC KADM5_PASS_Q_DICT
 #endif
 
+/* Heimdal doesn't define KADM5_MISSING_KRB5_CONF_PARAMS. */
+#ifndef KADM5_MISSING_KRB5_CONF_PARAMS
+# define KADM5_MISSING_KRB5_CONF_PARAMS KADM5_MISSING_CONF_PARAMS
+#endif
+
 /*
  * Heimdal provides _ctx functions that take an existing context.  MIT always
  * requires the context be passed in.  Code should use the _ctx variant, and

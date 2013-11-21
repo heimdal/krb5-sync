@@ -2,7 +2,7 @@
  * Tests for the MIT Kerberos module API.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
- * Copyright 2012
+ * Copyright 2012, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
@@ -48,6 +48,7 @@ main(void)
     kadm5_hook_vftable_1 hook;
     kadm5_hook_modinfo *data = NULL;
     kadm5_principal_ent_rec entity;
+    const char *message;
 
     krb5conf = test_file_path("data/krb5.conf");
     if (krb5conf == NULL)
@@ -115,10 +116,12 @@ main(void)
         ok(data != NULL, "...and data is not NULL");
         code = hook.chpass(ctx, data, KADM5_HOOK_STAGE_PRECOMMIT, princ,
                            false, 0, NULL, "test");
-        is_int(KADM5_FAILURE, code, "chpass");
-        is_string("cannot synchronize password: queueing AD password change"
-                  " failed", krb5_get_error_message(ctx, code),
-                  "...with correct error message");
+        is_int(ENOENT, code, "chpass");
+        message = krb5_get_error_message(ctx, code);
+        is_int(strncmp("cannot lock queue", message,
+                       strlen("cannot lock queue")),
+               0, "...with correct error message");
+        krb5_free_error_message(ctx, message);
 
         /* Test chpass with a NULL password. */
         code = hook.chpass(ctx, data, KADM5_HOOK_STAGE_PRECOMMIT, princ,
@@ -134,21 +137,25 @@ main(void)
         entity.attributes = KRB5_KDB_DISALLOW_ALL_TIX;
         code = hook.create(ctx, data, KADM5_HOOK_STAGE_PRECOMMIT, &entity,
                            0, 0, NULL, "test");
-        is_int(KADM5_FAILURE, code, "create");
-        is_string("cannot synchronize password: queueing AD password change"
-                  " failed", krb5_get_error_message(ctx, code),
-                  "...with correct error message");
+        is_int(ENOENT, code, "create");
+        message = krb5_get_error_message(ctx, code);
+        is_int(strncmp("cannot lock queue", message,
+                       strlen("cannot lock queue")),
+               0, "...with correct error message");
+        krb5_free_error_message(ctx, message);
         code = hook.modify(ctx, data, KADM5_HOOK_STAGE_POSTCOMMIT, &entity,
                            KADM5_ATTRIBUTES);
-        is_int(KADM5_FAILURE, code, "modify");
-        is_string("cannot synchronize status: queueing AD status change"
-                  " failed", krb5_get_error_message(ctx, code),
-                  "...with correct error message");
+        is_int(ENOENT, code, "modify");
+        message = krb5_get_error_message(ctx, code);
+        is_int(strncmp("cannot lock queue", message,
+                       strlen("cannot lock queue")),
+               0, "...with correct error message");
+        krb5_free_error_message(ctx, message);
 
         /* Test create with a NULL password. */
         code = hook.create(ctx, data, KADM5_HOOK_STAGE_PRECOMMIT, &entity, 0,
                            0, NULL, NULL);
-        is_int(0, code, "create");
+        is_int(0, code, "create with NUL password");
 
         /* Close down the module. */
         hook.fini(ctx, data);
