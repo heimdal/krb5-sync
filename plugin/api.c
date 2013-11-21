@@ -160,8 +160,7 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
      * Otherwise, if the principal is multi-part, check the instance.
      */
     if (pwchange && ncomp == 1 && config->ad_base_instance != NULL) {
-        okay = !sync_instance_exists(config, ctx, principal,
-                                     config->ad_base_instance);
+        okay = !sync_instance_exists(ctx, principal, config->ad_base_instance);
         if (!okay) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
