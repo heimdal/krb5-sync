@@ -37,12 +37,12 @@
  * This function returns failure only if it could not allocate memory.
  */
 krb5_error_code
-pwupdate_init(struct plugin_config **result, krb5_context ctx)
+pwupdate_init(kadm5_hook_modinfo **result, krb5_context ctx)
 {
-    struct plugin_config *config;
+    kadm5_hook_modinfo *config;
 
     /* Allocate our internal data. */
-    config = calloc(1, sizeof(struct plugin_config));
+    config = calloc(1, sizeof(*config));
     if (config == NULL)
         return sync_error_system(ctx, "cannot allocate memory");
 
@@ -76,7 +76,7 @@ pwupdate_init(struct plugin_config **result, krb5_context ctx)
  * since we don't store any other local state.
  */
 void
-pwupdate_close(struct plugin_config *config)
+pwupdate_close(kadm5_hook_modinfo *config)
 {
     if (config->ad_keytab != NULL)
         free(config->ad_keytab);
@@ -151,7 +151,7 @@ instance_allowed(const char *allowed, const char *instance)
  * proceed, logs a debug-level message to syslog.
  */
 static int
-principal_allowed(struct plugin_config *config, krb5_context ctx,
+principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
                   krb5_principal principal, int pwchange)
 {
     char *display;
@@ -216,7 +216,7 @@ principal_allowed(struct plugin_config *config, krb5_context ctx,
  * Currently, we can't do anything in that case, so just skip it.
  */
 krb5_error_code
-pwupdate_precommit_password(struct plugin_config *config, krb5_context ctx,
+pwupdate_precommit_password(kadm5_hook_modinfo *config, krb5_context ctx,
                             krb5_principal principal,
                             const char *password, int pwlen)
 {
@@ -254,7 +254,7 @@ queue:
  * Currently, there are none.
  */
 krb5_error_code
-pwupdate_postcommit_password(struct plugin_config *config UNUSED,
+pwupdate_postcommit_password(kadm5_hook_modinfo *config UNUSED,
                              krb5_context ctx UNUSED,
                              krb5_principal principal UNUSED,
                              const char *password UNUSED, int pwlen UNUSED)
@@ -273,7 +273,7 @@ pwupdate_postcommit_password(struct plugin_config *config UNUSED,
  * queue it for later processing.
  */
 krb5_error_code
-pwupdate_postcommit_status(struct plugin_config *config, krb5_context ctx,
+pwupdate_postcommit_status(kadm5_hook_modinfo *config, krb5_context ctx,
                            krb5_principal principal, int enabled)
 {
     krb5_error_code code;

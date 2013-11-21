@@ -33,12 +33,12 @@
  * successful, and exit with an error message if we weren't.
  */
 static void
-ad_password(struct plugin_config *data, krb5_context ctx,
+ad_password(kadm5_hook_modinfo *config, krb5_context ctx,
             krb5_principal principal, char *password, const char *user)
 {
     krb5_error_code code;
 
-    code = pwupdate_ad_change(data, ctx, principal, password,
+    code = pwupdate_ad_change(config, ctx, principal, password,
                               strlen(password));
     if (code != 0)
         die_krb5(ctx, code, "AD password change for %s failed", user);
@@ -51,12 +51,12 @@ ad_password(struct plugin_config *data, krb5_context ctx,
  * we were successful, and exit with an error message if we weren't.
  */
 static void
-ad_status(struct plugin_config *data, krb5_context ctx,
+ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
           krb5_principal principal, bool enable, const char *user)
 {
     krb5_error_code code;
 
-    code = pwupdate_ad_status(data, ctx, principal, enable);
+    code = pwupdate_ad_status(config, ctx, principal, enable);
     if (code != 0)
         die_krb5(ctx, code, "AD status change for %s failed", user);
     notice("AD status change for %s succeeded", user);
@@ -92,7 +92,7 @@ read_line(FILE *file, const char *filename, char *buffer, size_t bufsiz)
  * supported for AFS.
  */
 static void
-process_queue_file(struct plugin_config *data, krb5_context ctx,
+process_queue_file(kadm5_hook_modinfo *config, krb5_context ctx,
                    const char *filename)
 {
     FILE *queue;
@@ -137,9 +137,9 @@ process_queue_file(struct plugin_config *data, krb5_context ctx,
     if (password) {
         read_line(queue, filename, buffer, sizeof(buffer));
         if (ad)
-            ad_password(data, ctx, principal, buffer, user);
+            ad_password(config, ctx, principal, buffer, user);
     } else if (enable || disable) {
-        ad_status(data, ctx, principal, enable, user);
+        ad_status(config, ctx, principal, enable, user);
     }
 
     /* If we got here, we were successful.  Close the file and delete it. */
@@ -159,7 +159,7 @@ main(int argc, char *argv[])
     char *password = NULL;
     char *filename = NULL;
     char *user;
-    struct plugin_config *config;
+    kadm5_hook_modinfo *config;
     krb5_context ctx;
     krb5_error_code code;
     krb5_principal principal;

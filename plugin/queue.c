@@ -54,7 +54,7 @@
  * script.  Perl makes it very annoying to use fcntl locking on Linux.
  */
 static int
-lock_queue(struct plugin_config *config)
+lock_queue(kadm5_hook_modinfo *config)
 {
     char *lockpath = NULL;
     int fd = -1;
@@ -160,7 +160,7 @@ queue_timestamp(void)
  * On failure, return -1 (still true but distinguished).
  */
 int
-pwupdate_queue_conflict(struct plugin_config *config, krb5_context ctx,
+pwupdate_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
                         krb5_principal principal, const char *domain,
                         const char *operation)
 {
@@ -209,7 +209,7 @@ fail:
  * enable and disable).  Returns a Kerberos error code.
  */
 krb5_error_code
-pwupdate_queue_write(struct plugin_config *config, krb5_context ctx,
+pwupdate_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
                      krb5_principal principal, const char *domain,
                      const char *operation, const char *password)
 {

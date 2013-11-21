@@ -53,7 +53,7 @@
  * initial credentials.  Returns a Kerberos status code.
  */
 static krb5_error_code
-get_creds(struct plugin_config *config, krb5_context ctx, krb5_ccache *cc)
+get_creds(kadm5_hook_modinfo *config, krb5_context ctx, krb5_ccache *cc)
 {
     krb5_error_code code;
     krb5_keytab kt = NULL;
@@ -133,7 +133,7 @@ fail:
  * and always involves changing the realm.  Returns a Kerberos error code.
  */
 static krb5_error_code
-get_ad_principal(struct plugin_config *config, krb5_context ctx,
+get_ad_principal(kadm5_hook_modinfo *config, krb5_context ctx,
                  krb5_const_principal principal, krb5_principal *ad_principal)
 {
     krb5_error_code code;
@@ -182,7 +182,7 @@ get_ad_principal(struct plugin_config *config, krb5_context ctx,
  * length.  Returns a Kerberos error code.
  */
 krb5_error_code
-pwupdate_ad_change(struct plugin_config *config, krb5_context ctx,
+pwupdate_ad_change(kadm5_hook_modinfo *config, krb5_context ctx,
                    krb5_principal principal, const char *password,
                    int pwlen UNUSED)
 {
@@ -261,7 +261,7 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
  * length.
  */
 krb5_error_code
-pwupdate_ad_status(struct plugin_config *config, krb5_context ctx,
+pwupdate_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
                    krb5_principal principal, int enabled)
 {
     krb5_ccache ccache;

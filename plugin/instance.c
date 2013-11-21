@@ -28,7 +28,7 @@
  * or on any other error.
  */
 int
-pwupdate_instance_exists(struct plugin_config *config UNUSED,
+pwupdate_instance_exists(kadm5_hook_modinfo *config UNUSED,
                          krb5_context ctx, krb5_principal base,
                          const char *instance)
 {

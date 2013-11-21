@@ -32,7 +32,7 @@ main(void)
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
-    struct plugin_config *config;
+    kadm5_hook_modinfo *config;
     char buffer[BUFSIZ];
     time_t now, try;
     struct tm *date;

@@ -16,25 +16,32 @@
 #include <config.h>
 #include <portable/krb5.h>
 #include <portable/macros.h>
+#include <portable/stdbool.h>
 
-#include <sys/types.h>
+#ifdef HAVE_KRB5_KADM5_HOOK_PLUGIN
+# include <krb5/kadm5_hook_plugin.h>
+#else
+typedef struct kadm5_hook_modinfo_st kadm5_hook_modinfo;
+#endif
 
 /*
  * Local configuration information for the module.  This contains all the
  * parameters that are read from the krb5-sync sub-section of the appdefaults
- * section when the module is initialized.  This structure is passed as an
- * opaque pointer back to the caller, which is then expected to pass it in as
- * the first argument to the other calls.
+ * section when the module is initialized.
+ *
+ * MIT Kerberos uses this type as an abstract data type for any data that a
+ * kadmin hook needs to carry.  Reuse it since then we get type checking for
+ * at least the MIT plugin.
  */
-struct plugin_config {
-    char *ad_keytab;
-    char *ad_principal;
-    char *ad_realm;
+struct kadm5_hook_modinfo_st {
     char *ad_admin_server;
-    char *ad_ldap_base;
     char *ad_base_instance;
     char *ad_instances;
+    char *ad_keytab;
+    char *ad_ldap_base;
+    char *ad_principal;
     bool ad_queue_only;
+    char *ad_realm;
     char *queue_dir;
 };
 
@@ -44,38 +51,38 @@ BEGIN_DECLS
 #pragma GCC visibility push(hidden)
 
 /* General public API. */
-krb5_error_code pwupdate_init(struct plugin_config **, krb5_context);
-void pwupdate_close(struct plugin_config *);
-krb5_error_code pwupdate_precommit_password(struct plugin_config *,
+krb5_error_code pwupdate_init(kadm5_hook_modinfo **, krb5_context);
+void pwupdate_close(kadm5_hook_modinfo *);
+krb5_error_code pwupdate_precommit_password(kadm5_hook_modinfo *,
                                             krb5_context, krb5_principal,
                                             const char *password,
                                             int pwlen);
-krb5_error_code pwupdate_postcommit_password(struct plugin_config *,
+krb5_error_code pwupdate_postcommit_password(kadm5_hook_modinfo *,
                                              krb5_context, krb5_principal,
                                              const char *password,
                                              int pwlen);
-krb5_error_code pwupdate_postcommit_status(struct plugin_config *,
+krb5_error_code pwupdate_postcommit_status(kadm5_hook_modinfo *,
                                            krb5_context, krb5_principal,
                                            int enabled);
 
 /* Password changing. */
-krb5_error_code pwupdate_ad_change(struct plugin_config *, krb5_context,
+krb5_error_code pwupdate_ad_change(kadm5_hook_modinfo *, krb5_context,
                                    krb5_principal, const char *password,
                                    int pwlen);
 
 /* Account status update. */
-krb5_error_code pwupdate_ad_status(struct plugin_config *, krb5_context,
+krb5_error_code pwupdate_ad_status(kadm5_hook_modinfo *, krb5_context,
                                    krb5_principal, int enabled);
 
 /* Instance lookups. */
-int pwupdate_instance_exists(struct plugin_config *, krb5_context,
+int pwupdate_instance_exists(kadm5_hook_modinfo *, krb5_context,
                              krb5_principal, const char *instance);
 
 /* Queuing. */
-int pwupdate_queue_conflict(struct plugin_config *, krb5_context,
+int pwupdate_queue_conflict(kadm5_hook_modinfo *, krb5_context,
                             krb5_principal, const char *domain,
                             const char *operation);
-krb5_error_code pwupdate_queue_write(struct plugin_config *, krb5_context,
+krb5_error_code pwupdate_queue_write(kadm5_hook_modinfo *, krb5_context,
                                      krb5_principal, const char *domain,
                                      const char *operation,
                                      const char *password);
