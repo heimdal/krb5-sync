@@ -146,7 +146,7 @@ instance_allowed(const char *allowed, const char *instance)
  */
 static int
 principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
-                  krb5_principal principal, int pwchange)
+                  krb5_principal principal, bool pwchange)
 {
     char *display;
     krb5_error_code code;
@@ -220,7 +220,7 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
         return 0;
     if (password == NULL)
         return 0;
-    if (!principal_allowed(config, ctx, principal, 1))
+    if (!principal_allowed(config, ctx, principal, true))
         return 0;
     if (sync_queue_conflict(config, ctx, principal, "ad", "password"))
         goto queue;
@@ -262,7 +262,7 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
         || config->ad_principal == NULL
         || config->ad_realm == NULL)
         return 0;
-    if (!principal_allowed(config, ctx, principal, 0))
+    if (!principal_allowed(config, ctx, principal, false))
         return 0;
     if (sync_queue_conflict(config, ctx, principal, "ad", "enable"))
         goto queue;
