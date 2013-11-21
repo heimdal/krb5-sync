@@ -55,7 +55,7 @@ typedef struct kadm5_hook {
 static krb5_error_code
 init(krb5_context ctx, void **data)
 {
-    return pwupdate_init((kadm5_hook_modinfo **) data, ctx);
+    return pwupdate_init(ctx, (kadm5_hook_modinfo **) data);
 }
 
 

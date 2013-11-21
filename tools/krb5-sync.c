@@ -208,7 +208,7 @@ main(int argc, char *argv[])
         die_krb5(ctx, code, "cannot initialize Kerberos context");
 
     /* Initialize the plugin. */
-    code = pwupdate_init(&config, ctx);
+    code = pwupdate_init(ctx, &config);
     if (code != 0)
         die_krb5(ctx, code, "plugin initialization failed");
 

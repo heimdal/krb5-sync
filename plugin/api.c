@@ -37,7 +37,7 @@
  * This function returns failure only if it could not allocate memory.
  */
 krb5_error_code
-pwupdate_init(kadm5_hook_modinfo **result, krb5_context ctx)
+pwupdate_init(krb5_context ctx, kadm5_hook_modinfo **result)
 {
     kadm5_hook_modinfo *config;
 

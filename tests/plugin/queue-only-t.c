@@ -60,7 +60,7 @@ main(void)
     plan(24);
 
     /* Test init. */
-    is_int(0, pwupdate_init(&config, ctx), "pwupdate_init succeeds");
+    is_int(0, pwupdate_init(ctx, &config), "pwupdate_init succeeds");
     ok(config != NULL, "...and config is non-NULL");
 
     /* Create a password change and be sure it's queued. */

@@ -65,7 +65,7 @@ main(void)
     plan(36);
 
     /* Test init. */
-    is_int(0, pwupdate_init(&data, ctx), "pwupdate_init succeeds");
+    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
 
     /* Block processing for our test user and then test password change. */
@@ -254,7 +254,7 @@ main(void)
     code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
-    is_int(0, pwupdate_init(&data, ctx), "pwupdate_init succeeds");
+    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
     code = pwupdate_precommit_password(data, ctx, princ, "foobar",
                                        strlen("foobar"));

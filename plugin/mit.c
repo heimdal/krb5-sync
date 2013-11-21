@@ -49,7 +49,7 @@ krb5_error_code kadm5_hook_krb5_sync_initvt(krb5_context, int, int,
 static kadm5_ret_t
 init(krb5_context ctx, kadm5_hook_modinfo **data)
 {
-    return pwupdate_init(data, ctx);
+    return pwupdate_init(ctx, data);
 }
 
 

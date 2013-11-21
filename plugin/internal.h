@@ -51,7 +51,7 @@ BEGIN_DECLS
 #pragma GCC visibility push(hidden)
 
 /* General public API. */
-krb5_error_code pwupdate_init(kadm5_hook_modinfo **, krb5_context);
+krb5_error_code pwupdate_init(krb5_context, kadm5_hook_modinfo **);
 void pwupdate_close(kadm5_hook_modinfo *);
 krb5_error_code pwupdate_precommit_password(kadm5_hook_modinfo *,
                                             krb5_context, krb5_principal,
