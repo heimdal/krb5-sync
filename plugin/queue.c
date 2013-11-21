@@ -132,8 +132,8 @@ queue_timestamp(void)
 {
     struct tm now;
     time_t seconds;
-    size_t length;
-    char *timestamp;
+    char *timestamp = NULL;
+    int status;
 
     seconds = time(NULL);
     if (seconds == (time_t) -1)
@@ -142,12 +142,11 @@ queue_timestamp(void)
         return NULL;
     now.tm_mon++;
     now.tm_year += 1900;
-    length = strlen("YYYYMMDDTHHMMSSZ") + 1;
-    timestamp = malloc(length);
-    if (timestamp == NULL)
+    status = asprintf(&timestamp, "%04d%02d%02dT%02d%02d%02dZ", now.tm_year,
+                      now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min,
+                      now.tm_sec);
+    if (status < 0)
         return NULL;
-    snprintf(timestamp, length, "%04d%02d%02dT%02d%02d%02dZ", now.tm_year,
-             now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec);
     return timestamp;
 }
 

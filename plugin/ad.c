@@ -268,8 +268,9 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     LDAP *ld = NULL;
     LDAPMessage *res = NULL;
     LDAPMod mod, *mod_array[2];
-    char ldapuri[256], ldapbase[256], ldapdn[256], *dname, *lb, *end, *dn;
-    char *target = NULL;
+    char *dname, *lb, *end, *dn;
+    char ldapbase[256];
+    char *ldapuri = NULL, *ldapdn = NULL, *control = NULL, *target = NULL;
     struct berval **vals = NULL;
     char *value;
     const char *attrs[] = { "userAccountControl", NULL };
@@ -300,7 +301,10 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     }
 
     /* Now, bind to the directory server using GSSAPI. */
-    snprintf(ldapuri, sizeof(ldapuri), "ldap://%s", config->ad_admin_server);
+    if (asprintf(&ldapuri, "ldap://%s", config->ad_admin_server) < 0) {
+        code = sync_error_system(ctx, "cannot allocate memory");
+        goto done;
+    }
     code = ldap_initialize(&ld, ldapuri);
     if (code != LDAP_SUCCESS) {
         code = sync_error_ldap(ctx, code, "LDAP initialization failed");
@@ -355,7 +359,10 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     code = krb5_unparse_name(ctx, ad_principal, &target);
     if (code != 0)
         goto done;
-    snprintf(ldapdn, sizeof(ldapdn), "(userPrincipalName=%s)", target);
+    if (asprintf(&ldapdn, "(userPrincipalName=%s)", target) < 0) {
+        code = sync_error_system(ctx, "cannot allocate memory");
+        goto done;
+    }
     code = ldap_search_ext_s(ld, ldapbase, LDAP_SCOPE_SUBTREE, ldapdn,
                             (char **) attrs, 0, NULL, NULL, NULL, 0, &res);
     if (code != LDAP_SUCCESS) {
@@ -411,8 +418,11 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     memset(&mod, 0, sizeof(mod));
     mod.mod_op = LDAP_MOD_REPLACE;
     mod.mod_type = (char *) "userAccountControl";
-    snprintf(ldapdn, sizeof(ldapdn), "%u", acctcontrol);
-    strvals[0] = ldapdn;
+    if (asprintf(&control, "%u", acctcontrol) < 0) {
+        code = sync_error_system(ctx, "cannot allocate memory");
+        goto done;
+    }
+    strvals[0] = control;
     strvals[1] = NULL;
     mod.mod_vals.modv_strvals = strvals;
     mod_array[0] = &mod;
@@ -430,6 +440,9 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
            enabled ? "enabled" : "disabled", target);
 
 done:
+    free(ldapuri);
+    free(ldapdn);
+    free(control);
     krb5_cc_destroy(ctx, ccache);
     if (target != NULL)
         krb5_free_unparsed_name(ctx, target);
