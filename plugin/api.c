@@ -150,7 +150,8 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
 {
     char *display;
     krb5_error_code code;
-    int ncomp, okay;
+    int ncomp;
+    bool exists = false;
 
     /* Get the number of components. */
     ncomp = krb5_principal_get_num_comp(ctx, principal);
@@ -160,8 +161,9 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
      * Otherwise, if the principal is multi-part, check the instance.
      */
     if (pwchange && ncomp == 1 && config->ad_base_instance != NULL) {
-        okay = !sync_instance_exists(ctx, principal, config->ad_base_instance);
-        if (!okay) {
+        code = sync_instance_exists(ctx, principal, config->ad_base_instance,
+                                    &exists);
+        if (code != 0 || !exists) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
                 display = NULL;
@@ -172,7 +174,7 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
             if (display != NULL)
                 krb5_free_unparsed_name(ctx, display);
         }
-        return okay;
+        return exists;
     } else if (ncomp > 1) {
         const char *instance;
 

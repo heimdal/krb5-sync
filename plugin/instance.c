@@ -27,9 +27,9 @@
  * part is found in the local Kerberos database.  Returns false if it is not
  * or on any other error.
  */
-int
+krb5_error_code
 sync_instance_exists(krb5_context ctx, krb5_principal base,
-                     const char *instance)
+                     const char *instance, bool *exists)
 {
     krb5_principal princ = NULL;
     krb5_error_code code;
@@ -39,14 +39,20 @@ sync_instance_exists(krb5_context ctx, krb5_principal base,
     int mask;
     kadm5_principal_ent_rec ent;
 
+    /* Default to assuming the principal doesn't exist. */
+    *exists = false;
+
     /* Principals must have exactly one component. */
     if (krb5_principal_get_num_comp(ctx, base) != 1)
         return 0;
     
     /* Form a new principal from the old principal plus the instance. */
     realm = krb5_principal_get_realm(ctx, base);
-    if (realm == NULL)
-        return 0;
+    if (realm == NULL) {
+        code = KADM5_BAD_PRINCIPAL;
+        krb5_set_error_message(ctx, code, "cannot get realm of principal");
+        goto fail;
+    }
     code = krb5_build_principal(ctx, &princ, strlen(realm), realm,
                                 krb5_principal_get_comp_string(ctx, base, 0),
                                 instance, (char *) 0);
@@ -64,14 +70,18 @@ sync_instance_exists(krb5_context ctx, krb5_principal base,
         goto fail;
     mask = KADM5_ATTRIBUTES | KADM5_PW_EXPIRATION;
     code = kadm5_get_principal(handle, princ, &ent, mask);
-    if (code == 0)
+    if (code != KADM5_UNK_PRINC)
+        goto fail;
+    if (code == 0) {
+        *exists = true;
         kadm5_free_principal_ent(handle, &ent);
+    }
     kadm5_destroy(handle);
     krb5_free_principal(ctx, princ);
-    princ = NULL;
-    return (code == 0);
+    return 0;
 
 fail:
-    krb5_free_principal(ctx, princ);
-    return 0;
+    if (princ != NULL)
+        krb5_free_principal(ctx, princ);
+    return code;
 }

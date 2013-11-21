@@ -73,10 +73,13 @@ krb5_error_code sync_ad_status(kadm5_hook_modinfo *, krb5_context,
                                krb5_principal, bool enabled);
 
 /*
- * Returns true if the principal has only one component and two-component
- * principal with instance added exists in the Kerberos database.
+ * Sets exists true to true if the principal has only one component and
+ * two-component principal with instance added exists in the Kerberos
+ * database, false otherwise.  Returns an error if we cannot determine whether
+ * the principal exists.
  */
-int sync_instance_exists(krb5_context, krb5_principal, const char *instance);
+krb5_error_code sync_instance_exists(krb5_context, krb5_principal,
+                                     const char *instance, bool *exists);
 
 /* Returns true if there is a queue conflict for this operation. */
 int sync_queue_conflict(kadm5_hook_modinfo *, krb5_context, krb5_principal,
