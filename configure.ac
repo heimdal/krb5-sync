@@ -66,7 +66,7 @@ AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit])
-AC_REPLACE_FUNCS([asprintf strlcat strlcpy strndup])
+AC_REPLACE_FUNCS([asprintf strndup])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADER([config.h])
