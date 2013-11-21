@@ -78,18 +78,12 @@ pwupdate_init(kadm5_hook_modinfo **result, krb5_context ctx)
 void
 pwupdate_close(kadm5_hook_modinfo *config)
 {
-    if (config->ad_keytab != NULL)
-        free(config->ad_keytab);
-    if (config->ad_principal != NULL)
-        free(config->ad_principal);
-    if (config->ad_realm != NULL)
-        free(config->ad_realm);
-    if (config->ad_admin_server != NULL)
-        free(config->ad_admin_server);
-    if (config->ad_base_instance != NULL)
-        free(config->ad_base_instance);
-    if (config->queue_dir != NULL)
-        free(config->queue_dir);
+    free(config->ad_keytab);
+    free(config->ad_principal);
+    free(config->ad_realm);
+    free(config->ad_admin_server);
+    free(config->ad_base_instance);
+    free(config->queue_dir);
     free(config);
 }
 

@@ -71,8 +71,7 @@ lock_queue(kadm5_hook_modinfo *config)
     return fd;
 
 fail:
-    if (lockpath != NULL)
-        free(lockpath);
+    free(lockpath);
     if (fd >= 0)
         close(fd);
     return -1;
@@ -197,8 +196,7 @@ fail:
         unlock_queue(lock);
     if (queue != NULL)
         closedir(queue);
-    if (prefix != NULL)
-        free(prefix);
+    free(prefix);
     return -1;
 }
 
@@ -243,10 +241,8 @@ pwupdate_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
 
     /* Find a unique filename for the queue file. */
     for (i = 0; i < MAX_QUEUE; i++) {
-        if (path != NULL) {
-            free(path);
-            path = NULL;
-        }
+        free(path);
+        path = NULL;
         code = asprintf(&path, "%s/%s%s-%02d", config->queue_dir, prefix,
                         timestamp, i);
         if (code < 0) {
@@ -305,11 +301,8 @@ fail:
         unlock_queue(lock);
     if (user != NULL)
         krb5_free_unparsed_name(ctx, user);
-    if (prefix != NULL)
-        free(prefix);
-    if (timestamp != NULL)
-        free(timestamp);
-    if (path != NULL)
-        free(path);
+    free(prefix);
+    free(timestamp);
+    free(path);
     return code;
 }
