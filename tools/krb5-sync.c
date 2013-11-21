@@ -38,8 +38,7 @@ ad_password(kadm5_hook_modinfo *config, krb5_context ctx,
 {
     krb5_error_code code;
 
-    code = pwupdate_ad_change(config, ctx, principal, password,
-                              strlen(password));
+    code = sync_ad_chpass(config, ctx, principal, password, strlen(password));
     if (code != 0)
         die_krb5(ctx, code, "AD password change for %s failed", user);
     notice("AD password change for %s succeeded", user);
@@ -56,7 +55,7 @@ ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
 {
     krb5_error_code code;
 
-    code = pwupdate_ad_status(config, ctx, principal, enable);
+    code = sync_ad_status(config, ctx, principal, enable);
     if (code != 0)
         die_krb5(ctx, code, "AD status change for %s failed", user);
     notice("AD status change for %s succeeded", user);
@@ -208,7 +207,7 @@ main(int argc, char *argv[])
         die_krb5(ctx, code, "cannot initialize Kerberos context");
 
     /* Initialize the plugin. */
-    code = pwupdate_init(ctx, &config);
+    code = sync_init(ctx, &config);
     if (code != 0)
         die_krb5(ctx, code, "plugin initialization failed");
 

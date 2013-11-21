@@ -60,13 +60,12 @@ main(void)
     plan(24);
 
     /* Test init. */
-    is_int(0, pwupdate_init(ctx, &config), "pwupdate_init succeeds");
+    is_int(0, sync_init(ctx, &config), "sync_init succeeds");
     ok(config != NULL, "...and config is non-NULL");
 
     /* Create a password change and be sure it's queued. */
-    code = pwupdate_precommit_password(config, ctx, princ, "foobar",
-                                       strlen("foobar"));
-    is_int(0, code, "pwupdate_precommit_password succeeds");
+    code = sync_chpass(config, ctx, princ, "foobar", strlen("foobar"));
+    is_int(0, code, "sync_chpass succeeds");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -108,8 +107,8 @@ main(void)
     free(queue);
 
     /* Test queuing of enable. */
-    code = pwupdate_postcommit_status(config, ctx, princ, 1);
-    is_int(0, code, "pwupdate_postcommit_status enable succeeds");
+    code = sync_status(config, ctx, princ, 1);
+    is_int(0, code, "sync_status enable succeeds");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -143,8 +142,8 @@ main(void)
     ok(unlink(queue) == 0, "Remove queued enable");
 
     /* Test queuing of disable. */
-    code = pwupdate_postcommit_status(config, ctx, princ, 0);
-    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
+    code = sync_status(config, ctx, princ, 0);
+    is_int(0, code, "sync_status disable succeeds");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -183,7 +182,7 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Shut down the plugin. */
-    pwupdate_close(config);
+    sync_close(config);
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);

@@ -62,10 +62,10 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(36);
+    plan(35);
 
     /* Test init. */
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
+    is_int(0, sync_init(ctx, &data), "pwupdate_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
 
     /* Block processing for our test user and then test password change. */
@@ -74,8 +74,7 @@ main(void)
     if (fd < 0)
         sysbail("cannot create fake queue file");
     close(fd);
-    code = pwupdate_precommit_password(data, ctx, princ, "foobar",
-                                       strlen("foobar"));
+    code = sync_chpass(data, ctx, princ, "foobar", strlen("foobar"));
     is_int(0, code, "pwupdate_precommit_password succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
     queue = NULL;
@@ -116,11 +115,6 @@ main(void)
         fclose(file);
     }
 
-    /* pwupdate_postcommit_password should do nothing, silently. */
-    code = pwupdate_postcommit_password(data, ctx, princ, "foobar",
-                                        strlen("foobar"));
-    is_int(0, code, "pwupdate_postcommit_password succeeds");
-
     /* Clean up password change queue files. */
     ok(unlink("queue/test-ad-password-19700101T000000Z") == 0,
        "Sentinel file still exists");
@@ -133,8 +127,8 @@ main(void)
     if (fd < 0)
         sysbail("cannot create fake queue file");
     close(fd);
-    code = pwupdate_postcommit_status(data, ctx, princ, 1);
-    is_int(0, code, "pwupdate_postcommit_status enable succeeds");
+    code = sync_status(data, ctx, princ, 1);
+    is_int(0, code, "sync_status enable succeeds");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -172,8 +166,8 @@ main(void)
      * Do the same thing for disables, which should still be blocked by the
      * same marker.
      */
-    code = pwupdate_postcommit_status(data, ctx, princ, 0);
-    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
+    code = sync_status(data, ctx, princ, 0);
+    is_int(0, code, "sync_status disable succeeds");
     queue = NULL;
     now = time(NULL);
     for (try = now - 1; try <= now; try++) {
@@ -214,24 +208,21 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Check failure when there's no queue directory. */
-    code = pwupdate_precommit_password(data, ctx, princ, "foobar",
-                                       strlen("foobar"));
-    is_int(ENOENT, code,
-           "pwupdate_precommit_password fails with no queue");
+    code = sync_chpass(data, ctx, princ, "foobar", strlen("foobar"));
+    is_int(ENOENT, code, "sync_chpass fails with no queue");
     message = krb5_get_error_message(ctx, code);
     is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
            0, "...with correct error message");
     krb5_free_error_message(ctx, message);
-    code = pwupdate_postcommit_status(data, ctx, princ, 0);
-    is_int(ENOENT, code,
-           "pwupdate_postcommit_status disable fails with no queue");
+    code = sync_status(data, ctx, princ, 0);
+    is_int(ENOENT, code, "sync_status disable fails with no queue");
     message = krb5_get_error_message(ctx, code);
     is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
            0, "...with correct error message");
     krb5_free_error_message(ctx, message);
 
     /* Shut down the plugin. */
-    pwupdate_close(data);
+    sync_close(data);
 
     /*
      * Change to an empty Kerberos configuration file, and then make sure the
@@ -254,13 +245,12 @@ main(void)
     code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
+    is_int(0, sync_init(ctx, &data), "sync_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
-    code = pwupdate_precommit_password(data, ctx, princ, "foobar",
-                                       strlen("foobar"));
-    is_int(0, code, "pwupdate_precommit_password succeeds");
-    code = pwupdate_postcommit_status(data, ctx, princ, 0);
-    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
+    code = sync_chpass(data, ctx, princ, "foobar", strlen("foobar"));
+    is_int(0, code, "sync_chpass succeeds");
+    code = sync_status(data, ctx, princ, 0);
+    is_int(0, code, "sync_status disable succeeds");
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);

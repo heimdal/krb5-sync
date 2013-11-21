@@ -182,9 +182,9 @@ get_ad_principal(kadm5_hook_modinfo *config, krb5_context ctx,
  * length.  Returns a Kerberos error code.
  */
 krb5_error_code
-pwupdate_ad_change(kadm5_hook_modinfo *config, krb5_context ctx,
-                   krb5_principal principal, const char *password,
-                   int pwlen UNUSED)
+sync_ad_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
+               krb5_principal principal, const char *password,
+               int pwlen UNUSED)
 {
     krb5_error_code code;
     char *target = NULL;
@@ -261,8 +261,8 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
  * length.
  */
 krb5_error_code
-pwupdate_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
-                   krb5_principal principal, int enabled)
+sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
+               krb5_principal principal, int enabled)
 {
     krb5_ccache ccache;
     krb5_principal ad_principal = NULL;

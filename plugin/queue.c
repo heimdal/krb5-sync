@@ -159,9 +159,9 @@ queue_timestamp(void)
  * On failure, return -1 (still true but distinguished).
  */
 int
-pwupdate_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
-                        krb5_principal principal, const char *domain,
-                        const char *operation)
+sync_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
+                    krb5_principal principal, const char *domain,
+                    const char *operation)
 {
     int lock = -1;
     char *prefix = NULL;
@@ -207,9 +207,9 @@ fail:
  * enable and disable).  Returns a Kerberos error code.
  */
 krb5_error_code
-pwupdate_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
-                     krb5_principal principal, const char *domain,
-                     const char *operation, const char *password)
+sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
+                 krb5_principal principal, const char *domain,
+                 const char *operation, const char *password)
 {
     char *prefix = NULL, *timestamp = NULL, *path = NULL, *user = NULL;
     char *p;

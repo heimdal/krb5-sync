@@ -28,9 +28,8 @@
  * or on any other error.
  */
 int
-pwupdate_instance_exists(kadm5_hook_modinfo *config UNUSED,
-                         krb5_context ctx, krb5_principal base,
-                         const char *instance)
+sync_instance_exists(kadm5_hook_modinfo *config UNUSED, krb5_context ctx,
+                     krb5_principal base, const char *instance)
 {
     krb5_principal princ = NULL;
     krb5_error_code code;

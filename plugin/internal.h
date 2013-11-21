@@ -50,42 +50,44 @@ BEGIN_DECLS
 /* Default to a hidden visibility for all internal functions. */
 #pragma GCC visibility push(hidden)
 
-/* General public API. */
-krb5_error_code pwupdate_init(krb5_context, kadm5_hook_modinfo **);
-void pwupdate_close(kadm5_hook_modinfo *);
-krb5_error_code pwupdate_precommit_password(kadm5_hook_modinfo *,
-                                            krb5_context, krb5_principal,
-                                            const char *password,
-                                            int pwlen);
-krb5_error_code pwupdate_postcommit_password(kadm5_hook_modinfo *,
-                                             krb5_context, krb5_principal,
-                                             const char *password,
-                                             int pwlen);
-krb5_error_code pwupdate_postcommit_status(kadm5_hook_modinfo *,
-                                           krb5_context, krb5_principal,
-                                           int enabled);
+/* Initialize the plugin and set up configuration. */
+krb5_error_code sync_init(krb5_context, kadm5_hook_modinfo **);
 
-/* Password changing. */
-krb5_error_code pwupdate_ad_change(kadm5_hook_modinfo *, krb5_context,
-                                   krb5_principal, const char *password,
-                                   int pwlen);
+/* Free the internal plugin state. */
+void sync_close(kadm5_hook_modinfo *);
 
-/* Account status update. */
-krb5_error_code pwupdate_ad_status(kadm5_hook_modinfo *, krb5_context,
-                                   krb5_principal, int enabled);
+/* Handle a password change. */
+krb5_error_code sync_chpass(kadm5_hook_modinfo *, krb5_context,
+                            krb5_principal, const char *password, int pwlen);
 
-/* Instance lookups. */
-int pwupdate_instance_exists(kadm5_hook_modinfo *, krb5_context,
-                             krb5_principal, const char *instance);
+/* Handle an account status change. */
+krb5_error_code sync_status(kadm5_hook_modinfo *, krb5_context,
+                            krb5_principal, int enabled);
 
-/* Queuing. */
-int pwupdate_queue_conflict(kadm5_hook_modinfo *, krb5_context,
-                            krb5_principal, const char *domain,
-                            const char *operation);
-krb5_error_code pwupdate_queue_write(kadm5_hook_modinfo *, krb5_context,
-                                     krb5_principal, const char *domain,
-                                     const char *operation,
-                                     const char *password);
+/* Password changing in Active Directory. */
+krb5_error_code sync_ad_chpass(kadm5_hook_modinfo *, krb5_context,
+                               krb5_principal, const char *password,
+                               int pwlen);
+
+/* Account status update in Active Directory. */
+krb5_error_code sync_ad_status(kadm5_hook_modinfo *, krb5_context,
+                               krb5_principal, int enabled);
+
+/*
+ * Returns true if the principal has only one component and two-component
+ * principal with instance added exists in the Kerberos database.
+ */
+int sync_instance_exists(kadm5_hook_modinfo *, krb5_context, krb5_principal,
+                         const char *instance);
+
+/* Returns true if there is a queue conflict for this operation. */
+int sync_queue_conflict(kadm5_hook_modinfo *, krb5_context, krb5_principal,
+                        const char *domain, const char *operation);
+
+/* Writes an operation to the queue. */
+krb5_error_code sync_queue_write(kadm5_hook_modinfo *, krb5_context,
+                                 krb5_principal, const char *domain,
+                                 const char *operation, const char *password);
 
 /*
  * Obtain configuration settings from krb5.conf.  These are wrappers around

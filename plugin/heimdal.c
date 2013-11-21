@@ -55,7 +55,7 @@ typedef struct kadm5_hook {
 static krb5_error_code
 init(krb5_context ctx, void **data)
 {
-    return pwupdate_init(ctx, (kadm5_hook_modinfo **) data);
+    return sync_init(ctx, (kadm5_hook_modinfo **) data);
 }
 
 
@@ -65,7 +65,7 @@ init(krb5_context ctx, void **data)
 static void
 fini(krb5_context ctx UNUSED, void *data)
 {
-    pwupdate_close(data);
+    sync_close(data);
 }
 
 
@@ -90,10 +90,7 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
 
     /* Dispatch to the appropriate function. */
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        code = pwupdate_precommit_password(data, ctx, princ, password, length);
-    else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        code = pwupdate_postcommit_password(data, ctx, princ, password,
-                                            length);
+        code = sync_chpass(data, ctx, princ, password, length);
     return code;
 }
 
@@ -128,8 +125,7 @@ modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
-        return pwupdate_postcommit_status(data, ctx, entry->principal,
-                                          enabled);
+        return sync_status(data, ctx, entry->principal, enabled);
     }
     return 0;
 }

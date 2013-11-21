@@ -37,7 +37,7 @@
  * This function returns failure only if it could not allocate memory.
  */
 krb5_error_code
-pwupdate_init(krb5_context ctx, kadm5_hook_modinfo **result)
+sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
 {
     kadm5_hook_modinfo *config;
 
@@ -76,7 +76,7 @@ pwupdate_init(krb5_context ctx, kadm5_hook_modinfo **result)
  * since we don't store any other local state.
  */
 void
-pwupdate_close(kadm5_hook_modinfo *config)
+sync_close(kadm5_hook_modinfo *config)
 {
     free(config->ad_keytab);
     free(config->ad_principal);
@@ -160,8 +160,8 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
      * Otherwise, if the principal is multi-part, check the instance.
      */
     if (pwchange && ncomp == 1 && config->ad_base_instance != NULL) {
-        okay = !pwupdate_instance_exists(config, ctx, principal,
-                                         config->ad_base_instance);
+        okay = !sync_instance_exists(config, ctx, principal,
+                                     config->ad_base_instance);
         if (!okay) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
@@ -210,9 +210,8 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
  * Currently, we can't do anything in that case, so just skip it.
  */
 krb5_error_code
-pwupdate_precommit_password(kadm5_hook_modinfo *config, krb5_context ctx,
-                            krb5_principal principal,
-                            const char *password, int pwlen)
+sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
+            krb5_principal principal, const char *password, int pwlen)
 {
     krb5_error_code code;
     const char *message;
@@ -223,11 +222,11 @@ pwupdate_precommit_password(kadm5_hook_modinfo *config, krb5_context ctx,
         return 0;
     if (!principal_allowed(config, ctx, principal, 1))
         return 0;
-    if (pwupdate_queue_conflict(config, ctx, principal, "ad", "password"))
+    if (sync_queue_conflict(config, ctx, principal, "ad", "password"))
         goto queue;
     if (config->ad_queue_only)
         goto queue;
-    code = pwupdate_ad_change(config, ctx, principal, password, pwlen);
+    code = sync_ad_chpass(config, ctx, principal, password, pwlen);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
         syslog(LOG_INFO, "krb5-sync: AD password change failed, queuing: %s",
@@ -238,22 +237,8 @@ pwupdate_precommit_password(kadm5_hook_modinfo *config, krb5_context ctx,
     return 0;
 
 queue:
-    return pwupdate_queue_write(config, ctx, principal, "ad", "password",
-                                password);
-}
-
-
-/*
- * Actions to take after the password is changed in the local database.
- * Currently, there are none.
- */
-krb5_error_code
-pwupdate_postcommit_password(kadm5_hook_modinfo *config UNUSED,
-                             krb5_context ctx UNUSED,
-                             krb5_principal principal UNUSED,
-                             const char *password UNUSED, int pwlen UNUSED)
-{
-    return 0;
+    return sync_queue_write(config, ctx, principal, "ad", "password",
+                            password);
 }
 
 
@@ -267,8 +252,8 @@ pwupdate_postcommit_password(kadm5_hook_modinfo *config UNUSED,
  * queue it for later processing.
  */
 krb5_error_code
-pwupdate_postcommit_status(kadm5_hook_modinfo *config, krb5_context ctx,
-                           krb5_principal principal, int enabled)
+sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
+            krb5_principal principal, int enabled)
 {
     krb5_error_code code;
 
@@ -279,16 +264,16 @@ pwupdate_postcommit_status(kadm5_hook_modinfo *config, krb5_context ctx,
         return 0;
     if (!principal_allowed(config, ctx, principal, 0))
         return 0;
-    if (pwupdate_queue_conflict(config, ctx, principal, "ad", "enable"))
+    if (sync_queue_conflict(config, ctx, principal, "ad", "enable"))
         goto queue;
     if (config->ad_queue_only)
         goto queue;
-    code = pwupdate_ad_status(config, ctx, principal, enabled);
+    code = sync_ad_status(config, ctx, principal, enabled);
     if (code != 0)
         goto queue;
     return 0;
 
 queue:
-    return pwupdate_queue_write(config, ctx, principal, "ad",
-                                enabled ? "enable" : "disable", NULL);
+    return sync_queue_write(config, ctx, principal, "ad",
+                            enabled ? "enable" : "disable", NULL);
 }

@@ -49,7 +49,7 @@ krb5_error_code kadm5_hook_krb5_sync_initvt(krb5_context, int, int,
 static kadm5_ret_t
 init(krb5_context ctx, kadm5_hook_modinfo **data)
 {
-    return pwupdate_init(ctx, data);
+    return sync_init(ctx, data);
 }
 
 
@@ -59,7 +59,7 @@ init(krb5_context ctx, kadm5_hook_modinfo **data)
 static void
 fini(krb5_context ctx UNUSED, kadm5_hook_modinfo *data)
 {
-    pwupdate_close(data);
+    sync_close(data);
 }
 
 
@@ -86,10 +86,7 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
     /* Dispatch to the appropriate function. */
     length = strlen(password);
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        code = pwupdate_precommit_password(data, ctx, princ, password, length);
-    else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        code = pwupdate_postcommit_password(data, ctx, princ, password,
-                                            length);
+        code = sync_chpass(data, ctx, princ, password, length);
     return code;
 }
 
@@ -125,8 +122,7 @@ modify(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
-        return pwupdate_postcommit_status(data, ctx, entry->principal,
-                                          enabled);
+        return sync_status(data, ctx, entry->principal, enabled);
     }
     return 0;
 }
