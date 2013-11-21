@@ -76,9 +76,6 @@ static krb5_error_code
 chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
        krb5_principal princ, const char *password)
 {
-    size_t length;
-    krb5_error_code code = 0;
-
     /*
      * If password is NULL, we have a new key set but no password (meaning
      * this is an operation such as add -r).  We can't do anything without a
@@ -86,12 +83,12 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
      */
     if (password == NULL)
         return 0;
-    length = strlen(password);
 
     /* Dispatch to the appropriate function. */
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        code = sync_chpass(data, ctx, princ, password, length);
-    return code;
+        return sync_chpass(data, ctx, princ, password);
+    else
+        return 0;
 }
 
 

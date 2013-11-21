@@ -211,7 +211,7 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
  */
 krb5_error_code
 sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
-            krb5_principal principal, const char *password, int pwlen)
+            krb5_principal principal, const char *password)
 {
     krb5_error_code code;
     const char *message;
@@ -226,7 +226,7 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
         goto queue;
     if (config->ad_queue_only)
         goto queue;
-    code = sync_ad_chpass(config, ctx, principal, password, pwlen);
+    code = sync_ad_chpass(config, ctx, principal, password);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
         syslog(LOG_INFO, "krb5-sync: AD password change failed, queuing: %s",

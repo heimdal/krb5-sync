@@ -72,9 +72,6 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
        int n_ks_tuple UNUSED, krb5_key_salt_tuple *ks_tuple UNUSED,
        const char *password)
 {
-    size_t length;
-    krb5_error_code code = 0;
-
     /*
      * If password is NULL, we have a new key set but no password (meaning
      * this is an operation such as addprinc -randkey).  We can't do anything
@@ -84,10 +81,10 @@ chpass(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
         return 0;
 
     /* Dispatch to the appropriate function. */
-    length = strlen(password);
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        code = sync_chpass(data, ctx, princ, password, length);
-    return code;
+        return sync_chpass(data, ctx, princ, password);
+    else
+        return 0;
 }
 
 

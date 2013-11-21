@@ -183,8 +183,7 @@ get_ad_principal(kadm5_hook_modinfo *config, krb5_context ctx,
  */
 krb5_error_code
 sync_ad_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
-               krb5_principal principal, const char *password,
-               int pwlen UNUSED)
+               krb5_principal principal, const char *password)
 {
     krb5_error_code code;
     char *target = NULL;

@@ -64,7 +64,7 @@ main(void)
     ok(config != NULL, "...and config is non-NULL");
 
     /* Create a password change and be sure it's queued. */
-    code = sync_chpass(config, ctx, princ, "foobar", strlen("foobar"));
+    code = sync_chpass(config, ctx, princ, "foobar");
     is_int(0, code, "sync_chpass succeeds");
     queue = NULL;
     now = time(NULL);

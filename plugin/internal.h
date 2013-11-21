@@ -58,7 +58,7 @@ void sync_close(kadm5_hook_modinfo *);
 
 /* Handle a password change. */
 krb5_error_code sync_chpass(kadm5_hook_modinfo *, krb5_context,
-                            krb5_principal, const char *password, int pwlen);
+                            krb5_principal, const char *password);
 
 /* Handle an account status change. */
 krb5_error_code sync_status(kadm5_hook_modinfo *, krb5_context,
@@ -66,8 +66,7 @@ krb5_error_code sync_status(kadm5_hook_modinfo *, krb5_context,
 
 /* Password changing in Active Directory. */
 krb5_error_code sync_ad_chpass(kadm5_hook_modinfo *, krb5_context,
-                               krb5_principal, const char *password,
-                               int pwlen);
+                               krb5_principal, const char *password);
 
 /* Account status update in Active Directory. */
 krb5_error_code sync_ad_status(kadm5_hook_modinfo *, krb5_context,

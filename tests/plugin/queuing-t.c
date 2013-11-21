@@ -74,7 +74,7 @@ main(void)
     if (fd < 0)
         sysbail("cannot create fake queue file");
     close(fd);
-    code = sync_chpass(data, ctx, princ, "foobar", strlen("foobar"));
+    code = sync_chpass(data, ctx, princ, "foobar");
     is_int(0, code, "pwupdate_precommit_password succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
     queue = NULL;
@@ -208,7 +208,7 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Check failure when there's no queue directory. */
-    code = sync_chpass(data, ctx, princ, "foobar", strlen("foobar"));
+    code = sync_chpass(data, ctx, princ, "foobar");
     is_int(ENOENT, code, "sync_chpass fails with no queue");
     message = krb5_get_error_message(ctx, code);
     is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
@@ -247,7 +247,7 @@ main(void)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
     is_int(0, sync_init(ctx, &data), "sync_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
-    code = sync_chpass(data, ctx, princ, "foobar", strlen("foobar"));
+    code = sync_chpass(data, ctx, princ, "foobar");
     is_int(0, code, "sync_chpass succeeds");
     code = sync_status(data, ctx, princ, 0);
     is_int(0, code, "sync_status disable succeeds");

@@ -38,7 +38,7 @@ ad_password(kadm5_hook_modinfo *config, krb5_context ctx,
 {
     krb5_error_code code;
 
-    code = sync_ad_chpass(config, ctx, principal, password, strlen(password));
+    code = sync_ad_chpass(config, ctx, principal, password);
     if (code != 0)
         die_krb5(ctx, code, "AD password change for %s failed", user);
     notice("AD password change for %s succeeded", user);
