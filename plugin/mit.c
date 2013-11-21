@@ -115,7 +115,7 @@ static kadm5_ret_t
 modify(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
        kadm5_principal_ent_t entry, long mask)
 {
-    int enabled;
+    bool enabled;
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);

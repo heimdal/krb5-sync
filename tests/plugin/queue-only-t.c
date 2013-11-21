@@ -107,7 +107,7 @@ main(void)
     free(queue);
 
     /* Test queuing of enable. */
-    code = sync_status(config, ctx, princ, 1);
+    code = sync_status(config, ctx, princ, true);
     is_int(0, code, "sync_status enable succeeds");
     queue = NULL;
     now = time(NULL);
@@ -142,7 +142,7 @@ main(void)
     ok(unlink(queue) == 0, "Remove queued enable");
 
     /* Test queuing of disable. */
-    code = sync_status(config, ctx, princ, 0);
+    code = sync_status(config, ctx, princ, false);
     is_int(0, code, "sync_status disable succeeds");
     queue = NULL;
     now = time(NULL);

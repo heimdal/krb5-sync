@@ -127,7 +127,7 @@ main(void)
     if (fd < 0)
         sysbail("cannot create fake queue file");
     close(fd);
-    code = sync_status(data, ctx, princ, 1);
+    code = sync_status(data, ctx, princ, true);
     is_int(0, code, "sync_status enable succeeds");
     queue = NULL;
     now = time(NULL);
@@ -166,7 +166,7 @@ main(void)
      * Do the same thing for disables, which should still be blocked by the
      * same marker.
      */
-    code = sync_status(data, ctx, princ, 0);
+    code = sync_status(data, ctx, princ, false);
     is_int(0, code, "sync_status disable succeeds");
     queue = NULL;
     now = time(NULL);
@@ -214,7 +214,7 @@ main(void)
     is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
            0, "...with correct error message");
     krb5_free_error_message(ctx, message);
-    code = sync_status(data, ctx, princ, 0);
+    code = sync_status(data, ctx, princ, false);
     is_int(ENOENT, code, "sync_status disable fails with no queue");
     message = krb5_get_error_message(ctx, code);
     is_int(strncmp("cannot lock queue", message, strlen("cannot lock queue")),
@@ -249,7 +249,7 @@ main(void)
     ok(data != NULL, "...and data is non-NULL");
     code = sync_chpass(data, ctx, princ, "foobar");
     is_int(0, code, "sync_chpass succeeds");
-    code = sync_status(data, ctx, princ, 0);
+    code = sync_status(data, ctx, princ, false);
     is_int(0, code, "sync_status disable succeeds");
 
     /* Clean up. */

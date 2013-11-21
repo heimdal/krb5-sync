@@ -62,7 +62,7 @@ krb5_error_code sync_chpass(kadm5_hook_modinfo *, krb5_context,
 
 /* Handle an account status change. */
 krb5_error_code sync_status(kadm5_hook_modinfo *, krb5_context,
-                            krb5_principal, int enabled);
+                            krb5_principal, bool enabled);
 
 /* Password changing in Active Directory. */
 krb5_error_code sync_ad_chpass(kadm5_hook_modinfo *, krb5_context,
@@ -70,7 +70,7 @@ krb5_error_code sync_ad_chpass(kadm5_hook_modinfo *, krb5_context,
 
 /* Account status update in Active Directory. */
 krb5_error_code sync_ad_status(kadm5_hook_modinfo *, krb5_context,
-                               krb5_principal, int enabled);
+                               krb5_principal, bool enabled);
 
 /*
  * Returns true if the principal has only one component and two-component

@@ -261,7 +261,7 @@ ad_interact_sasl(LDAP *ld UNUSED, unsigned flags UNUSED,
  */
 krb5_error_code
 sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
-               krb5_principal principal, int enabled)
+               krb5_principal principal, bool enabled)
 {
     krb5_ccache ccache;
     krb5_principal ad_principal = NULL;

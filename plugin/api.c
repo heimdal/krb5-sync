@@ -253,7 +253,7 @@ queue:
  */
 krb5_error_code
 sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
-            krb5_principal principal, int enabled)
+            krb5_principal principal, bool enabled)
 {
     krb5_error_code code;
 

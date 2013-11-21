@@ -118,7 +118,7 @@ static krb5_error_code
 modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
        kadm5_principal_ent_t entry, uint32_t mask)
 {
-    int enabled;
+    bool enabled;
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
