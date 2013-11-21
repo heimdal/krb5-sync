@@ -6,7 +6,6 @@ plugin/queue-only
 plugin/queuing
 portable/asprintf
 portable/snprintf
-portable/strndup
 util/messages
 util/messages-krb5
 util/xmalloc

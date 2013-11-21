@@ -86,11 +86,10 @@ warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)' $(check_PROGRAMS)
 
 # The bits below are for the test suite, not for the main package.
-check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t \
-        tests/plugin/queue-only-t tests/plugin/queuing-t		  \
-        tests/portable/asprintf-t tests/portable/snprintf-t		  \
-        tests/portable/strndup-t tests/util/messages-krb5-t		  \
-        tests/util/messages-t tests/util/xmalloc
+check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t   \
+	tests/plugin/queue-only-t tests/plugin/queuing-t		    \
+	tests/portable/asprintf-t tests/portable/snprintf-t		    \
+	tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
 check_LIBRARIES = tests/tap/libtap.a
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
@@ -127,9 +126,6 @@ tests_portable_asprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
 tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
 	tests/portable/snprintf.c
 tests_portable_snprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
-tests_portable_strndup_t_SOURCES = tests/portable/strndup-t.c \
-	tests/portable/strndup.c
-tests_portable_strndup_t_LDADD = tests/tap/libtap.a portable/libportable.la
 tests_util_messages_krb5_t_LDFLAGS = $(KRB5_LDFLAGS)
 tests_util_messages_krb5_t_LDADD = tests/tap/libtap.a util/libutil.la \
 	portable/libportable.la $(KRB5_LIBS)

@@ -21,7 +21,6 @@
 /tests/plugin/queuing-t
 /tests/portable/asprintf-t
 /tests/portable/snprintf-t
-/tests/portable/strndup-t
 /tests/runtests
 /tests/util/concat-t
 /tests/util/messages-krb5-t
