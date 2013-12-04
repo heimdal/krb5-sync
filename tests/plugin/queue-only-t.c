@@ -182,7 +182,7 @@ main(void)
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Shut down the plugin. */
-    sync_close(config);
+    sync_close(ctx, config);
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);

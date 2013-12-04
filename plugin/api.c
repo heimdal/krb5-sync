@@ -76,7 +76,7 @@ sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
  * since we don't store any other local state.
  */
 void
-sync_close(kadm5_hook_modinfo *config)
+sync_close(krb5_context ctx UNUSED, kadm5_hook_modinfo *config)
 {
     free(config->ad_keytab);
     free(config->ad_principal);

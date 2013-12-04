@@ -57,9 +57,9 @@ init(krb5_context ctx, kadm5_hook_modinfo **data)
  * Shut down the plugin, freeing any internal resources.
  */
 static void
-fini(krb5_context ctx UNUSED, kadm5_hook_modinfo *data)
+fini(krb5_context ctx, kadm5_hook_modinfo *data)
 {
-    sync_close(data);
+    sync_close(ctx, data);
 }
 
 

@@ -223,7 +223,7 @@ main(void)
     krb5_free_error_message(ctx, message);
 
     /* Shut down the plugin. */
-    sync_close(data);
+    sync_close(ctx, data);
     free(wanted);
 
     /*
@@ -253,6 +253,7 @@ main(void)
     is_int(0, code, "sync_chpass succeeds");
     code = sync_status(data, ctx, princ, false);
     is_int(0, code, "sync_status disable succeeds");
+    sync_close(ctx, data);
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);

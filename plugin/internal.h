@@ -54,7 +54,7 @@ BEGIN_DECLS
 krb5_error_code sync_init(krb5_context, kadm5_hook_modinfo **);
 
 /* Free the internal plugin state. */
-void sync_close(kadm5_hook_modinfo *);
+void sync_close(krb5_context, kadm5_hook_modinfo *);
 
 /* Handle a password change. */
 krb5_error_code sync_chpass(kadm5_hook_modinfo *, krb5_context,

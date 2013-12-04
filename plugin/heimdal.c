@@ -63,9 +63,9 @@ init(krb5_context ctx, void **data)
  * Shut down the object, freeing any internal resources.
  */
 static void
-fini(krb5_context ctx UNUSED, void *data)
+fini(krb5_context ctx, void *data)
 {
-    sync_close(data);
+    sync_close(ctx, data);
 }
 
 
