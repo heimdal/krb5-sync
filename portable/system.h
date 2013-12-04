@@ -124,6 +124,9 @@ extern int snprintf(char *, size_t, const char *, ...)
 #if !HAVE_DECL_VSNPRINTF
 extern int vsnprintf(char *, size_t, const char *, va_list);
 #endif
+#if !HAVE_STRNDUP
+extern char *strndup(const char *, size_t);
+#endif
 
 /* Undo default visibility change. */
 #pragma GCC visibility pop
