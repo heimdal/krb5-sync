@@ -118,12 +118,10 @@ queue_prefix(krb5_context ctx, krb5_principal principal,
      * The first part of the queue file is the principal with the realm
      * stripped and any slashes converted to periods.
      */
-    code = krb5_unparse_name(ctx, principal, &user);
+    code = krb5_unparse_name_flags(ctx, principal,
+                                   KRB5_PRINCIPAL_UNPARSE_NO_REALM, &user);
     if (code != 0)
         return code;
-    p = strchr(user, '@');
-    if (p != NULL)
-        *p = '\0';
     while ((p = strchr(user, '/')) != NULL)
         *p = '.';
 
@@ -235,7 +233,6 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
                  const char *password)
 {
     char *prefix = NULL, *timestamp = NULL, *path = NULL, *user = NULL;
-    char *p;
     unsigned int i;
     krb5_error_code code;
     int lock = -1, fd = -1;
@@ -273,21 +270,11 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
             break;
     }
 
-    /*
-     * Get the username from the principal and chop off the realm, dealing
-     * properly with escaped @ characters.
-     */
-    code = krb5_unparse_name(ctx, principal, &user);
+    /* Get the username from the principal without the realm. */
+    code = krb5_unparse_name_flags(ctx, principal,
+                                   KRB5_PRINCIPAL_UNPARSE_NO_REALM, &user);
     if (code != 0)
         goto fail;
-    for (p = user; *p != '\0'; p++) {
-        if (p[0] == '\\' && p[1] != '\0') {
-            p++;
-        } else if (p[0] == '@') {
-            p[0] = '\0';
-            break;
-        }
-    }
 
     /* Write out the queue data (with hard-coded "ad" domain). */
     WRITE_CHECK(fd, user);
