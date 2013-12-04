@@ -128,6 +128,40 @@ sync_config_boolean(krb5_context ctx, const char *opt, bool *result)
 
 
 /*
+ * Load a list option from Kerberos appdefaults.  Takes the Kerberos context,
+ * the option, and the result location.  The option is read as a string and
+ * the split on spaces and tabs into a list.
+ *
+ * This requires an annoying workaround because one cannot specify a default
+ * value of NULL with MIT Kerberos, since MIT Kerberos unconditionally calls
+ * strdup on the default value.  There's also no way to determine if memory
+ * allocation failed while parsing or while setting the default value.
+ */
+krb5_error_code
+sync_config_list(krb5_context ctx, const char *opt, struct vector **result)
+{
+    realm_type realm;
+    char *value = NULL;
+
+    /* Obtain the string from [appdefaults]. */
+    realm = default_realm(ctx);
+    krb5_appdefault_string(ctx, "krb5-sync", realm, opt, "", &value);
+    free_default_realm(ctx, realm);
+
+    /* If we got something back, store it in result. */
+    if (value != NULL) {
+        if (value[0] != '\0') {
+            *result = sync_vector_split_multi(value, " \t", *result);
+            if (*result == NULL)
+                return sync_error_system(ctx, "cannot allocate memory");
+        }
+        krb5_free_string(ctx, value);
+    }
+    return 0;
+}
+
+
+/*
  * Load a string option from Kerberos appdefaults.  Takes the Kerberos
  * context, the option, and the result location.
  *

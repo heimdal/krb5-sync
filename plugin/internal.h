@@ -24,6 +24,13 @@
 typedef struct kadm5_hook_modinfo_st kadm5_hook_modinfo;
 #endif
 
+/* Used to store a list of strings, managed by the sync_vector_* functions. */
+struct vector {
+    size_t count;
+    size_t allocated;
+    char **strings;
+};
+
 /*
  * Local configuration information for the module.  This contains all the
  * parameters that are read from the krb5-sync sub-section of the appdefaults
@@ -36,7 +43,7 @@ typedef struct kadm5_hook_modinfo_st kadm5_hook_modinfo;
 struct kadm5_hook_modinfo_st {
     char *ad_admin_server;
     char *ad_base_instance;
-    char *ad_instances;
+    struct vector *ad_instances;
     char *ad_keytab;
     char *ad_ldap_base;
     char *ad_principal;
@@ -92,12 +99,40 @@ krb5_error_code sync_queue_write(kadm5_hook_modinfo *, krb5_context,
                                  const char *password);
 
 /*
+ * Manage vectors, which are counted lists of strings.  The functions that
+ * return a boolean return false if memory allocation fails.
+ */
+struct vector *sync_vector_new(void)
+    __attribute__((__malloc__));
+bool sync_vector_add(struct vector *, const char *string)
+    __attribute__((__nonnull__));
+void sync_vector_free(struct vector *)
+    __attribute__((__nonnull__));
+
+/*
+ * vector_split_multi splits on a set of characters.  If the vector argument
+ * is NULL, a new vector is allocated; otherwise, the provided one is reused.
+ * Returns NULL on memory allocation failure, after which the provided vector
+ * may have been modified to only have partial results.
+ *
+ * Empty strings will yield zero-length vectors.  Adjacent delimiters are
+ * treated as a single delimiter by vector_split_multi.  Any leading or
+ * trailing delimiters are ignored, so this function will never create
+ * zero-length strings (similar to the behavior of strtok).
+ */
+struct vector *sync_vector_split_multi(const char *string, const char *seps,
+                                       struct vector *)
+    __attribute__((__nonnull__(1, 2)));
+
+/*
  * Obtain configuration settings from krb5.conf.  These are wrappers around
  * the krb5_appdefault_* APIs that handle setting the section name, obtaining
  * the local default realm and using it to find settings, and doing any
  * necessary conversion.
  */
 void sync_config_boolean(krb5_context, const char *, bool *)
+    __attribute__((__nonnull__));
+krb5_error_code sync_config_list(krb5_context, const char *, struct vector **)
     __attribute__((__nonnull__));
 void sync_config_string(krb5_context, const char *, char **)
     __attribute__((__nonnull__));

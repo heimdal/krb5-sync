@@ -54,7 +54,7 @@ sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
     sync_config_string(ctx, "ad_ldap_base", &config->ad_ldap_base);
 
     /* Get allowed instances from krb5.conf. */
-    sync_config_string(ctx, "ad_instances", &config->ad_instances);
+    sync_config_list(ctx, "ad_instances", &config->ad_instances);
 
     /* See if we're propagating an instance to the base account in AD. */
     sync_config_string(ctx, "ad_base_instance", &config->ad_base_instance);
@@ -78,53 +78,33 @@ sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
 void
 sync_close(krb5_context ctx UNUSED, kadm5_hook_modinfo *config)
 {
-    free(config->ad_keytab);
-    free(config->ad_principal);
-    free(config->ad_realm);
     free(config->ad_admin_server);
     free(config->ad_base_instance);
+    sync_vector_free(config->ad_instances);
+    free(config->ad_keytab);
+    free(config->ad_ldap_base);
+    free(config->ad_principal);
+    free(config->ad_realm);
     free(config->queue_dir);
     free(config);
 }
 
 
 /*
- * Given the list of allowed principals as a space-delimited string and the
- * instance of a principal, returns true if that instance is allowed and false
- * otherwise.
+ * Given the configuration and the instance of a principal, returns true if
+ * that instance is allowed and false otherwise.
  */
 static bool
-instance_allowed(const char *allowed, const char *instance)
+instance_allowed(kadm5_hook_modinfo *config, const char *instance)
 {
-    const char *p, *i, *end;
-    bool checking, okay;
+    size_t i;
 
-    if (allowed == NULL || instance == NULL)
+    if (config->ad_instances == NULL || instance == NULL)
         return false;
-    i = instance;
-    end = i + strlen(instance);
-    checking = true;
-    okay = false;
-    for (p = allowed; *p != '\0'; p++) {
-        if (*p == ' ') {
-            if (okay && i == end)
-                break;
-            okay = false;
-            checking = true;
-            i = instance;
-        } else if (checking && (i == end || *p != *i)) {
-            okay = false;
-            checking = false;
-            i = instance;
-        } else if (checking && *p == *i) {
-            okay = true;
-            i++;
-        }
-    }
-    if (okay && (*p == '\0' || *p == ' ') && i == end)
-        return true;
-    else
-        return false;
+    for (i = 0; i < config->ad_instances->count; i++)
+        if (strcmp(config->ad_instances->strings[i], instance) == 0)
+            return true;
+    return false;
 }
 
 
@@ -185,7 +165,7 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
         const char *instance;
 
         instance = krb5_principal_get_comp_string(ctx, principal, 1);
-        if (!instance_allowed(config->ad_instances, instance)) {
+        if (!instance_allowed(config, instance)) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
                 display = NULL;
