@@ -141,17 +141,21 @@ instance_allowed(const char *allowed, const char *instance)
  * this change because the instance's password is propagated as the base
  * account in Active Directory instead.
  *
- * Returns true if we should proceed, false otherwise.  If we shouldn't
- * proceed, logs a debug-level message to syslog.
+ * Sets the allowed flag based on whether we should proceed, and returns a
+ * Kerberos status code for more serious errors.  If we shouldn't proceed,
+ * logs a debug-level message to syslog.
  */
-static int
+static krb5_error_code
 principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
-                  krb5_principal principal, bool pwchange)
+                  krb5_principal principal, bool pwchange, bool *allowed)
 {
     char *display;
     krb5_error_code code;
     int ncomp;
     bool exists = false;
+
+    /* Default to propagating. */
+    *allowed = true;
 
     /* Get the number of components. */
     ncomp = krb5_principal_get_num_comp(ctx, principal);
@@ -163,7 +167,9 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
     if (pwchange && ncomp == 1 && config->ad_base_instance != NULL) {
         code = sync_instance_exists(ctx, principal, config->ad_base_instance,
                                     &exists);
-        if (code != 0 || !exists) {
+        if (code != 0)
+            return code;
+        if (exists) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
                 display = NULL;
@@ -173,25 +179,25 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
                    config->ad_base_instance);
             if (display != NULL)
                 krb5_free_unparsed_name(ctx, display);
+            *allowed = false;
         }
-        return exists;
     } else if (ncomp > 1) {
         const char *instance;
 
         instance = krb5_principal_get_comp_string(ctx, principal, 1);
-        if (instance_allowed(config->ad_instances, instance))
-            return 1;
-        code = krb5_unparse_name(ctx, principal, &display);
-        if (code != 0)
-            display = NULL;
-        syslog(LOG_DEBUG, "account synchronization skipping principal \"%s\""
-               " with non-null instance for Active Directory",
-               display != NULL ? display : "???");
-        if (display != NULL)
-            krb5_free_unparsed_name(ctx, display);
-        return 0;
+        if (!instance_allowed(config->ad_instances, instance)) {
+            code = krb5_unparse_name(ctx, principal, &display);
+            if (code != 0)
+                display = NULL;
+            syslog(LOG_DEBUG, "account synchronization skipping principal"
+                   " \"%s\" with non-null instance for Active Directory",
+                   display != NULL ? display : "???");
+            if (display != NULL)
+                krb5_free_unparsed_name(ctx, display);
+            *allowed = false;
+        }
     }
-    return 1;
+    return 0;
 }
 
 
@@ -216,12 +222,21 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
 {
     krb5_error_code code;
     const char *message;
+    bool allowed = false;
 
     if (config->ad_realm == NULL)
         return 0;
     if (password == NULL)
         return 0;
-    if (!principal_allowed(config, ctx, principal, true))
+    code = principal_allowed(config, ctx, principal, true, &allowed);
+    if (code != 0) {
+        message = krb5_get_error_message(ctx, code);
+        syslog(LOG_WARNING, "krb5-sync: cannot check if password change"
+               " should be propagated: %s", message);
+        krb5_free_error_message(ctx, message);
+        return code;
+    }
+    if (!allowed)
         return 0;
     if (sync_queue_conflict(config, ctx, principal, "ad", "password"))
         goto queue;
@@ -257,6 +272,8 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
             krb5_principal principal, bool enabled)
 {
     krb5_error_code code;
+    const char *message;
+    bool allowed;
 
     if (config->ad_admin_server == NULL
         || config->ad_keytab == NULL
@@ -264,7 +281,15 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
         || config->ad_principal == NULL
         || config->ad_realm == NULL)
         return 0;
-    if (!principal_allowed(config, ctx, principal, false))
+    code = principal_allowed(config, ctx, principal, true, &allowed);
+    if (code != 0) {
+        message = krb5_get_error_message(ctx, code);
+        syslog(LOG_WARNING, "krb5-sync: cannot check if password change"
+               " should be propagated: %s", message);
+        krb5_free_error_message(ctx, message);
+        return code;
+    }
+    if (!allowed)
         return 0;
     if (sync_queue_conflict(config, ctx, principal, "ad", "enable"))
         goto queue;
