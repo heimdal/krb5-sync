@@ -93,38 +93,38 @@ sync_close(kadm5_hook_modinfo *config)
  * instance of a principal, returns true if that instance is allowed and false
  * otherwise.
  */
-static int
+static bool
 instance_allowed(const char *allowed, const char *instance)
 {
     const char *p, *i, *end;
-    int checking, okay;
+    bool checking, okay;
 
     if (allowed == NULL || instance == NULL)
-        return 0;
+        return false;
     i = instance;
     end = i + strlen(instance);
-    checking = 1;
-    okay = 0;
+    checking = true;
+    okay = false;
     for (p = allowed; *p != '\0'; p++) {
         if (*p == ' ') {
             if (okay && i == end)
                 break;
-            okay = 0;
-            checking = 1;
+            okay = false;
+            checking = true;
             i = instance;
         } else if (checking && (i == end || *p != *i)) {
-            okay = 0;
-            checking = 0;
+            okay = false;
+            checking = false;
             i = instance;
         } else if (checking && *p == *i) {
-            okay = 1;
+            okay = true;
             i++;
         }
     }
     if (okay && (*p == '\0' || *p == ' ') && i == end)
-        return 1;
+        return true;
     else
-        return 0;
+        return false;
 }
 
 
