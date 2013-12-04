@@ -97,12 +97,12 @@ unlock_queue(int fd)
 
 
 /*
- * Given a Kerberos principal, a context, a domain, and an operation, generate
- * the prefix for queue files as a newly allocated string.  Returns a Kerberos
+ * Given a Kerberos principal, a context, and an operation, generate the
+ * prefix for queue files as a newly allocated string.  Returns a Kerberos
  * status code.
  */
 static krb5_error_code
-queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
+queue_prefix(krb5_context ctx, krb5_principal principal,
              const char *operation, char **prefix)
 {
     char *user = NULL;
@@ -113,6 +113,11 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
     /* Enable and disable should go into the same queue. */
     if (strcmp(operation, "disable") == 0)
         operation = "enable";
+
+    /*
+     * The first part of the queue file is the principal with the realm
+     * stripped and any slashes converted to periods.
+     */
     code = krb5_unparse_name(ctx, principal, &user);
     if (code != 0)
         return code;
@@ -121,7 +126,13 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
         *p = '\0';
     while ((p = strchr(user, '/')) != NULL)
         *p = '.';
-    if (asprintf(prefix, "%s-%s-%s-", user, domain, operation) < 0) {
+
+    /*
+     * Add to that the domain and operation.  The domain is currently always
+     * forced to ad (afs used to be possible, but that support was dropped),
+     * but retained for possible future use.
+     */
+    if (asprintf(prefix, "%s-ad-%s-", user, operation) < 0) {
         oerrno = errno;
         krb5_free_unparsed_name(ctx, user);
         errno = oerrno;
@@ -161,15 +172,15 @@ queue_timestamp(krb5_context ctx, char **timestamp)
 
 
 /*
- * Given a Kerberos context, a principal (assumed to have no instance), a
- * domain (currently always "ad"), and an operation, check whether there are
- * any existing queued actions for that combination, storing the result in the
- * final boolean variable.  Returns a Kerberos status code.
+ * Given a Kerberos context, a principal (assumed to have no instance), and an
+ * operation, check whether there are any existing queued actions for that
+ * combination, storing the result in the final boolean variable.  Returns a
+ * Kerberos status code.
  */
 krb5_error_code
 sync_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
-                    krb5_principal principal, const char *domain,
-                    const char *operation, bool *conflict)
+                    krb5_principal principal, const char *operation,
+                    bool *conflict)
 {
     int lock = -1;
     char *prefix = NULL;
@@ -178,10 +189,11 @@ sync_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
     krb5_error_code code;
 
     if (config->queue_dir == NULL)
-        return -1;
-    code = queue_prefix(ctx, principal, domain, operation, &prefix);
+        return sync_error_config(ctx, "configuration setting queue_dir"
+                                 " missing");
+    code = queue_prefix(ctx, principal, operation, &prefix);
     if (code != 0)
-        goto fail;
+        return code;
     code = lock_queue(config, ctx, &lock);
     if (code != 0)
         goto fail;
@@ -214,13 +226,13 @@ fail:
 
 /*
  * Queue an action.  Takes the plugin configuration, the Kerberos context, the
- * principal, the domain, the operation, and a password (which may be NULL for
- * enable and disable).  Returns a Kerberos error code.
+ * principal, the operation, and a password (which may be NULL for enable and
+ * disable).  Returns a Kerberos error code.
  */
 krb5_error_code
 sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
-                 krb5_principal principal, const char *domain,
-                 const char *operation, const char *password)
+                 krb5_principal principal, const char *operation,
+                 const char *password)
 {
     char *prefix = NULL, *timestamp = NULL, *path = NULL, *user = NULL;
     char *p;
@@ -231,7 +243,7 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
     if (config->queue_dir == NULL)
         return sync_error_config(ctx, "configuration setting queue_dir"
                                  " missing");
-    code = queue_prefix(ctx, principal, domain, operation, &prefix);
+    code = queue_prefix(ctx, principal, operation, &prefix);
     if (code != 0)
         return code;
 
@@ -277,11 +289,9 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
         }
     }
 
-    /* Write out the queue data. */
+    /* Write out the queue data (with hard-coded "ad" domain). */
     WRITE_CHECK(fd, user);
-    WRITE_CHECK(fd, "\n");
-    WRITE_CHECK(fd, domain);
-    WRITE_CHECK(fd, "\n");
+    WRITE_CHECK(fd, "\nad\n");
     WRITE_CHECK(fd, operation);
     WRITE_CHECK(fd, "\n");
     if (password != NULL) {

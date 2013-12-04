@@ -239,8 +239,7 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     }
     if (!allowed)
         return 0;
-    code = sync_queue_conflict(config, ctx, principal, "ad", "enable",
-                               &conflict);
+    code = sync_queue_conflict(config, ctx, principal, "enable", &conflict);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
         syslog(LOG_WARNING, "krb5-sync: cannot check for queue conflicts: %s",
@@ -263,8 +262,7 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     return 0;
 
 queue:
-    return sync_queue_write(config, ctx, principal, "ad", "password",
-                            password);
+    return sync_queue_write(config, ctx, principal, "password", password);
 }
 
 
@@ -302,8 +300,7 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
     }
     if (!allowed)
         return 0;
-    code = sync_queue_conflict(config, ctx, principal, "ad", "enable",
-                               &conflict);
+    code = sync_queue_conflict(config, ctx, principal, "enable", &conflict);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
         syslog(LOG_WARNING, "krb5-sync: cannot check for queue conflicts: %s",
@@ -321,6 +318,6 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
     return 0;
 
 queue:
-    return sync_queue_write(config, ctx, principal, "ad",
+    return sync_queue_write(config, ctx, principal,
                             enabled ? "enable" : "disable", NULL);
 }

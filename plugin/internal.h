@@ -83,13 +83,13 @@ krb5_error_code sync_instance_exists(krb5_context, krb5_principal,
 
 /* Returns true if there is a queue conflict for this operation. */
 krb5_error_code sync_queue_conflict(kadm5_hook_modinfo *, krb5_context,
-                                    krb5_principal, const char *domain,
-                                    const char *operation, bool *conflict);
+                                    krb5_principal, const char *operation,
+                                    bool *conflict);
 
 /* Writes an operation to the queue. */
 krb5_error_code sync_queue_write(kadm5_hook_modinfo *, krb5_context,
-                                 krb5_principal, const char *domain,
-                                 const char *operation, const char *password);
+                                 krb5_principal, const char *operation,
+                                 const char *password);
 
 /*
  * Obtain configuration settings from krb5.conf.  These are wrappers around
