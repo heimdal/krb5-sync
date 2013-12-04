@@ -216,64 +216,95 @@ CONFIGURATION
 
   It is possible to add realm-specific configuration here following the
   normal krb5.conf syntax, but be aware that the plugin only looks for
-  configuration for the *default* realm, not for the realm of the affected
+  configuration for the default realm, not for the realm of the affected
   principal.  In other words, it's not possible to have multiple
   configurations based on the realm of the principal affected.
 
-  The ad_keytab option specifies the location of a keytab for
-  authenticating to the other realm, the ad_principal option specifies the
-  principal to authenticate as (using the key in the srvtab or keytab),
-  and the ad_realm option specifies the foreign realm.  These options must
-  be set.
+  The configuration options are:
 
-  ad_admin_server is the host to contact via LDAP to push account status
-  changes.  ad_ldap_base specifies the root of the tree inside Active
-  Directory where account information is stored.  These options must be
-  set in order to synchronize status changes, but can be omitted to only
-  synchronize passwords.
+  ad_admin_server
 
-  The ad_instances option specifies which instances have passwords and
-  account status propagated to that environment.  By default, only
-  principals no instances (single-part principals) are propagated.  You
-  can list a specific set of instances (space-separated), which will then
-  also be propagated to Active Directory.  The ad_instances option is only
-  used by the plugin and is not used by the command-line utility.  Any
-  principals passed to the command-line utility will be acted on, even if
-  they have non-empty instances.
+      The host to contact via LDAP to push account status changes.  If not
+      set, status changes will not be synchronized, only password changes.
 
-  If ad_base_instance is set, then any password change for a
-  single-component principal (such as user@EXAMPLE.COM) will be handled
-  somewhat specially.  First, the instance set in ad_base_instance will be
-  added and a check against the local Kerberos database will be done to
-  see if that instance (in this case, user/windows@EXAMPLE.COM) exists.
-  If it doesn't, the password change is processed as normal.  If it does,
-  the password change will be ignored.  Instead, if the password for
-  user/windows@EXAMPLE.COM is changed, that will be propagated as the
-  password for the main account in Active Directory (in this case,
-  user@WINDOWS.EXAMPLE.COM).  This allows the Active Directory principal
-  to be linked to a separate instance, rather than the main account, in
-  the MIT or Heimdal Kerberos realm for particular users.
+  ad_base_instance
 
-  If ad_realm is not set, the plugin will not attempt to push changes to
-  Active Directory, so you can deactivate this plugin while still loading
-  it by removing that part of the configuration.
+      If ad_base_instance is set, then any password change for a
+      single-component principal (such as user@EXAMPLE.COM) will be
+      handled somewhat specially.
 
-  The ad_queue_only option controls whether we attempt to push changes
-  directly to Active Directory or always queue them.  It can be set to
-  true to write all changes to the queue where they can be processed later
-  (by krb5-sync-backend, for example).  This may be helpful if the delay
-  from pushing changes to Active Directory causes problems for clients
-  (such as kpasswd clients, which are aggressive about retries and don't
-  like long delays).
+      First, the instance set in ad_base_instance will be added and a
+      check against the local Kerberos database will be done to see if
+      that instance (in this case, user/windows@EXAMPLE.COM) exists.  If
+      it doesn't, the password change is processed as normal.  If it does,
+      the password change will be ignored.  Instead, if the password for
+      user/windows@EXAMPLE.COM is changed, that will be propagated as the
+      password for the main account in Active Directory (in this case,
+      user@WINDOWS.EXAMPLE.COM).
 
-  The queue_dir setting specifies where to queue changes that couldn't be
-  made.  If password changes fail in AD, the whole password change is
-  failed, but status changes are done before synchronization with AD is
-  attempted.  The queuing mechanism is used to be sure that failed changes
-  aren't lost and can be investigated further.  For more information, see
-  the man page for krb5-sync and krb5-sync-backend.  If you use a queue
-  directory other than the one given, you will need to change the
-  beginning of the krb5-sync-backend script as well.
+      This allows the Active Directory principal to be linked to a
+      separate instance, rather than the main account, in the MIT or
+      Heimdal Kerberos realm for particular users.
+
+  ad_instances
+
+      Specifies which instances should have passwords and account status
+      propagated to the Active Directory environment.  By default, only
+      principals no instances (single-part principals) are propagated.
+      You can list a specific set of instances (space-separated), which
+      will then also be propagated to Active Directory.
+
+      The ad_instances option is only used by the plugin and is not used
+      by the command-line utility.  Any principals passed to the
+      command-line utility will be acted on, even if they have non-empty
+      instances.
+
+  ad_keytab
+
+      Specifies the location of a keytab for authenticating to the Active
+      Directory other realm.  Must be set.
+
+  ad_ldap_base
+
+      Specifies the root DN of the tree inside Active Directory where
+      account information is stored.  If not set, status changes will not
+      be synchronized, only password changes.
+
+  ad_principal
+
+      Specifies the principal to authenticate as (using the key in the
+      keytab).  Must be set.
+
+  ad_queue_only
+
+      Controls whether we attempt to push changes directly to Active
+      Directory or always queue them.  It can be set to true to write all
+      changes to the queue where they can be processed later (by
+      krb5-sync-backend, for example).  This may be helpful if the delay
+      from pushing changes to Active Directory causes problems for clients
+      (such as kpasswd clients, which are aggressive about retries and
+      don't like long delays).
+
+  ad_realm
+
+      Specifies the foreign realm.  If ad_realm is not set, the plugin
+      will not attempt to push changes to Active Directory, so you can
+      deactivate this plugin while still loading it by removing that part
+      of the configuration.
+
+  queue_dir
+
+      Specifies where to queue changes that couldn't be made.  If password
+      changes fail in AD, the whole password change is failed, but status
+      changes are done before synchronization with AD is attempted.  The
+      queuing mechanism is used to be sure that failed changes aren't lost
+      and can be investigated further.  For more information, see the man
+      page for krb5-sync and krb5-sync-backend.  Must be set.
+
+      A setting of /var/spool/krb5-sync is recommended, since that's the
+      default path in krb5-sync-backend.  If you use a different path,
+      you'll want to either change the path in that script or always use
+      the -d option.
 
   With MIT Kerberos 1.9 or later, support for kadmind plugins is built in.
   To load this plugin, add the following to the kdc.conf or krb5.conf file
