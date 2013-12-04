@@ -223,6 +223,7 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     krb5_error_code code;
     const char *message;
     bool allowed = false;
+    bool conflict = true;
 
     if (config->ad_realm == NULL)
         return 0;
@@ -238,7 +239,16 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     }
     if (!allowed)
         return 0;
-    if (sync_queue_conflict(config, ctx, principal, "ad", "password"))
+    code = sync_queue_conflict(config, ctx, principal, "ad", "enable",
+                               &conflict);
+    if (code != 0) {
+        message = krb5_get_error_message(ctx, code);
+        syslog(LOG_WARNING, "krb5-sync: cannot check for queue conflicts: %s",
+               message);
+        krb5_free_error_message(ctx, message);
+        return code;
+    }
+    if (conflict)
         goto queue;
     if (config->ad_queue_only)
         goto queue;
@@ -273,7 +283,8 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
 {
     krb5_error_code code;
     const char *message;
-    bool allowed;
+    bool allowed = false;
+    bool conflict = true;
 
     if (config->ad_admin_server == NULL
         || config->ad_keytab == NULL
@@ -291,7 +302,16 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
     }
     if (!allowed)
         return 0;
-    if (sync_queue_conflict(config, ctx, principal, "ad", "enable"))
+    code = sync_queue_conflict(config, ctx, principal, "ad", "enable",
+                               &conflict);
+    if (code != 0) {
+        message = krb5_get_error_message(ctx, code);
+        syslog(LOG_WARNING, "krb5-sync: cannot check for queue conflicts: %s",
+               message);
+        krb5_free_error_message(ctx, message);
+        return code;
+    }
+    if (conflict)
         goto queue;
     if (config->ad_queue_only)
         goto queue;

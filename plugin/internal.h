@@ -82,8 +82,9 @@ krb5_error_code sync_instance_exists(krb5_context, krb5_principal,
                                      const char *instance, bool *exists);
 
 /* Returns true if there is a queue conflict for this operation. */
-int sync_queue_conflict(kadm5_hook_modinfo *, krb5_context, krb5_principal,
-                        const char *domain, const char *operation);
+krb5_error_code sync_queue_conflict(kadm5_hook_modinfo *, krb5_context,
+                                    krb5_principal, const char *domain,
+                                    const char *operation, bool *conflict);
 
 /* Writes an operation to the queue. */
 krb5_error_code sync_queue_write(kadm5_hook_modinfo *, krb5_context,

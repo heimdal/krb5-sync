@@ -20,6 +20,7 @@
 #include <portable/system.h>
 
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/file.h>
 #include <time.h>
@@ -97,15 +98,16 @@ unlock_queue(int fd)
 
 /*
  * Given a Kerberos principal, a context, a domain, and an operation, generate
- * the prefix for queue files as a newly allocated string.  Returns NULL on
- * failure.
+ * the prefix for queue files as a newly allocated string.  Returns a Kerberos
+ * status code.
  */
-static char *
+static krb5_error_code
 queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
-             const char *operation)
+             const char *operation, char **prefix)
 {
-    char *user = NULL, *prefix = NULL;
+    char *user = NULL;
     char *p;
+    int oerrno;
     krb5_error_code code;
 
     /* Enable and disable should go into the same queue. */
@@ -113,88 +115,92 @@ queue_prefix(krb5_context ctx, krb5_principal principal, const char *domain,
         operation = "enable";
     code = krb5_unparse_name(ctx, principal, &user);
     if (code != 0)
-        return NULL;
+        return code;
     p = strchr(user, '@');
     if (p != NULL)
         *p = '\0';
     while ((p = strchr(user, '/')) != NULL)
         *p = '.';
-    if (asprintf(&prefix, "%s-%s-%s-", user, domain, operation) < 0) {
+    if (asprintf(prefix, "%s-%s-%s-", user, domain, operation) < 0) {
+        oerrno = errno;
         krb5_free_unparsed_name(ctx, user);
-        return NULL;
+        errno = oerrno;
+        return sync_error_system(ctx, "cannot create queue prefix");
     }
     krb5_free_unparsed_name(ctx, user);
-    return prefix;
+    return 0;
 }
 
 
 /*
- * Generate a timestamp from the current date and return it as a newly
- * allocated string, or NULL on failure.  Uses the ISO timestamp format.
+ * Generate a timestamp from the current date and store it in the argument.
+ * Uses the ISO timestamp format.  Returns a Kerberos status code.
  */
-static char *
-queue_timestamp(void)
+static krb5_error_code
+queue_timestamp(krb5_context ctx, char **timestamp)
 {
     struct tm now;
     time_t seconds;
-    char *timestamp = NULL;
     int status;
 
     seconds = time(NULL);
     if (seconds == (time_t) -1)
-        return NULL;
+        return sync_error_system(ctx, "cannot get current time");
     if (gmtime_r(&seconds, &now) == NULL)
-        return NULL;
+        return sync_error_system(ctx, "cannot get broken-down time");
     now.tm_mon++;
     now.tm_year += 1900;
-    status = asprintf(&timestamp, "%04d%02d%02dT%02d%02d%02dZ", now.tm_year,
+    status = asprintf(timestamp, "%04d%02d%02dT%02d%02d%02dZ", now.tm_year,
                       now.tm_mon, now.tm_mday, now.tm_hour, now.tm_min,
                       now.tm_sec);
     if (status < 0)
-        return NULL;
-    return timestamp;
+        return sync_error_system(ctx, "cannot create timestamp");
+    else
+        return 0;
 }
 
 
 /*
  * Given a Kerberos context, a principal (assumed to have no instance), a
- * domain (afs or ad), and an operation, check whether there are any existing
- * queued actions for that combination.  Returns 1 if there are, 0 otherwise.
- * On failure, return -1 (still true but distinguished).
+ * domain (currently always "ad"), and an operation, check whether there are
+ * any existing queued actions for that combination, storing the result in the
+ * final boolean variable.  Returns a Kerberos status code.
  */
-int
+krb5_error_code
 sync_queue_conflict(kadm5_hook_modinfo *config, krb5_context ctx,
                     krb5_principal principal, const char *domain,
-                    const char *operation)
+                    const char *operation, bool *conflict)
 {
     int lock = -1;
     char *prefix = NULL;
     DIR *queue = NULL;
     struct dirent *entry;
-    int found = 0;
     krb5_error_code code;
 
     if (config->queue_dir == NULL)
         return -1;
-    prefix = queue_prefix(ctx, principal, domain, operation);
-    if (prefix == NULL)
-        return -1;
+    code = queue_prefix(ctx, principal, domain, operation, &prefix);
+    if (code != 0)
+        goto fail;
     code = lock_queue(config, ctx, &lock);
     if (code != 0)
         goto fail;
     queue = opendir(config->queue_dir);
-    if (queue == NULL)
+    if (queue == NULL) {
+        code = sync_error_system(ctx, "cannot open %s", config->queue_dir);
         goto fail;
+    }
+    *conflict = false;
     while ((entry = readdir(queue)) != NULL) {
         if (strncmp(prefix, entry->d_name, strlen(prefix)) == 0) {
-            found = 1;
+            *conflict = true;
             break;
         }
     }
     unlock_queue(lock);
     closedir(queue);
     free(prefix);
-    return found;
+    return 0;
 
 fail:
     if (lock >= 0)
@@ -202,7 +208,7 @@ fail:
     if (queue != NULL)
         closedir(queue);
     free(prefix);
-    return -1;
+    return code;
 }
 
 
@@ -225,9 +231,9 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
     if (config->queue_dir == NULL)
         return sync_error_config(ctx, "configuration setting queue_dir"
                                  " missing");
-    prefix = queue_prefix(ctx, principal, domain, operation);
-    if (prefix == NULL)
-        return sync_error_system(ctx, "cannot generate queue prefix");
+    code = queue_prefix(ctx, principal, domain, operation, &prefix);
+    if (code != 0)
+        return code;
 
     /*
      * Lock the queue before the timestamp so that another writer coming up
@@ -236,11 +242,9 @@ sync_queue_write(kadm5_hook_modinfo *config, krb5_context ctx,
     code = lock_queue(config, ctx, &lock);
     if (code != 0)
         goto fail;
-    timestamp = queue_timestamp();
-    if (timestamp == NULL) {
-        code = sync_error_system(ctx, "cannot generate timestamp");
+    code = queue_timestamp(ctx, &timestamp);
+    if (code != 0)
         goto fail;
-    }
 
     /* Find a unique filename for the queue file. */
     for (i = 0; i < MAX_QUEUE; i++) {
