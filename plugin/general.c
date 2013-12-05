@@ -204,22 +204,31 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     bool allowed = false;
     bool conflict = true;
 
+    /* Do nothing if we don't have required configuration. */
     if (config->ad_realm == NULL)
         return 0;
+
+    /* If there was no password, this is probably a key randomization. */
     if (password == NULL)
         return 0;
+
+    /* Check if this principal should be synchronized. */
     code = principal_allowed(config, ctx, principal, true, &allowed);
     if (code != 0)
         return code;
     if (!allowed)
         return 0;
-    code = sync_queue_conflict(config, ctx, principal, "enable", &conflict);
+
+    /* Check if there was a queue conflict or if we always queue. */
+    code = sync_queue_conflict(config, ctx, principal, "password", &conflict);
     if (code != 0)
         return code;
     if (conflict)
         goto queue;
     if (config->ad_queue_only)
         goto queue;
+
+    /* Do the password change, and queue if it fails. */
     code = sync_ad_chpass(config, ctx, principal, password);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
@@ -253,17 +262,22 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
     bool allowed = false;
     bool conflict = true;
 
+    /* Do nothing if we don't have the required configuration. */
     if (config->ad_admin_server == NULL
         || config->ad_keytab == NULL
         || config->ad_ldap_base == NULL
         || config->ad_principal == NULL
         || config->ad_realm == NULL)
         return 0;
+
+    /* Check if this principal should be synchronized. */
     code = principal_allowed(config, ctx, principal, true, &allowed);
     if (code != 0)
         return code;
     if (!allowed)
         return 0;
+
+    /* Check if there was a queue conflict or if we always queue. */
     code = sync_queue_conflict(config, ctx, principal, "enable", &conflict);
     if (code != 0)
         return code;
@@ -271,6 +285,8 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
         goto queue;
     if (config->ad_queue_only)
         goto queue;
+
+    /* Synchronize the status. */
     code = sync_ad_status(config, ctx, principal, enabled);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
