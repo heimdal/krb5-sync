@@ -140,3 +140,17 @@ tests_util_xmalloc_LDADD = util/libutil.la portable/libportable.la
 
 check-local: $(check_PROGRAMS)
 	cd tests && ./runtests -l $(abs_top_srcdir)/tests/TESTS
+
+# Used by maintainers to run the main test suite under valgrind.  Suppress
+# the xmalloc and pod-spelling tests because the former won't work properly
+# under valgrind (due to increased memory usage) and the latter is pointless
+# to run under valgrind.
+check-valgrind: $(check_PROGRAMS)
+	rm -rf $(abs_top_builddir)/tmp-valgrind
+	mkdir $(abs_top_builddir)/tmp-valgrind
+	env RRA_MAINTAINER_TESTS= valgrind --leak-check=full	\
+	    --show-reachable=yes --trace-children=yes		\
+	    --log-file=$(abs_top_builddir)/tmp-valgrind/log.%p	\
+	    --suppressions=tests/data/valgrind.supp		\
+	    --trace-children-skip="/bin/sh,*/cat,*/diff,*/expr,*/grep,*/mkdir,*/rm,*/rmdir,*/sed,*/sleep,*/true,*/wc,*/docs/*-t,*/perl/*-t,*/data/make-krb5-conf" \
+	    tests/runtests -l '$(abs_top_srcdir)/tests/TESTS'
