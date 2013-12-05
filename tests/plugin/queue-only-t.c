@@ -20,6 +20,8 @@
 
 #include <plugin/internal.h>
 #include <tests/tap/basic.h>
+#include <tests/tap/kerberos.h>
+#include <tests/tap/process.h>
 #include <tests/tap/string.h>
 #include <tests/tap/sync.h>
 
@@ -27,37 +29,52 @@
 int
 main(void)
 {
-    char *tmpdir, *krb5conf, *env;
+    char *path, *tmpdir, *krb5_config;
+    char *setup_argv[6];
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
     kadm5_hook_modinfo *config;
 
+    /* Define the plan. */
+    plan(23);
+
+    /* Set up a temporary directory and queue relative to it. */
+    path = test_file_path("data/default.conf");
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
         sysbail("cannot cd to %s", tmpdir);
-    krb5conf = test_file_path("data/queue.conf");
-    if (krb5conf == NULL)
-        bail("cannot find tests/data/queue.conf");
     if (mkdir("queue", 0777) < 0)
         sysbail("cannot mkdir queue");
-    basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
-    if (putenv(env) < 0)
-        sysbail("cannot set KRB5_CONFIG");
+
+    /* Set up our krb5.conf with ad_queue_only set. */
+    setup_argv[0] = test_file_path("data/make-krb5-conf");
+    if (setup_argv[0] == NULL)
+        bail("cannot find data/make-krb5-conf in the test suite");
+    setup_argv[1] = path;
+    setup_argv[2] = tmpdir;
+    setup_argv[3] = (char *) "ad_queue_only";
+    setup_argv[4] = (char *) "true";
+    setup_argv[5] = NULL;
+    run_setup((const char **) setup_argv);
+
+    /* Point KRB5_CONFIG at the newly-generated krb5.conf file. */
+    basprintf(&krb5_config, "KRB5_CONFIG=%s/krb5.conf", tmpdir);
+    putenv(krb5_config);
+
+    /* Obtain a new Kerberos context with that krb5.conf file. */
     code = krb5_init_context(&ctx);
     if (code != 0)
-        bail("cannot create Kerberos context (%d)", (int) code);
-    code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
-    if (code != 0)
-        bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
-
-    plan(23);
+        bail_krb5(ctx, code, "cannot initialize Kerberos context");
 
     /* Test init. */
     is_int(0, sync_init(ctx, &config), "sync_init succeeds");
     ok(config != NULL, "...and config is non-NULL");
 
     /* Create a password change and be sure it's queued. */
+    code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test@EXAMPLE.COM");
     code = sync_chpass(config, ctx, princ, "foobar");
     is_int(0, code, "sync_chpass succeeds");
     sync_queue_check_password("queue", "test", "foobar");
@@ -79,13 +96,18 @@ main(void)
     /* Shut down the plugin. */
     sync_close(ctx, config);
 
-    /* Clean up. */
-    krb5_free_principal(ctx, princ);
-    krb5_free_context(ctx);
-    test_file_path_free(krb5conf);
+    /* Manually clean up after the results of make-krb5-conf. */
+    basprintf(&path, "%s/krb5.conf", tmpdir);
+    unlink(path);
+    free(path);
     if (chdir("..") < 0)
         sysbail("cannot chdir to parent directory");
     test_tmpdir_free(tmpdir);
-    free(env);
+
+    /* Clean up. */
+    krb5_free_principal(ctx, princ);
+    krb5_free_context(ctx);
+    putenv((char *) "KRB5_CONFIG=");
+    free(krb5_config);
     return 0;
 }
