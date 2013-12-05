@@ -50,6 +50,7 @@ struct kadm5_hook_modinfo_st {
     bool ad_queue_only;
     char *ad_realm;
     char *queue_dir;
+    bool syslog;
 };
 
 BEGIN_DECLS
@@ -149,6 +150,16 @@ krb5_error_code sync_error_generic(krb5_context, const char *format, ...)
 krb5_error_code sync_error_ldap(krb5_context, int, const char *format, ...)
     __attribute__((__nonnull__, __format__(printf, 3, 4)));
 krb5_error_code sync_error_system(krb5_context, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
+
+/* Log messages to syslog if configured to do so. */
+void sync_syslog_debug(kadm5_hook_modinfo *, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
+void sync_syslog_info(kadm5_hook_modinfo *, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
+void sync_syslog_notice(kadm5_hook_modinfo *, const char *format, ...)
+    __attribute__((__nonnull__, __format__(printf, 2, 3)));
+void sync_syslog_warning(kadm5_hook_modinfo *, const char *format, ...)
     __attribute__((__nonnull__, __format__(printf, 2, 3)));
 
 /* Undo default visibility change. */

@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <lber.h>
 #include <ldap.h>
-#include <syslog.h>
 
 #include <plugin/internal.h>
 #include <util/macros.h>
@@ -228,7 +227,7 @@ sync_ad_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     }
     free(result_string.data);
     free(result_code_string.data);
-    syslog(LOG_INFO, "krb5-sync: %s password changed", target);
+    sync_syslog_info(config, "krb5-sync: %s password changed", target);
 
 done:
     krb5_cc_destroy(ctx, ccache);
@@ -412,8 +411,8 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
 
     /* Success. */
     code = 0;
-    syslog(LOG_INFO, "successfully %s account %s",
-           enabled ? "enabled" : "disabled", target);
+    sync_syslog_info(config, "successfully %s account %s",
+                     enabled ? "enabled" : "disabled", target);
 
 done:
     free(ldapuri);

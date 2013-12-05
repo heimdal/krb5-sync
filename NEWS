@@ -40,6 +40,11 @@ krb5-sync 3.0 (unreleased)
     Directory cause performance issues in kadmind or kpasswdd.  kpasswd
     clients in particular are often intolerant of delays.
 
+    Add a new boolean krb5.conf option, syslog, which can be set to false
+    to suppress syslog logging of the actions taken by the plugin and
+    error messages leading to queuing the change.  Always log the error
+    that leads to queuing a status change.
+
     Any time an Active Directory password change fails, queue the change
     instead of failing it, rather than trying to distinguish between local
     errors that should fail the change and errors that should be queued.

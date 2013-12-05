@@ -24,7 +24,6 @@
 #include <portable/system.h>
 
 #include <errno.h>
-#include <syslog.h>
 
 #include <plugin/internal.h>
 #include <util/macros.h>
@@ -64,6 +63,10 @@ sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
 
     /* Get the directory for queued changes from krb5.conf. */
     sync_config_string(ctx, "queue_dir", &config->queue_dir);
+
+    /* Whether to log informational and warning messages to syslog. */
+    config->syslog = true;
+    sync_config_boolean(ctx, "syslog", &config->syslog);
 
     /* Initialized.  Set data and return. */
     *result = config;
@@ -152,13 +155,11 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
         if (exists) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
-                display = NULL;
-            syslog(LOG_DEBUG, "account synchronization skipping principal"
-                   " \"%s\" for Active Directory because %s instance exists",
-                   display != NULL ? display : "???",
-                   config->ad_base_instance);
-            if (display != NULL)
-                krb5_free_unparsed_name(ctx, display);
+                return code;
+            sync_syslog_debug(config, "krb5-sync: ignoring principal \"%s\""
+                              " because %s instance exists", display,
+                              config->ad_base_instance);
+            krb5_free_unparsed_name(ctx, display);
             *allowed = false;
         }
     } else if (ncomp > 1) {
@@ -168,12 +169,10 @@ principal_allowed(kadm5_hook_modinfo *config, krb5_context ctx,
         if (!instance_allowed(config, instance)) {
             code = krb5_unparse_name(ctx, principal, &display);
             if (code != 0)
-                display = NULL;
-            syslog(LOG_DEBUG, "account synchronization skipping principal"
-                   " \"%s\" with non-null instance for Active Directory",
-                   display != NULL ? display : "???");
-            if (display != NULL)
-                krb5_free_unparsed_name(ctx, display);
+                return code;
+            sync_syslog_debug(config, "krb5-sync: ignoring principal \"%s\""
+                              " with non-null instance", display);
+            krb5_free_unparsed_name(ctx, display);
             *allowed = false;
         }
     }
@@ -210,23 +209,13 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     if (password == NULL)
         return 0;
     code = principal_allowed(config, ctx, principal, true, &allowed);
-    if (code != 0) {
-        message = krb5_get_error_message(ctx, code);
-        syslog(LOG_WARNING, "krb5-sync: cannot check if password change"
-               " should be propagated: %s", message);
-        krb5_free_error_message(ctx, message);
+    if (code != 0)
         return code;
-    }
     if (!allowed)
         return 0;
     code = sync_queue_conflict(config, ctx, principal, "enable", &conflict);
-    if (code != 0) {
-        message = krb5_get_error_message(ctx, code);
-        syslog(LOG_WARNING, "krb5-sync: cannot check for queue conflicts: %s",
-               message);
-        krb5_free_error_message(ctx, message);
+    if (code != 0)
         return code;
-    }
     if (conflict)
         goto queue;
     if (config->ad_queue_only)
@@ -234,8 +223,8 @@ sync_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     code = sync_ad_chpass(config, ctx, principal, password);
     if (code != 0) {
         message = krb5_get_error_message(ctx, code);
-        syslog(LOG_INFO, "krb5-sync: AD password change failed, queuing: %s",
-               message);
+        sync_syslog_notice(config, "krb5-sync: AD password change failed,"
+                           " queuing: %s", message);
         krb5_free_error_message(ctx, message);
         goto queue;
     }
@@ -271,30 +260,25 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
         || config->ad_realm == NULL)
         return 0;
     code = principal_allowed(config, ctx, principal, true, &allowed);
-    if (code != 0) {
-        message = krb5_get_error_message(ctx, code);
-        syslog(LOG_WARNING, "krb5-sync: cannot check if password change"
-               " should be propagated: %s", message);
-        krb5_free_error_message(ctx, message);
+    if (code != 0)
         return code;
-    }
     if (!allowed)
         return 0;
     code = sync_queue_conflict(config, ctx, principal, "enable", &conflict);
-    if (code != 0) {
-        message = krb5_get_error_message(ctx, code);
-        syslog(LOG_WARNING, "krb5-sync: cannot check for queue conflicts: %s",
-               message);
-        krb5_free_error_message(ctx, message);
+    if (code != 0)
         return code;
-    }
     if (conflict)
         goto queue;
     if (config->ad_queue_only)
         goto queue;
     code = sync_ad_status(config, ctx, principal, enabled);
-    if (code != 0)
+    if (code != 0) {
+        message = krb5_get_error_message(ctx, code);
+        sync_syslog_notice(config, "krb5-sync: AD status change failed,"
+                           " queuing: %s", message);
+        krb5_free_error_message(ctx, message);
         goto queue;
+    }
     return 0;
 
 queue:

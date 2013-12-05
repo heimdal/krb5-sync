@@ -212,6 +212,7 @@ CONFIGURATION
           ad_queue_only    = false
 
           queue_dir        = /var/spool/krb5-sync
+          syslog           = true
       }
 
   It is possible to add realm-specific configuration here following the
@@ -305,6 +306,14 @@ CONFIGURATION
       default path in krb5-sync-backend.  If you use a different path,
       you'll want to either change the path in that script or always use
       the -d option.
+
+  syslog
+
+      Whether or not to log errors, warnings, and informational messages
+      from the plugin to syslog.  By default, this is enabled.  Set this
+      configuration option to false to suppress this logging, in which
+      case the only logging will be for errors returned to the kadmind or
+      kpasswdd servers.
 
   With MIT Kerberos 1.9 or later, support for kadmind plugins is built in.
   To load this plugin, add the following to the kdc.conf or krb5.conf file
