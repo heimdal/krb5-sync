@@ -41,6 +41,8 @@ main(void)
 
     /* Set up a temporary directory and queue relative to it. */
     path = test_file_path("data/default.conf");
+    if (path == NULL)
+        bail("cannot find data/default.conf in the test suite");
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
         sysbail("cannot cd to %s", tmpdir);
@@ -49,9 +51,9 @@ main(void)
 
     /* Set up our krb5.conf with ad_queue_only set. */
     make_conf = test_file_path("data/make-krb5-conf");
-    setup_argv[0] = make_conf;
-    if (setup_argv[0] == NULL)
+    if (make_conf == NULL)
         bail("cannot find data/make-krb5-conf in the test suite");
+    setup_argv[0] = make_conf;
     setup_argv[1] = path;
     setup_argv[2] = tmpdir;
     setup_argv[3] = "ad_queue_only";
