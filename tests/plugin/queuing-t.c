@@ -50,7 +50,7 @@ main(void)
         sysbail("cannot mkdir queue");
 
     /* Point KRB5_CONFIG at the correct krb5.conf file. */
-    path = test_file_path("data/default.conf");
+    path = test_file_path("data/krb5.conf");
     if (path == NULL)
         bail("cannot find data/krb5.conf in the test suite");
     basprintf(&krb5_config, "KRB5_CONFIG=%s", path);
@@ -115,9 +115,9 @@ main(void)
     test_file_path_free(path);
 
     /* Change to an empty Kerberos configuration file. */
-    path = test_file_path("data/empty.conf");
+    path = test_file_path("data/krb5-empty.conf");
     if (path == NULL)
-        bail("cannot find data/empty.conf in the test suite");
+        bail("cannot find data/krb5-empty.conf in the test suite");
     old_krb5_config = krb5_config;
     basprintf(&krb5_config, "KRB5_CONFIG=%s", path);
     if (putenv(krb5_config) < 0)

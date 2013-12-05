@@ -40,9 +40,9 @@ main(void)
     plan(23);
 
     /* Set up a temporary directory and queue relative to it. */
-    path = test_file_path("data/default.conf");
+    path = test_file_path("data/krb5.conf");
     if (path == NULL)
-        bail("cannot find data/default.conf in the test suite");
+        bail("cannot find data/krb5.conf in the test suite");
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
         sysbail("cannot cd to %s", tmpdir);

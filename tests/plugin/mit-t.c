@@ -54,9 +54,9 @@ main(void)
     char *wanted;
 
     /* Set up the default krb5.conf file. */
-    path = test_file_path("data/default.conf");
+    path = test_file_path("data/krb5.conf");
     if (path == NULL)
-        bail("cannot find data/default.conf in the test suite");
+        bail("cannot find data/krb5.conf in the test suite");
     basprintf(&krb5_config, "KRB5_CONFIG=%s", path);
     if (putenv(krb5_config) < 0)
         sysbail("cannot set KRB5CCNAME");

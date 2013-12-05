@@ -9,10 +9,10 @@
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = .gitignore LICENSE autogen patches/README			\
 	patches/heimdal-1.3.1 tests/README tests/TESTS			\
-	tests/data/default.conf tests/data/empty.conf			\
-	tests/data/make-krb5-conf tests/data/queue.conf			\
-	tests/docs/pod-spelling-t tests/docs/pod-t tests/tap/libtap.sh	\
-	tests/util/xmalloc-t tools/krb5-sync.pod
+	tests/data/krb5-empty.conf tests/data/krb5.conf			\
+	tests/data/make-krb5-conf tests/docs/pod-spelling-t		\
+	tests/docs/pod-t tests/tap/libtap.sh tests/util/xmalloc-t	\
+	tools/krb5-sync.pod
 
 # Everything in the package needs to be able to find the Kerberos headers
 # and libraries.
