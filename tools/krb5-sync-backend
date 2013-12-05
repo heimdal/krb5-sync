@@ -28,24 +28,34 @@
 # Declarations and site configuration
 ##############################################################################
 
+use 5.006;
 use strict;
-use Getopt::Long qw(GetOptions);
+use warnings;
+
 use Fcntl qw(LOCK_EX O_WRONLY O_CREAT O_EXCL);
+use Getopt::Long qw(GetOptions);
 use POSIX qw(EEXIST);
 
-# Path to the krb5-sync binary.
-our $SYNC   = '/usr/sbin/krb5-sync';
+# Default path to the krb5-sync binary.
+my $SYNC = '/usr/sbin/krb5-sync';
 
-# Path to the directory that contains queued changes.
-our $QUEUE  = '/var/spool/krb5-sync';
+# Default path to the directory that contains queued changes.
+my $QUEUE = '/var/spool/krb5-sync';
 
-# Regexes of error messages to ignore when running in silent mode.
-our @IGNORE =
-    (qr/AD password change for \S+ failed \(3\):.*Connection timed out$/,
-     qr/AD password change for \S+ failed \(3\):.*Authentication error$/,
-     qr/AD password change for \S+ failed \(3\):.* for service_locator$/,
-     qr/AD password change for \S+ failed \(3\):.*Operation not permitted$/,
-     qr/AD status change for \S+ failed \(1\): user .* not found in \S+$/);
+# Regular expression prefix to match when ignoring error messages.
+my $IGNORE_PREFIX
+  = qr{ AD [ ] (?:password|status) [ ] change [ ] for [ ] \S+ [ ] failed }xms;
+
+# Regexes of error messages to ignore when running in silent mode.  These are
+# all error messages that can indicate that the target account doesn't exist
+# in Active Directory yet, as opposed to some more serious error.
+my @IGNORE = (
+    qr{ $IGNORE_PREFIX: .* Connection [ ] timed [ ] out \z }xms,
+    qr{ $IGNORE_PREFIX: .* Authentication error \z }xms,
+    qr{ $IGNORE_PREFIX: .* for [ ] service_locator \z }xms,
+    qr{ $IGNORE_PREFIX: .* Operation [ ] not [ ] permitted \z }xms,
+    qr{ $IGNORE_PREFIX: .* user [ ] .* [ ] not [ ] found [ ] in [ ] \S+\z}xms,
+);
 
 ##############################################################################
 # Writing queue files
@@ -54,74 +64,99 @@ our @IGNORE =
 # Lock the queue.  We have to do this around any change to the queue or any
 # place where we need a consistent snapshot of the queue.  Note that we use
 # flock locking; other callers will have to match.
+#
+# Returns: The file handle of the queue lock, to pass to unlock_queue
+#  Throws: Text exception on failure to open or lock the queue
 sub lock_queue {
-    open (LOCK, '+<', "$QUEUE/.lock")
-        or die "$0: cannot open $QUEUE/.lock: $!\n";
-    flock (LOCK, LOCK_EX);
+    open(my $lock_fh, '+<', "$QUEUE/.lock")
+      or die "$0: cannot open $QUEUE/.lock: $!\n";
+    flock($lock_fh, LOCK_EX);
+      or die "$0: cannot lock $QUEUE/.lock: $!\n";
+    return $lock_fh;
 }
 
 # Unlock the queue.
+#
+# $lock_fh - The file handle of the queue lock
+#
+# Returns: undef
+#  Throws: Text exception on failure to close the lock file
 sub unlock_queue {
-    close LOCK;
+    my ($lock_fh) = @_;
+    close($lock_fh) or die "$0: cannot unlock $QUEUE/.lock: $!\n";
+    return;
 }
 
-# Generate a timestamp from the current time.  We want something that sorts
-# even if time_t adds another digit (okay, this code won't last that long, but
-# anyway...).
-sub timestamp {
+# Generate a timestamp for queue file names from the current time.  We want
+# something that sorts even if time_t adds another digit (okay, this code
+# won't last that long, but anyway...).
+#
+# Returns: The formatted timestamp for the current time.
+sub queue_timestamp {
     my ($sec, $min, $hour, $mday, $mon, $year) = gmtime;
     $mon++;
     $year += 1900;
-    return sprintf("%04d%02d%02dT%02d%02d%02dZ", $year, $mon, $mday, $hour,
+    return sprintf('%04d%02d%02dT%02d%02d%02dZ', $year, $mon, $mday, $hour,
                    $min, $sec);
 }
 
-# Write out a new queue file.  Takes the username affected, the system, the
-# action, a timestamp, and a list of additional lines.
+# Write out a new queue file.  We currently hard-code the target system to be
+# "ad", since that's the only one that's currently implemented, but we keep
+# the data field for future expansion.  The queue file will be written with a
+# timestamp for the current time.
+#
+# $principal - Principal to queue an operation for
+# $operation - Operation, chosen from enable, disable, or password
+# @data      - Additional data to add to the queue file
+#
+# Returns: undef
+#  Throws: Text exception on invalid arguments, write failure, or inability
+#          to create a usable queue file name
 sub queue {
-    my ($username, $system, $action, $timestamp, @data) = @_;
-    my $baseuser = $username;
-    $baseuser =~ s%/%.%;
-    my $type = $action;
-    $type = 'enable' if $type eq 'disable';
-    my $base = "$QUEUE/$baseuser-$system-$type-$timestamp";
-    my $file;
-    lock_queue;
-    for (my $count = 0; $count < 100; $count++) {
-        $file = "$base-" . sprintf ("%02d", $count);
-        if (sysopen (QUEUE, $file, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
+    my ($principal, $operation, @data) = @_;
+
+    # Convert the principal to a simple username, used for our queue format.
+    my $user = $principal;
+    $user =~ s{ @ .* }{}xms;
+    $user =~ tr{/}{.};
+
+    # Both enable and disable use the same type in the file name.
+    my $type = $operation;
+    if ($type eq 'disable') {
+        $type = 'enable';
+    }
+
+    # Create the filename prefix for the queue file.  "-" and a sequence
+    # number from 00 to 99 will be appended.
+    my $base = "$QUEUE/$baseuser-ad-$type-" . queue_timestamp();
+
+    # Find the next file name.
+    my $lock = lock_queue;
+    my ($file, $queue);
+    for my $count (0..99) {
+        $file = "$base-" . sprintf('%02d', $count);
+        if (sysopen($queue, $file, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
             last;
         }
-        die "$0: cannot create $file: $!\n" unless $! == EEXIST;
+        if ($! != EEXIST) {
+            die "$0: cannot create $file: $!\n";
+        }
     }
-    print QUEUE "$username\n$system\n$action\n";
-    for (@data) {
-        print QUEUE "$_";
-        print QUEUE "\n" if $_ !~ /\n/;
+
+    # Write the data to the queue file.
+    print {$queue} "$username\n$system\n$action\n"
+      or die "$0: cannot write to $file: $!\n";
+    for my $data (@data) {
+        print {$queue} $data or die "$0: cannot write to $file: $!\n";
+        if ($data !~ m{\n}xms) {
+            print {$queue} "\n" or die "$0: cannot write to $file: $!\n";
+        }
     }
-    close QUEUE or die "$0: cannot flush $file: $!\n";
-    unlock_queue;
-}
+    close($queue) or die "$0: cannot flush $file: $!\n";
 
-# Queue a password change.  Takes the username, password, and system (ad).
-sub queue_password {
-    my ($username, $system, $password) = @_;
-    if ($system ne 'ad') {
-        die "$0: invalid password change destination $system\n";
-    }
-    queue ($username, $system, 'password', timestamp, $password);
-}
-
-# Queue an account enable.  Takes the username.
-sub queue_enable {
-    my ($username) = @_;
-    queue ($username, 'ad', 'enable', timestamp);
-}
-
-# Queue an account disable.  Takes the username.
-sub queue_disable {
-    my ($username) = @_;
-    queue ($username, 'ad', 'disable', timestamp);
+    # Done.  Unlock the queue.
+    unlock_queue($lock);
+    return;
 }
 
 ##############################################################################
@@ -131,11 +166,16 @@ sub queue_disable {
 # List the current queue.  Displays the user, the type of event, the
 # destination service, and the timestamp.  Sort the events the same way
 # they're read when processing the queue.
+#
+# Returns: undef
+#  Throws: Text exception on failure to read the queue
 sub list {
-    lock_queue;
-    opendir (QUEUE, $QUEUE) or die "$0: cannot open $QUEUE: $!\n";
-    my @files = sort grep { !/^\./ } readdir QUEUE;
-    closedir QUEUE;
+    my $lock = lock_queue;
+
+    # Read the files from the queue.
+    opendir(my $queue, $QUEUE) or die "$0: cannot open $QUEUE: $!\n";
+    my @files = sort grep { !m{ \A \. }xms } readdir($queue);
+    closedir($queue) or die "$0: cannot close $QUEUE: $!\n";
     unlock_queue;
     for my $file (@files) {
         my ($user, undef, undef, $timestamp) = split ('-', $file);
@@ -251,10 +291,10 @@ die "$0: no function specified\n" unless $function;
 # Take the appropriate action.
 if ($function eq 'disable') {
     die "Usage: sync disable <username>\n" unless @args == 1;
-    queue_disable (@args);
+    queue('disable', @args);
 } elsif ($function eq 'enable') {
     die "Usage: sync enable <username>\n" unless @args == 1;
-    queue_enable (@args);
+    queue('enable', @args);
 } elsif ($function eq 'help') {
     print <<'EOH';
 Kerberos status synchronization help:
@@ -273,12 +313,15 @@ EOH
     die "Usage: sync process\n" unless @args == 0;
     process ($silent);
 } elsif ($function eq 'password') {
-    if (@args == 2) {
-        local $/;
-        $args[2] = <STDIN>;
+    if (@args < 1 || @args > 2) {
+        die "Usage: sync password <user> <password>\n";
     }
-    die "Usage: sync password <user> <system> <password>\n" unless @args == 3;
-    queue_password (@args);
+    my ($principal, $password) = @args;
+    if (!defined($password) {
+        local $/;
+        $password = <STDIN>;
+    }
+    queue($principal, 'password', $password);
 } elsif ($function eq 'purge') {
     die "Usage: sync purge <days>\n" unless @args == 1;
     purge (@args);
