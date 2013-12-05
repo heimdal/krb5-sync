@@ -7,19 +7,22 @@
 # See LICENSE for licensing terms.
 
 ACLOCAL_AMFLAGS = -I m4
-EXTRA_DIST = .gitignore LICENSE autogen patches/README			 \
-	patches/heimdal-1.3.1 tests/README tests/TESTS			 \
-	tests/data/empty.conf tests/data/krb5.conf tests/data/queue.conf \
-	tests/docs/pod-spelling-t tests/docs/pod-t tests/tap/libtap.sh	 \
+EXTRA_DIST = .gitignore LICENSE autogen patches/README			\
+	patches/heimdal-1.3.1 tests/README tests/TESTS			\
+	tests/data/default.conf tests/data/empty.conf			\
+	tests/data/make-krb5-conf tests/data/queue.conf			\
+	tests/docs/pod-spelling-t tests/docs/pod-t tests/tap/libtap.sh	\
 	tests/util/xmalloc-t tools/krb5-sync.pod
 
+# Everything in the package needs to be able to find the Kerberos headers
+# and libraries.
 AM_CPPFLAGS = $(KRB5_CPPFLAGS)
+AM_LDFLAGS = $(KRB5_LDFLAGS)
 
 noinst_LTLIBRARIES = portable/libportable.la util/libutil.la
 portable_libportable_la_SOURCES = portable/dummy.c portable/kadmin.h	\
 	portable/krb5-extra.c portable/krb5.h portable/macros.h		\
 	portable/stdbool.h portable/system.h
-portable_libportable_la_LDFLAGS = $(KRB5_LDFLAGS)
 portable_libportable_la_LIBADD = $(LTLIBOBJS) $(KRB5_LIBS)
 util_libutil_la_SOURCES = util/macros.h util/messages-krb5.c		    \
         util/messages-krb5.h util/messages.c util/messages.h util/xmalloc.c \
@@ -39,7 +42,7 @@ plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/config.c plugin/error.c \
 plugin_krb5_sync_la_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(KADM5SRV_LDFLAGS) \
-	$(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
+	$(LDAP_LDFLAGS) $(AM_LDFLAGS)
 plugin_krb5_sync_la_LIBADD = portable/libportable.la $(KADM5SRV_LIBS) \
 	$(LDAP_LIBS) $(KRB5_LIBS)
 
@@ -47,7 +50,7 @@ plugin_krb5_sync_la_LIBADD = portable/libportable.la $(KADM5SRV_LIBS) \
 sbin_PROGRAMS = tools/krb5-sync
 tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_krb5_sync_la_SOURCES)
 tools_krb5_sync_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
-tools_krb5_sync_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) $(KRB5_LDFLAGS)
+tools_krb5_sync_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) $(AM_LDFLAGS)
 tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\
 	$(KADM5SRV_LIBS) $(LDAP_LIBS) $(KRB5_LIBS)
 
@@ -96,21 +99,21 @@ tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
 	-DBUILD='"$(abs_top_builddir)/tests"'
 tests_tap_libtap_a_CPPFLAGS = -I$(abs_top_srcdir)/tests
 tests_tap_libtap_a_SOURCES = tests/tap/basic.c tests/tap/basic.h	\
-	tests/tap/macros.h tests/tap/messages.c tests/tap/messages.h	\
-	tests/tap/process.c tests/tap/process.h tests/tap/string.c	\
-	tests/tap/string.h
+	tests/tap/kerberos.c tests/tap/kerberos.h tests/tap/macros.h	\
+	tests/tap/messages.c tests/tap/messages.h tests/tap/process.c	\
+	tests/tap/process.h tests/tap/string.c tests/tap/string.h
 
 # All of the test programs.
 tests_plugin_heimdal_t_LDADD = tests/tap/libtap.a portable/libportable.la \
-	$(DL_LIBS)
+	$(KRB5_LIBS) $(DL_LIBS)
 tests_plugin_mit_t_LDADD = tests/tap/libtap.a portable/libportable.la \
-	$(DL_LIBS)
+	$(KRB5_LIBS) $(DL_LIBS)
 tests_plugin_queue_only_t_SOURCES = tests/plugin/queue-only-t.c \
 	$(plugin_krb5_sync_la_SOURCES)
 tests_plugin_queue_only_t_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 tests_plugin_queue_only_t_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) \
-	$(KRB5_LDFLAGS)
+	$(AM_LDFLAGS)
 tests_plugin_queue_only_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(KADM5SRV_LIBS) $(LDAP_LIBS) $(KRB5_LIBS)
 tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
@@ -118,7 +121,7 @@ tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
 tests_plugin_queuing_t_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 tests_plugin_queuing_t_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) \
-	$(KRB5_LDFLAGS)
+	$(AM_LDFLAGS)
 tests_plugin_queuing_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(KADM5SRV_LIBS) $(LDAP_LIBS) $(KRB5_LIBS)
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
@@ -127,7 +130,6 @@ tests_portable_asprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
 tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
 	tests/portable/snprintf.c
 tests_portable_snprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
-tests_util_messages_krb5_t_LDFLAGS = $(KRB5_LDFLAGS)
 tests_util_messages_krb5_t_LDADD = tests/tap/libtap.a util/libutil.la \
 	portable/libportable.la $(KRB5_LIBS)
 tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.la \
