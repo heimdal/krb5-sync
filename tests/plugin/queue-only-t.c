@@ -16,28 +16,22 @@
 #include <portable/system.h>
 
 #include <errno.h>
-#include <fcntl.h>
 #include <sys/stat.h>
-#include <time.h>
 
 #include <plugin/internal.h>
 #include <tests/tap/basic.h>
 #include <tests/tap/string.h>
+#include <tests/tap/sync.h>
 
 
 int
 main(void)
 {
-    char *tmpdir, *krb5conf, *env, *queue;
+    char *tmpdir, *krb5conf, *env;
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
     kadm5_hook_modinfo *config;
-    char buffer[BUFSIZ];
-    time_t now, try;
-    struct tm *date;
-    FILE *file;
-    struct stat st;
 
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
@@ -57,7 +51,7 @@ main(void)
     if (code != 0)
         bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
 
-    plan(24);
+    plan(23);
 
     /* Test init. */
     is_int(0, sync_init(ctx, &config), "sync_init succeeds");
@@ -66,116 +60,17 @@ main(void)
     /* Create a password change and be sure it's queued. */
     code = sync_chpass(config, ctx, princ, "foobar");
     is_int(0, code, "sync_chpass succeeds");
-    queue = NULL;
-    now = time(NULL);
-    for (try = now - 1; try <= now; try++) {
-        date = gmtime(&try);
-        basprintf(&queue,
-                  "queue/test-ad-password-%04d%02d%02dT%02d%02d%02dZ-00",
-                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
-                  date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
-            break;
-        free(queue);
-        queue = NULL;
-    }
-    ok(queue != NULL, "...password change was queued");
-    if (queue == NULL)
-        ok_block(5, false, "No queued change to check");
-    else {
-        if (stat(queue, &st) < 0)
-            sysbail("cannot stat %s", queue);
-        is_int(0600, st.st_mode & 0777, "...mode of queue file is correct");
-        file = fopen(queue, "r");
-        if (file == NULL)
-            sysbail("cannot open %s", queue);
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("test\n", buffer, "...queued user is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("ad\n", buffer, "...queued domain is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("password\n", buffer, "...queued operation is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("foobar\n", buffer, "...queued password is correct");
-        fclose(file);
-    }
-    ok(unlink(queue) == 0, "Remove queued password change");
-    free(queue);
+    sync_queue_check_password("queue", "test", "foobar");
 
     /* Test queuing of enable. */
     code = sync_status(config, ctx, princ, true);
     is_int(0, code, "sync_status enable succeeds");
-    queue = NULL;
-    now = time(NULL);
-    for (try = now - 1; try <= now; try++) {
-        date = gmtime(&try);
-        basprintf(&queue, "queue/test-ad-enable-%04d%02d%02dT%02d%02d%02dZ-00",
-                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
-                  date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
-            break;
-        free(queue);
-        queue = NULL;
-    }
-    ok(queue != NULL, "...enable was queued");
-    if (queue == NULL)
-        ok_block(3, false, "No queued change to check");
-    else {
-        file = fopen(queue, "r");
-        if (file == NULL)
-            sysbail("cannot open %s", queue);
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("test\n", buffer, "...queued user is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("ad\n", buffer, "...queued domain is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("enable\n", buffer, "...queued operation is correct");
-        fclose(file);
-    }
-    ok(unlink(queue) == 0, "Remove queued enable");
+    sync_queue_check_enable("queue", "test", true);
 
     /* Test queuing of disable. */
     code = sync_status(config, ctx, princ, false);
     is_int(0, code, "sync_status disable succeeds");
-    queue = NULL;
-    now = time(NULL);
-    for (try = now - 1; try <= now; try++) {
-        date = gmtime(&try);
-        basprintf(&queue, "queue/test-ad-enable-%04d%02d%02dT%02d%02d%02dZ-00",
-                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
-                  date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
-            break;
-        free(queue);
-        queue = NULL;
-    }
-    ok(queue != NULL, "...enable was queued");
-    if (queue == NULL)
-        ok_block(3, false, "No queued change to check");
-    else {
-        file = fopen(queue, "r");
-        if (file == NULL)
-            sysbail("cannot open %s", queue);
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("test\n", buffer, "...queued user is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("ad\n", buffer, "...queued domain is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("disable\n", buffer, "...queued operation is correct");
-        fclose(file);
-    }
-    ok(unlink(queue) == 0, "Remove queued disable");
-    free(queue);
+    sync_queue_check_enable("queue", "test", false);
 
     /* Unwind the queue and be sure all the right files exist. */
     ok(unlink("queue/.lock") == 0, "Lock file still exists");
