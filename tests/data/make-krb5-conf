@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Generate a krb5.conf file with an [appdefault] krb5-strength section that
+# Generate a krb5.conf file with an [appdefault] krb5-sync section that
 # contains all the key/value pairs given on the command line.  This script is
 # used by C tests to set up the environment.
 #
@@ -24,16 +24,8 @@ fi
 shift
 shift
 
-# Copy over the template and ensure it's writable.
-cp "$source" "$tmpdir"/krb5.conf
-chmod 644 "$tmpdir"/krb5.conf
-
-# Add the appdefaults section.
-cat <<EOF >>"$tmpdir"/krb5.conf
-
-[appdefaults]
-    krb5-strength = {
-EOF
+# Pull over all of the template file up to the krb5-sync settings.
+sed '/^ *krb5-sync *= */q' <"$source" >"$tmpdir"/krb5.conf
 
 # Add the key-value pairs.
 while [ -n "$1" ] ; do
@@ -42,8 +34,8 @@ while [ -n "$1" ] ; do
     shift
 done
 
-# End the appdefaults section.
-echo '    }' >>"$tmpdir"/krb5.conf
+# Add the rest of the file.
+sed '0,/^ *krb5-sync *= */d' <"$source" >>"$tmpdir"/krb5.conf
 
 # Done.
 exit 0
