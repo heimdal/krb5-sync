@@ -124,7 +124,7 @@ AC_DEFUN([RRA_LIB_HELPER_WITH_OPTIONAL],
         [Location of $2 headers and libraries])],
     [AS_IF([test x"$withval" = xno],
         [rra_use_$3=false],
-        [AS_IF([test x"$withval" != yes], [rra_$3[]_root="$withval"])
+        [AS_IF([test x"$withval" != xyes], [rra_$3[]_root="$withval"])
          rra_use_$3=true])])
  AC_ARG_WITH([$1][-include],
     [AS_HELP_STRING([--with-][$1][-include=DIR],

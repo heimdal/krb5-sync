@@ -12,8 +12,8 @@
  * This file is part of C TAP Harness.  The current version plus supporting
  * documentation is at <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
  *
- * Copyright 2009, 2010, 2011, 2012 Russ Allbery <eagle@eyrie.org>
- * Copyright 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2011, 2012
+ * Copyright 2009, 2010, 2011, 2012, 2013 Russ Allbery <eagle@eyrie.org>
+ * Copyright 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2011, 2012, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -58,7 +58,7 @@
 
 /*
  * The test count.  Always contains the number that will be used for the next
- * test status.
+ * test status.  This is exported to callers of the library.
  */
 unsigned long testnum = 1;
 
@@ -66,53 +66,133 @@ unsigned long testnum = 1;
  * Status information stored so that we can give a test summary at the end of
  * the test case.  We store the planned final test and the count of failures.
  * We can get the highest test count from testnum.
- *
- * We also store the PID of the process that called plan() and only summarize
- * results when that process exits, so as to not misreport results in forked
- * processes.
- *
- * If _lazy is true, we're doing lazy planning and will print out the plan
- * based on the last test number at the end of testing.
  */
 static unsigned long _planned = 0;
 static unsigned long _failed  = 0;
+
+/*
+ * Store the PID of the process that called plan() and only summarize
+ * results when that process exits, so as to not misreport results in forked
+ * processes.
+ */
 static pid_t _process = 0;
+
+/*
+ * If true, we're doing lazy planning and will print out the plan based on the
+ * last test number at the end of testing.
+ */
 static int _lazy = 0;
+
+/*
+ * If true, the test was aborted by calling bail().  Currently, this is only
+ * used to ensure that we pass a false value to any cleanup functions even if
+ * all tests to that point have passed.
+ */
+static int _aborted = 0;
+
+/*
+ * Registered cleanup functions.  These are stored as a linked list and run in
+ * registered order by finish when the test program exits.  Each function is
+ * passed a boolean value indicating whether all tests were successful.
+ */
+struct cleanup_func {
+    test_cleanup_func func;
+    struct cleanup_func *next;
+};
+static struct cleanup_func *cleanup_funcs = NULL;
+
+/*
+ * Print a specified prefix and then the test description.  Handles turning
+ * the argument list into a va_args structure suitable for passing to
+ * print_desc, which has to be done in a macro.  Assumes that format is the
+ * argument immediately before the variadic arguments.
+ */
+#define PRINT_DESC(prefix, format)              \
+    do {                                        \
+        if (format != NULL) {                   \
+            va_list args;                       \
+            if (prefix != NULL)                 \
+                printf("%s", prefix);           \
+            va_start(args, format);             \
+            vprintf(format, args);              \
+            va_end(args);                       \
+        }                                       \
+    } while (0)
 
 
 /*
  * Our exit handler.  Called on completion of the test to report a summary of
  * results provided we're still in the original process.  This also handles
  * printing out the plan if we used plan_lazy(), although that's suppressed if
- * we never ran a test (due to an early bail, for example).
+ * we never ran a test (due to an early bail, for example), and running any
+ * registered cleanup functions.
  */
 static void
 finish(void)
 {
+    int success;
+    struct cleanup_func *current;
     unsigned long highest = testnum - 1;
 
-    if (_planned == 0 && !_lazy)
-        return;
-    fflush(stderr);
-    if (_process != 0 && getpid() == _process) {
-        if (_lazy && highest > 0) {
-            printf("1..%lu\n", highest);
-            _planned = highest;
+    /*
+     * Don't do anything except free the cleanup functions if we aren't the
+     * primary process (the process in which plan or plan_lazy was called).
+     */
+    if (_process != 0 && getpid() != _process) {
+        while (cleanup_funcs != NULL) {
+            current = cleanup_funcs;
+            cleanup_funcs = cleanup_funcs->next;
+            free(current);
         }
-        if (_planned > highest)
-            printf("# Looks like you planned %lu test%s but only ran %lu\n",
-                   _planned, (_planned > 1 ? "s" : ""), highest);
-        else if (_planned < highest)
-            printf("# Looks like you planned %lu test%s but ran %lu extra\n",
-                   _planned, (_planned > 1 ? "s" : ""), highest - _planned);
-        else if (_failed > 0)
-            printf("# Looks like you failed %lu test%s of %lu\n", _failed,
-                   (_failed > 1 ? "s" : ""), _planned);
-        else if (_planned > 1)
-            printf("# All %lu tests successful or skipped\n", _planned);
-        else
-            printf("# %lu test successful or skipped\n", _planned);
+        return;
     }
+
+    /*
+     * Determine whether all tests were successful, which is needed before
+     * calling cleanup functions since we pass that fact to the functions.
+     */
+    if (_planned == 0 && _lazy)
+        _planned = highest;
+    success = (!_aborted && _planned == highest && _failed == 0);
+
+    /*
+     * If there are any registered cleanup functions, we run those first.  We
+     * always run them, even if we didn't run a test.
+     */
+    while (cleanup_funcs != NULL) {
+        cleanup_funcs->func(success);
+        current = cleanup_funcs;
+        cleanup_funcs = cleanup_funcs->next;
+        free(current);
+    }
+
+    /* Don't do anything further if we never planned a test. */
+    if (_planned == 0)
+        return;
+
+    /* If we're aborting due to bail, don't print summaries. */
+    if (_aborted)
+        return;
+
+    /* Print out the lazy plan if needed. */
+    fflush(stderr);
+    if (_lazy && _planned > 0)
+        printf("1..%lu\n", _planned);
+
+    /* Print out a summary of the results. */
+    if (_planned > highest)
+        diag("Looks like you planned %lu test%s but only ran %lu", _planned,
+             (_planned > 1 ? "s" : ""), highest);
+    else if (_planned < highest)
+        diag("Looks like you planned %lu test%s but ran %lu extra", _planned,
+             (_planned > 1 ? "s" : ""), highest - _planned);
+    else if (_failed > 0)
+        diag("Looks like you failed %lu test%s of %lu", _failed,
+             (_failed > 1 ? "s" : ""), _planned);
+    else if (_planned != 1)
+        diag("All %lu tests successful or skipped", _planned);
+    else
+        diag("%lu test successful or skipped", _planned);
 }
 
 
@@ -124,14 +204,16 @@ void
 plan(unsigned long count)
 {
     if (setvbuf(stdout, NULL, _IOLBF, BUFSIZ) != 0)
-        fprintf(stderr, "# cannot set stdout to line buffered: %s\n",
-                strerror(errno));
+        sysdiag("cannot set stdout to line buffered");
     fflush(stderr);
     printf("1..%lu\n", count);
     testnum = 1;
     _planned = count;
     _process = getpid();
-    atexit(finish);
+    if (atexit(finish) != 0) {
+        sysdiag("cannot register exit handler");
+        diag("cleanups will not be run");
+    }
 }
 
 
@@ -143,12 +225,12 @@ void
 plan_lazy(void)
 {
     if (setvbuf(stdout, NULL, _IOLBF, BUFSIZ) != 0)
-        fprintf(stderr, "# cannot set stdout to line buffered: %s\n",
-                strerror(errno));
+        sysdiag("cannot set stdout to line buffered");
     testnum = 1;
     _process = getpid();
     _lazy = 1;
-    atexit(finish);
+    if (atexit(finish) != 0)
+        sysbail("cannot register exit handler to display plan");
 }
 
 
@@ -161,27 +243,9 @@ skip_all(const char *format, ...)
 {
     fflush(stderr);
     printf("1..0 # skip");
-    if (format != NULL) {
-        va_list args;
-
-        putchar(' ');
-        va_start(args, format);
-        vprintf(format, args);
-        va_end(args);
-    }
+    PRINT_DESC(" ", format);
     putchar('\n');
     exit(0);
-}
-
-
-/*
- * Print the test description.
- */
-static void
-print_desc(const char *format, va_list args)
-{
-    printf(" - ");
-    vprintf(format, args);
 }
 
 
@@ -196,13 +260,7 @@ ok(int success, const char *format, ...)
     printf("%sok %lu", success ? "" : "not ", testnum++);
     if (!success)
         _failed++;
-    if (format != NULL) {
-        va_list args;
-
-        va_start(args, format);
-        print_desc(format, args);
-        va_end(args);
-    }
+    PRINT_DESC(" - ", format);
     putchar('\n');
 }
 
@@ -217,8 +275,10 @@ okv(int success, const char *format, va_list args)
     printf("%sok %lu", success ? "" : "not ", testnum++);
     if (!success)
         _failed++;
-    if (format != NULL)
-        print_desc(format, args);
+    if (format != NULL) {
+        printf(" - ");
+        vprintf(format, args);
+    }
     putchar('\n');
 }
 
@@ -231,14 +291,7 @@ skip(const char *reason, ...)
 {
     fflush(stderr);
     printf("ok %lu # skip", testnum++);
-    if (reason != NULL) {
-        va_list args;
-
-        va_start(args, reason);
-        putchar(' ');
-        vprintf(reason, args);
-        va_end(args);
-    }
+    PRINT_DESC(" ", reason);
     putchar('\n');
 }
 
@@ -256,13 +309,7 @@ ok_block(unsigned long count, int status, const char *format, ...)
         printf("%sok %lu", status ? "" : "not ", testnum++);
         if (!status)
             _failed++;
-        if (format != NULL) {
-            va_list args;
-
-            va_start(args, format);
-            print_desc(format, args);
-            va_end(args);
-        }
+        PRINT_DESC(" - ", format);
         putchar('\n');
     }
 }
@@ -279,14 +326,7 @@ skip_block(unsigned long count, const char *reason, ...)
     fflush(stderr);
     for (i = 0; i < count; i++) {
         printf("ok %lu # skip", testnum++);
-        if (reason != NULL) {
-            va_list args;
-
-            va_start(args, reason);
-            putchar(' ');
-            vprintf(reason, args);
-            va_end(args);
-        }
+        PRINT_DESC(" ", reason);
         putchar('\n');
     }
 }
@@ -303,17 +343,12 @@ is_int(long wanted, long seen, const char *format, ...)
     if (wanted == seen)
         printf("ok %lu", testnum++);
     else {
-        printf("# wanted: %ld\n#   seen: %ld\n", wanted, seen);
+        diag("wanted: %ld", wanted);
+        diag("  seen: %ld", seen);
         printf("not ok %lu", testnum++);
         _failed++;
     }
-    if (format != NULL) {
-        va_list args;
-
-        va_start(args, format);
-        print_desc(format, args);
-        va_end(args);
-    }
+    PRINT_DESC(" - ", format);
     putchar('\n');
 }
 
@@ -333,17 +368,12 @@ is_string(const char *wanted, const char *seen, const char *format, ...)
     if (strcmp(wanted, seen) == 0)
         printf("ok %lu", testnum++);
     else {
-        printf("# wanted: %s\n#   seen: %s\n", wanted, seen);
+        diag("wanted: %s", wanted);
+        diag("  seen: %s", seen);
         printf("not ok %lu", testnum++);
         _failed++;
     }
-    if (format != NULL) {
-        va_list args;
-
-        va_start(args, format);
-        print_desc(format, args);
-        va_end(args);
-    }
+    PRINT_DESC(" - ", format);
     putchar('\n');
 }
 
@@ -359,18 +389,12 @@ is_hex(unsigned long wanted, unsigned long seen, const char *format, ...)
     if (wanted == seen)
         printf("ok %lu", testnum++);
     else {
-        printf("# wanted: %lx\n#   seen: %lx\n", (unsigned long) wanted,
-               (unsigned long) seen);
+        diag("wanted: %lx", (unsigned long) wanted);
+        diag("  seen: %lx", (unsigned long) seen);
         printf("not ok %lu", testnum++);
         _failed++;
     }
-    if (format != NULL) {
-        va_list args;
-
-        va_start(args, format);
-        print_desc(format, args);
-        va_end(args);
-    }
+    PRINT_DESC(" - ", format);
     putchar('\n');
 }
 
@@ -383,6 +407,7 @@ bail(const char *format, ...)
 {
     va_list args;
 
+    _aborted = 1;
     fflush(stderr);
     fflush(stdout);
     printf("Bail out! ");
@@ -390,7 +415,7 @@ bail(const char *format, ...)
     vprintf(format, args);
     va_end(args);
     printf("\n");
-    exit(1);
+    exit(255);
 }
 
 
@@ -403,6 +428,7 @@ sysbail(const char *format, ...)
     va_list args;
     int oerrno = errno;
 
+    _aborted = 1;
     fflush(stderr);
     fflush(stdout);
     printf("Bail out! ");
@@ -410,7 +436,7 @@ sysbail(const char *format, ...)
     vprintf(format, args);
     va_end(args);
     printf(": %s\n", strerror(oerrno));
-    exit(1);
+    exit(255);
 }
 
 
@@ -626,4 +652,23 @@ test_tmpdir_free(char *path)
     rmdir(path);
     if (path != NULL)
         free(path);
+}
+
+
+/*
+ * Register a cleanup function that is called when testing ends.  All such
+ * registered functions will be run by finish.
+ */
+void
+test_cleanup_register(test_cleanup_func func)
+{
+    struct cleanup_func *cleanup, **last;
+
+    cleanup = bmalloc(sizeof(struct cleanup_func));
+    cleanup->func = func;
+    cleanup->next = NULL;
+    last = &cleanup_funcs;
+    while (*last != NULL)
+        last = &(*last)->next;
+    *last = cleanup;
 }

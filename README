@@ -89,6 +89,12 @@ REQUIREMENTS
   updates, you will also need to know the server to which to do LDAP
   queries (generally, this is one of the Domain Controllers).
 
+  To run the full test suite, Perl 5.6.2 or later is required.  The
+  following additional Perl modules will be used if present:
+
+      Test::Pod
+      Test::Spelling
+
   To bootstrap from a Git checkout, or if you change the Automake files
   and need to regenerate Makefile.in, you will need Automake 1.11 or
   later.  For bootstrap or if you change configure.ac or any of the m4

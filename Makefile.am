@@ -139,4 +139,4 @@ tests_util_messages_t_LDADD = tests/tap/libtap.a util/libutil.la \
 tests_util_xmalloc_LDADD = util/libutil.la portable/libportable.la
 
 check-local: $(check_PROGRAMS)
-	cd tests && ./runtests $(abs_top_srcdir)/tests/TESTS
+	cd tests && ./runtests -l $(abs_top_srcdir)/tests/TESTS

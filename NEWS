@@ -63,6 +63,25 @@ krb5-sync 3.0 (unreleased)
     longer exist by the time we get to them.  This makes krb5-sync-backend
     more robust against multiple copies running at the same time.
 
+    Update to rra-c-util 4.12:
+
+    * Better error messages from xasprintf on failure to format output.
+    * Check return status of vsnprintf properly.
+    * Significant improvements to POD tests.
+    * Avoid leaking a dummy symbol from the portability layer.
+    * Probe for Kerberos headers with file existence checks.
+
+    Update to C TAP Harness 2.3:
+
+    * runtests now treats the command line as a list of tests by default.
+    * The full test executable path can now be passed to runtests -o.
+    * Improved harness output for tests with lazy plans.
+    * Improved harness output to a terminal for some abort cases.
+    * Flush harness output after each test even when not on a terminal.
+    * bail and sysbail now exit with status 255 to match Test::More.
+    * Suppress lazy plans and test summaries if the test failed with bail.
+    * Add warn_unused_result gcc attributes to relevant functions.
+
 krb5-sync 2.3 (2012-09-18)
 
     When handling password changes from MIT Kerberos, quietly ignore

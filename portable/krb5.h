@@ -66,6 +66,31 @@ void krb5_appdefault_string(krb5_context, const char *, const krb5_data *,
                             const char *, const char *, char **);
 #endif
 
+/*
+ * MIT-specific.  The Heimdal documentation says to use free(), but that
+ * doesn't actually make sense since the memory is allocated inside the
+ * Kerberos library.  Use krb5_xfree instead.
+ */
+#ifndef HAVE_KRB5_FREE_DEFAULT_REALM
+# define krb5_free_default_realm(c, r) krb5_xfree(r)
+#endif
+
+/*
+ * Heimdal: krb5_xfree, MIT: krb5_free_string, older MIT uses free().  Note
+ * that we can incorrectly allocate in the library and call free() if
+ * krb5_free_string is not available but something we use that API for is
+ * available, such as krb5_appdefaults_*, but there isn't anything we can
+ * really do about it.
+ */
+#ifndef HAVE_KRB5_FREE_STRING
+# ifdef HAVE_KRB5_XFREE
+#  define krb5_free_string(c, s) krb5_xfree(s)
+# else
+#  define krb5_free_string(c, s) free(s)
+# endif
+#endif
+
+
 /* Heimdal: krb5_xfree, MIT: krb5_free_unparsed_name. */
 #ifdef HAVE_KRB5_XFREE
 # define krb5_free_unparsed_name(c, p) krb5_xfree(p)
