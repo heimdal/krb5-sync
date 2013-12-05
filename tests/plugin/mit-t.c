@@ -164,6 +164,8 @@ main(void)
 
     /* Close down the module. */
     vtable.fini(ctx, data);
+    if (dlclose(handle) != 0)
+        bail("cannot close plugin: %s", dlerror());
     free(wanted);
 
     /* Clean up. */

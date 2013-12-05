@@ -165,6 +165,8 @@ main(void)
 
     /* Close down the module. */
     hook->fini(ctx, config);
+    if (dlclose(handle) != 0)
+        bail("cannot close plugin: %s", dlerror());
     free(wanted);
 
     /* Clean up. */

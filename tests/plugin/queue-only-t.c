@@ -29,8 +29,8 @@
 int
 main(void)
 {
-    char *path, *tmpdir, *krb5_config;
-    char *setup_argv[6];
+    char *path, *tmpdir, *make_conf, *krb5_config;
+    const char *setup_argv[6];
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
@@ -48,19 +48,23 @@ main(void)
         sysbail("cannot mkdir queue");
 
     /* Set up our krb5.conf with ad_queue_only set. */
-    setup_argv[0] = test_file_path("data/make-krb5-conf");
+    make_conf = test_file_path("data/make-krb5-conf");
+    setup_argv[0] = make_conf;
     if (setup_argv[0] == NULL)
         bail("cannot find data/make-krb5-conf in the test suite");
     setup_argv[1] = path;
     setup_argv[2] = tmpdir;
-    setup_argv[3] = (char *) "ad_queue_only";
-    setup_argv[4] = (char *) "true";
+    setup_argv[3] = "ad_queue_only";
+    setup_argv[4] = "true";
     setup_argv[5] = NULL;
-    run_setup((const char **) setup_argv);
+    run_setup(setup_argv);
+    test_file_path_free(make_conf);
+    test_file_path_free(path);
 
     /* Point KRB5_CONFIG at the newly-generated krb5.conf file. */
     basprintf(&krb5_config, "KRB5_CONFIG=%s/krb5.conf", tmpdir);
-    putenv(krb5_config);
+    if (putenv(krb5_config) < 0)
+        sysbail("cannot set KRB5_CONFIG in the environment");
 
     /* Obtain a new Kerberos context with that krb5.conf file. */
     code = krb5_init_context(&ctx);
