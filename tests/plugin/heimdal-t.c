@@ -65,7 +65,7 @@ main(void)
     const char *message;
     char *wanted;
 
-    krb5conf = test_file_path("data/krb5.conf");
+    krb5conf = test_file_path("data/default.conf");
     if (krb5conf == NULL)
         bail("cannot find tests/data/krb5.conf");
     basprintf(&env, "KRB5_CONFIG=%s", krb5conf);

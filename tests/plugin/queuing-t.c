@@ -48,7 +48,7 @@ main(void)
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
         sysbail("cannot cd to %s", tmpdir);
-    krb5conf = test_file_path("data/krb5.conf");
+    krb5conf = test_file_path("data/default.conf");
     if (krb5conf == NULL)
         bail("cannot find tests/data/krb5.conf");
     if (mkdir("queue", 0777) < 0)
