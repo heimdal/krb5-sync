@@ -12,7 +12,7 @@
  *
  * Written by Russ Allbery <eagle@eyrie.org>
  * Copyright 2002, 2004, 2005 Russ Allbery <eagle@eyrie.org>
- * Copyright 2009, 2010, 2011
+ * Copyright 2009, 2010, 2011, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -171,7 +171,10 @@ run_setup(const char *const argv[])
         p = strchr(output, '\n');
         if (p != NULL)
             *p = '\0';
-        bail("%s", output);
+        if (output[0] != '\0')
+            bail("%s", output);
+        else
+            bail("setup command failed with no output");
     }
     free(output);
 }
