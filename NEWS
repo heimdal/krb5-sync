@@ -2,6 +2,11 @@
 
 krb5-sync 3.0 (unreleased)
 
+    The default installed module name has been changed to sync.so from
+    krb5_sync.so, since the krb5 part is redundant in the Kerberos plugin
+    context.  This will require configuration changes for existing users
+    to load the new plugin path name.
+
     The meaning of the ad_ldap_base configuration option has changed, and
     it's now mandatory for status synchronization.  This setting should
     now contain the full DN of the tree in Active Directory where account

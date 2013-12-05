@@ -86,12 +86,12 @@ main(void)
         bail_krb5(ctx, code, "cannot parse principal test@EXAMPLE.COM");
 
     /*
-     * Load the module.  We assume that the plugin is available as
-     * krb5_sync.so in a .libs directory since we don't want to embed
-     * Libtool's libtldl just to run a test.  If that's not correct for the
-     * local platform, we skip this test.
+     * Load the module.  We assume that the plugin is available as sync.so in
+     * a .libs directory since we don't want to embed Libtool's libtldl just
+     * to run a test.  If that's not correct for the local platform, we skip
+     * this test.
      */
-    plugin = test_file_path("../plugin/.libs/krb5_sync.so");
+    plugin = test_file_path("../plugin/.libs/sync.so");
     if (plugin == NULL)
         skip_all("unknown plugin naming scheme");
     handle = dlopen(plugin, RTLD_NOW);

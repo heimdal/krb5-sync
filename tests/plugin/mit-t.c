@@ -72,12 +72,12 @@ main(void)
         bail_krb5(ctx, code, "cannot parse principal test@EXAMPLE.COM");
 
     /*
-     * Load the module.  We assume that the plugin is available as
-     * krb5_sync.so in a .libs directory since we don't want to embed
-     * Libtool's libtldl just to run a test.  If that's not correct for the
-     * local platform, we skip this test.
+     * Load the module.  We assume that the plugin is available as sync.so in
+     * a .libs directory since we don't want to embed Libtool's libtldl just
+     * to run a test.  If that's not correct for the local platform, we skip
+     * this test.
      */
-    plugin = test_file_path("../plugin/.libs/krb5_sync.so");
+    plugin = test_file_path("../plugin/.libs/sync.so");
     if (plugin == NULL)
         skip_all("unknown plugin naming scheme");
     handle = dlopen(plugin, RTLD_NOW);
@@ -86,9 +86,9 @@ main(void)
     test_file_path_free(plugin);
 
     /* Find the entry point function. */
-    init = dlsym(handle, "kadm5_hook_krb5_sync_initvt");
+    init = dlsym(handle, "kadm5_hook_sync_initvt");
     if (init == NULL)
-        bail("cannot get kadm5_hook_krb5_sync_initvt symbol: %s", dlerror());
+        bail("cannot get kadm5_hook_sync_initvt symbol: %s", dlerror());
 
     /* No more skipping, so now we can report a plan. */
     plan(12);
@@ -110,7 +110,7 @@ main(void)
         bail("missing function in module vtable");
 
     /* Verify the metadata. */
-    is_string("krb5_sync", vtable.name, "Hook name is correct");
+    is_string("krb5-sync", vtable.name, "Hook name is correct");
 
     /*
      * Call the chpass function, which should fail with errors about queuing

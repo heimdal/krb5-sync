@@ -321,21 +321,21 @@ CONFIGURATION
 
     [plugins]
       kadm5_hook = {
-        module = krb5_sync:/usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+        module = krb5_sync:/usr/local/lib/krb5/plugins/kadm5_hook/sync.so
       }
 
   You may wish to install krb5_sync.so under a krb5/plugins/kadm5_hook in
   the library directory used for your Kerberos installation instead, if
   that is not /usr/local/lib, in which case you can use
-  "kadm5_hook/krb5_sync.so" as the relative path to the plugin.
+  "kadm5_hook/sync.so" as the relative path to the plugin.
 
   The kadmind patch for Heimdal adds a configuration option for the
   krb5.conf file in the [kadmin] section.  If this option is not set, the
   plugin will not be loaded and none of the hooks will be run.  Therefore,
   to use the plugin, add configuration like:
 
-    [kadmin]
-      hook_libraries = /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+      [kadmin]
+          hook_libraries = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
 
   to the configuration file used by kadmind and kpasswdd.  Update the path
   for wherever the krb5-sync plugin is located.
@@ -344,7 +344,7 @@ CONFIGURATION
   option for the kdc.conf.  To use the plugin on older versions of MIT,
   add a line like:
 
-    pwupdate_plugin = /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+      pwupdate_plugin = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
 
   to the local realm sub-section of the [realms] section.
 

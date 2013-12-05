@@ -38,8 +38,8 @@
  * The public function that the MIT kadm5 library looks for.  It contains the
  * module name, so it can't be prototyped by the MIT headers.
  */
-krb5_error_code kadm5_hook_krb5_sync_initvt(krb5_context, int, int,
-                                            krb5_plugin_vtable);
+krb5_error_code kadm5_hook_sync_initvt(krb5_context, int, int,
+                                       krb5_plugin_vtable);
 
 
 /*
@@ -129,14 +129,14 @@ modify(krb5_context ctx, kadm5_hook_modinfo *data, int stage,
  * The public interface called by the kadmin hook code in MIT Kerberos.
  */
 krb5_error_code
-kadm5_hook_krb5_sync_initvt(krb5_context ctx UNUSED, int maj_ver,
-                            int min_ver UNUSED, krb5_plugin_vtable vtable)
+kadm5_hook_sync_initvt(krb5_context ctx UNUSED, int maj_ver,
+                       int min_ver UNUSED, krb5_plugin_vtable vtable)
 {
     kadm5_hook_vftable_1 *vt = (kadm5_hook_vftable_1 *) vtable;
+
     if (maj_ver != 1)
         return KRB5_PLUGIN_VER_NOTSUPP;
-
-    vt->name = "krb5_sync";
+    vt->name = "krb5-sync";
     vt->init = init;
     vt->fini = fini;
     vt->chpass = chpass;

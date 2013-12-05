@@ -34,21 +34,21 @@ util_libutil_la_LIBADD = portable/libportable.la $(KRB5_LIBS)
 moduledir = $(libdir)/krb5/plugins/kadm5_hook
 
 # Rules for building the krb5-sync plugin.
-module_LTLIBRARIES = plugin/krb5_sync.la
-plugin_krb5_sync_la_SOURCES = plugin/ad.c plugin/config.c plugin/error.c \
-	plugin/internal.h plugin/general.c plugin/heimdal.c		 \
-	plugin/instance.c plugin/logging.c plugin/mit.c plugin/queue.c	 \
+module_LTLIBRARIES = plugin/sync.la
+plugin_sync_la_SOURCES = plugin/ad.c plugin/config.c plugin/error.c	\
+	plugin/internal.h plugin/general.c plugin/heimdal.c		\
+	plugin/instance.c plugin/logging.c plugin/mit.c plugin/queue.c	\
 	plugin/vector.c
-plugin_krb5_sync_la_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
+plugin_sync_la_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
-plugin_krb5_sync_la_LDFLAGS = -module -avoid-version $(KADM5SRV_LDFLAGS) \
+plugin_sync_la_LDFLAGS = -module -avoid-version $(KADM5SRV_LDFLAGS) \
 	$(LDAP_LDFLAGS) $(AM_LDFLAGS)
-plugin_krb5_sync_la_LIBADD = portable/libportable.la $(KADM5SRV_LIBS) \
+plugin_sync_la_LIBADD = portable/libportable.la $(KADM5SRV_LIBS) \
 	$(LDAP_LIBS) $(KRB5_LIBS)
 
 # Rules for building the krb5-sync utility.
 sbin_PROGRAMS = tools/krb5-sync
-tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_krb5_sync_la_SOURCES)
+tools_krb5_sync_SOURCES = tools/krb5-sync.c $(plugin_sync_la_SOURCES)
 tools_krb5_sync_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) $(AM_CPPFLAGS)
 tools_krb5_sync_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) $(AM_LDFLAGS)
 tools_krb5_sync_LDADD = portable/libportable.la util/libutil.la	\
@@ -109,7 +109,7 @@ tests_plugin_heimdal_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 tests_plugin_mit_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(KRB5_LIBS) $(DL_LIBS)
 tests_plugin_queue_only_t_SOURCES = tests/plugin/queue-only-t.c \
-	$(plugin_krb5_sync_la_SOURCES)
+	$(plugin_sync_la_SOURCES)
 tests_plugin_queue_only_t_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 tests_plugin_queue_only_t_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) \
@@ -117,7 +117,7 @@ tests_plugin_queue_only_t_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) \
 tests_plugin_queue_only_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 	$(KADM5SRV_LIBS) $(LDAP_LIBS) $(KRB5_LIBS)
 tests_plugin_queuing_t_SOURCES = tests/plugin/queuing-t.c \
-	$(plugin_krb5_sync_la_SOURCES)
+	$(plugin_sync_la_SOURCES)
 tests_plugin_queuing_t_CPPFLAGS = $(KADM5SRV_CPPFLAGS) $(LDAP_CPPFLAGS) \
 	$(AM_CPPFLAGS)
 tests_plugin_queuing_t_LDFLAGS = $(KADM5SRV_LDFLAGS) $(LDAP_LDFLAGS) \
