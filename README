@@ -92,8 +92,18 @@ REQUIREMENTS
   To run the full test suite, Perl 5.6.2 or later is required.  The
   following additional Perl modules will be used if present:
 
+      Test::MinimumVersion
+      Test::Perl::Critic
       Test::Pod
       Test::Spelling
+      Test::Strict
+
+  All are available on CPAN.  Those tests will be skipped if the modules
+  are not available.
+
+  To enable tests that may be sensitive to the local environment or that
+  produce a lot of false positives without uncovering many problems, set
+  RRA_MAINTAINER_TESTS to a true value.
 
   To bootstrap from a Git checkout, or if you change the Automake files
   and need to regenerate Makefile.in, you will need Automake 1.11 or

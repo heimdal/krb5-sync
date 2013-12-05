@@ -1,5 +1,8 @@
 docs/pod
 docs/pod-spelling
+perl/critic
+perl/minimum-version
+perl/strict
 plugin/heimdal
 plugin/mit
 plugin/queue-only
