@@ -380,9 +380,9 @@ sync_ad_status(kadm5_hook_modinfo *config, krb5_context ctx,
     memcpy(value, vals[0]->bv_val, vals[0]->bv_len);
     value[vals[0]->bv_len] = '\0';
     if (sscanf(value, "%u", &acctcontrol) != 1) {
-        free(value);
         code = sync_error_generic(ctx, "unable to parse userAccountControl"
                                   " for user \"%s\" (%s)", target, value);
+        free(value);
         goto done;
     }
     free(value);

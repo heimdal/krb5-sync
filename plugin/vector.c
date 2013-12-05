@@ -201,6 +201,8 @@ sync_vector_split_multi(const char *string, const char *seps,
 
     /* Count how big a vector we need and resize accordingly. */
     count = split_multi_count(string, seps);
+    if (count == 0)
+        return vector;
     if (vector->allocated < count && !sync_vector_resize(vector, count))
         goto fail;
 
