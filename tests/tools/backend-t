@@ -1,0 +1,176 @@
+#!/usr/bin/perl
+#
+# Test suite for krb5-strength-backend.
+#
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2013
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# See LICENSE for licensing terms.
+
+use 5.006;
+use strict;
+use warnings;
+
+use lib "$ENV{SOURCE}/tap/perl";
+
+use File::Path qw(remove_tree);
+use POSIX qw(strftime);
+use Test::More tests => 30;
+use Test::RRA qw(use_prereq);
+use Test::RRA::Automake qw(test_file_path test_tmpdir);
+
+use_prereq('IPC::Run', 'run');
+use_prereq('Perl6::Slurp', 'slurp');
+
+# Run krb5-sync-backend and return the status, output, and error output as a
+# list.  Always uses a directory named 'queue' under test_tmpdir() as the
+# queue directory.
+#
+# @args - Command-line arguments to pass in
+#
+# Returns: Exit status, stdout, and stderr as a list
+#  Throws: Text exception on failure to create the queue or run the program
+sub run_backend {
+    my ($action, @args) = @_;
+
+    # Ensure the queue directory exists.
+    my $queue = test_tmpdir() . '/queue';
+    if (!-d $queue) {
+        mkdir($queue, 0777) or BAIL_OUT("cannot create $queue: $!");
+    }
+
+    # Add the queue option to the start of the arguments.
+    unshift(@args, '-d', $queue);
+
+    # If the action is password, we have to pass the password on standard
+    # input.
+    my $in;
+    if ($action eq 'password') {
+        $in = pop(@args);
+    }
+
+    # Run the command and capture the output.  We add the queue option after
+    # the initial argument.
+    my $backend = test_file_path('../tools/krb5-sync-backend');
+    my ($out, $err);
+    run([$backend, $action, @args], \$in, \$out, \$err);
+    my $status = ($? >> 8);
+
+    # Return the results.
+    return ($status, $out, $err);
+}
+
+# Run a krb5-sync-backend command that should exit with success and produce no
+# output and check those results with Test::More functions.  Always uses a
+# directory named 'queue' under test_tmpdir() as the queue directory.
+#
+# @args - Command-line arguments to pass in
+#
+# Returns: undef
+#  Throws: Text exception on failure to create the queue or run the program
+sub run_backend_checked {
+    my (@args) = @_;
+
+    # Run the program and capture status and output.
+    my ($status, $out, $err) = run_backend(@args);
+
+    # Check that everything is as expected.
+    is($status, 0,   "krb5-sync-backend @args succeeded");
+    is($out,    q{}, '...with no output');
+    is($err,    q{}, '...and no errors');
+    return;
+}
+
+# Given a user, an action, and (for a password change) the new password,
+# locate that queued action and check that the correct information was stored
+# for it.  Expects the action to have been queued in the past second.  Reports
+# results with Test::More functions.  Always uses a directory named 'queue'
+# under test_tmpdir() as the queue directory.
+#
+# $user     - User for which the action should be queued
+# $action   - The queued action, chosen from enable, disable, or password
+# $password - For password actions, the queued password
+#
+# Returns: undef
+#  Throws: Text exception on system failures such as reading files
+sub check_queued_action {
+    my ($user, $action, $password) = @_;
+    my $queue = test_tmpdir() . '/queue';
+
+    # Build the base portion of the expected filename, without the timestamp.
+    my $type = ($action eq 'disable') ? 'enable' : $action;
+    my $base = $queue . "/$user-ad-$type-";
+
+    # Locate the queue file.  This doesn't deal with multiple files created
+    # with the same timestamp with a non-zero sequence number.
+    my $now = time;
+    my $path;
+    for my $time ($now - 1 .. $now) {
+        $path = $base . strftime('%Y%m%dT%H%M%SZ-00', gmtime($time));
+        last if -f $path;
+    }
+    ok(defined($path), 'Queued change found');
+
+    # If we found a file, check the contents and delete the file.
+  SKIP: {
+        if (!defined($path)) {
+            my $count = ($action eq 'password') ? 5 : 4;
+            skip('No queued change found', $count);
+        }
+        my @data = slurp($path, { chomp => 1 });
+        is($data[0], $user,   '...queued user is correct');
+        is($data[1], 'ad',    '...queued domain is correct');
+        is($data[2], $action, '...queued operation is correct');
+        if ($action eq 'password') {
+            is(scalar(@data), 4, '...no extraneous data');
+            is($data[3], $password, '...queued password is correct');
+        } else {
+            is(scalar(@data), 3, '...no extraneous data');
+        }
+
+        # Unlink the file after checking.  This lets us check later that no
+        # extraneous files were created in the queue.
+        if (!unlink($path)) {
+            diag("cannot delete queued change $path: $!");
+        }
+    }
+    return;
+}
+
+# Clean out any existing queue if one already exists.
+my $queue = test_tmpdir() . '/queue';
+if (-d $queue) {
+    remove_tree($queue);
+}
+
+# Start of testing.  Try creating each type of change.
+run_backend_checked('disable',  'test');
+run_backend_checked('enable',   'longtest');
+run_backend_checked('password', 'test', 'foobar');
+
+# Check that the list output is now what we would expect.  We can't check the
+# timestamp directly without messing about with various improbable but
+# possible time transitions, so just make sure it's in the correct format.
+my $timestamp = qr{ \d{4}-\d\d-\d\d [ ] \d\d:\d\d:\d\d [ ] UTC }xms;
+my $expected = qr{
+    \A
+    longtest [ ]{2} enable   [ ]{4} ad [ ]{4} $timestamp \n
+    test     [ ]{6} disable  [ ]{3} ad [ ]{4} $timestamp \n
+    test     [ ]{6} password [ ]{2} ad [ ]{4} $timestamp \n
+    \z
+}xms;
+my ($status, $out, $err) = run_backend('list');
+is($status, 0, 'krb5-sync-backend list succeeded');
+like($out, $expected, '...with correct output');
+is($err, q{}, '...and no errors');
+
+# Now check that the created queue files are all correct.
+check_queued_action('test',     'disable');
+check_queued_action('test',     'password', 'foobar');
+check_queued_action('longtest', 'enable');
+
+# Verify that the lock file exists and that there are no other queued files by
+# removing the queue.
+ok(unlink("$queue/.lock"), 'Lock file exists and can be removed');
+ok(rmdir($queue), 'No extraneous files in the queue');

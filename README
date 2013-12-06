@@ -100,6 +100,7 @@ REQUIREMENTS
   the prerequisites for krb5-sync-backend.  The following additional Perl
   modules will be used if present:
 
+      Perl6::Slurp
       Test::MinimumVersion
       Test::Perl::Critic
       Test::Pod

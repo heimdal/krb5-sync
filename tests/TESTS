@@ -9,6 +9,7 @@ plugin/queue-only
 plugin/queuing
 portable/asprintf
 portable/snprintf
+tools/backend
 util/messages
 util/messages-krb5
 util/xmalloc
