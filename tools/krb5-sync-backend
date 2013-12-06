@@ -53,13 +53,16 @@ my @IGNORE = (
 # place where we need a consistent snapshot of the queue.  Note that we use
 # flock locking; other callers will have to match.
 #
+# $queue - Queue directory to use
+#
 # Returns: The file handle of the queue lock, to pass to unlock_queue
 #  Throws: Text exception on failure to open or lock the queue
 sub lock_queue {
-    open(my $lock_fh, '+<', "$QUEUE/.lock")
-      or die "$0: cannot open $QUEUE/.lock: $!\n";
+    my ($queue) = @_;
+    open(my $lock_fh, '+>', "$queue/.lock")
+      or die "$0: cannot open $queue/.lock: $!\n";
     flock($lock_fh, LOCK_EX)
-      or die "$0: cannot lock $QUEUE/.lock: $!\n";
+      or die "$0: cannot lock $queue/.lock: $!\n";
     return $lock_fh;
 }
 
@@ -71,7 +74,7 @@ sub lock_queue {
 #  Throws: Text exception on failure to close the lock file
 sub unlock_queue {
     my ($lock_fh) = @_;
-    close($lock_fh) or die "$0: cannot unlock $QUEUE/.lock: $!\n";
+    close($lock_fh) or die "$0: cannot unlock queue: $!\n";
     return;
 }
 
@@ -120,7 +123,7 @@ sub queue {
     my $base = "$queue/$user-ad-$type-" . queue_timestamp();
 
     # Find the next file name.
-    my $lock = lock_queue;
+    my $lock = lock_queue($queue);
     my ($filename, $file);
     for my $count (0 .. 99) {
         $filename = "$base-" . sprintf('%02d', $count);
@@ -204,7 +207,7 @@ sub list {
     my $queue = $options_ref->{directory} || $QUEUE;
 
     # Read in the files within a queue lock.
-    my $lock  = lock_queue();
+    my $lock  = lock_queue($queue);
     my @files = queue_files($queue);
     unlock_queue($lock);
 
@@ -254,7 +257,7 @@ sub process {
     my $silent = $options_ref->{silent};
 
     # Read in the files within a queue lock.
-    my $list_lock = lock_queue();
+    my $list_lock = lock_queue($queue);
     my @files     = queue_files($queue);
     unlock_queue($list_lock);
 
@@ -268,7 +271,7 @@ sub process {
         my $path = "$queue/$filename";
 
         # Grab the queue lock.
-        my $lock = lock_queue();
+        my $lock = lock_queue($queue);
 
         # Skip missing files, since they've probably been processed by some
         # other job running in parallel.
@@ -343,7 +346,7 @@ sub purge {
 
     # Lock the queue walk through the queue files and check their age.
     my $has_errors;
-    my $lock = lock_queue();
+    my $lock = lock_queue($queue);
     for my $filename (queue_files($queue)) {
         my $path = "$queue/$filename";
         if (-M $path > $days) {
