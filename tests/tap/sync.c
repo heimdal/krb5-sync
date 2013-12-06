@@ -24,6 +24,23 @@
 
 
 /*
+ * Format the user for queue file naming.  This just replaces all slashes with
+ * periods and returns the new user as a newly-allocated string.
+ */
+static char *
+munge_user(const char *user)
+{
+    char *munged_user, *p;
+
+    munged_user = bstrdup(user);
+    for (p = munged_user; *p != '\0'; p++)
+        if (*p == '/')
+            *p = '.';
+    return munged_user;
+}
+
+
+/*
  * Block processing by creating a dummy queue file.  Takes the queue
  * directory, the username (as used for queuing), and the operation to block.
  * Calls bail on failure.
@@ -32,9 +49,11 @@ void
 sync_queue_block(const char *queue, const char *user, const char *op)
 {
     int fd;
-    char *file;
+    char *file, *munged_user;
 
-    basprintf(&file, "%s/%s-ad-%s-19700101T000000Z", queue, user, op);
+    munged_user = munge_user(user);
+    basprintf(&file, "%s/%s-ad-%s-19700101T000000Z", queue, munged_user, op);
+    free(munged_user);
     fd = open(file, O_CREAT | O_WRONLY, 0666);
     if (fd < 0)
         sysbail("cannot create blocking queue file %s", file);
@@ -50,9 +69,11 @@ sync_queue_block(const char *queue, const char *user, const char *op)
 void
 sync_queue_unblock(const char *queue, const char *user, const char *op)
 {
-    char *file;
+    char *file, *munged_user;
 
-    basprintf(&file, "%s/%s-ad-%s-19700101T000000Z", queue, user, op);
+    munged_user = munge_user(user);
+    basprintf(&file, "%s/%s-ad-%s-19700101T000000Z", queue, munged_user, op);
+    free(munged_user);
     if (unlink(file) < 0)
         sysbail("cannot delete blocking queue file %s", file);
     free(file);
@@ -68,7 +89,7 @@ static void
 queue_check(const char *queue, const char *user, const char *op,
             const char *password)
 {
-    char *path, *wanted;
+    char *path, *wanted, *munged_user;
     const char *path_op;
     time_t now, timestamp;
     struct tm *date;
@@ -80,16 +101,18 @@ queue_check(const char *queue, const char *user, const char *op,
     path = NULL;
     now = time(NULL);
     path_op = (strcmp("disable", op) == 0) ? "enable" : op;
+    munged_user = munge_user(user);
     for (timestamp = now - 1; timestamp <= now; timestamp++) {
         date = gmtime(&timestamp);
         basprintf(&path, "%s/%s-ad-%s-%04d%02d%02dT%02d%02d%02dZ-00", queue,
-                  user, path_op, date->tm_year + 1900, date->tm_mon + 1,
+                  munged_user, path_op, date->tm_year + 1900, date->tm_mon + 1,
                   date->tm_mday, date->tm_hour, date->tm_min, date->tm_sec);
         if (access(path, F_OK) == 0)
             break;
         free(path);
         path = NULL;
     }
+    free(munged_user);
 
     /* Check that we found a queued change. */
     ok(path != NULL, "%s for %s was queued", op, user);

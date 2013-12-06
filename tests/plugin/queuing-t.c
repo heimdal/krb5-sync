@@ -40,7 +40,7 @@ main(void)
     char *wanted;
 
     /* Define the plan. */
-    plan(32);
+    plan(47);
 
     /* Set up a temporary directory and queue relative to it. */
     tmpdir = test_tmpdir();
@@ -72,7 +72,7 @@ main(void)
         bail_krb5(ctx, code, "cannot parse principal test@EXAMPLE.COM");
     sync_queue_block("queue", "test", "password");
     code = sync_chpass(data, ctx, princ, "foobar");
-    is_int(0, code, "pwupdate_precommit_password succeeds");
+    is_int(0, code, "sync_chpass succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
     sync_queue_check_password("queue", "test", "foobar");
     sync_queue_unblock("queue", "test", "password");
@@ -89,11 +89,51 @@ main(void)
     sync_queue_check_enable("queue", "test", false);
     sync_queue_unblock("queue", "test", "enable");
 
+    /* Queue a password change for a root instance. */
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/root@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/root@EXAMPLE.COM");
+    sync_queue_block("queue", "test/root", "password");
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(0, code, "sync_chpass of root instance succeeds");
+    sync_queue_check_password("queue", "test/root", "foobar");
+    sync_queue_unblock("queue", "test/root", "password");
+
+    /* Queue an account disable for an ipass instance. */
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/ipass@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/ipass@EXAMPLE.COM");
+    sync_queue_block("queue", "test/ipass", "enable");
+    code = sync_status(data, ctx, princ, true);
+    is_int(0, code, "sync_status of root instance succeeds");
+    sync_queue_check_enable("queue", "test/ipass", true);
+    sync_queue_unblock("queue", "test/ipass", "enable");
+
+    /*
+     * Try queuing a change for an admin instance, which should do nothing,
+     * successfully.  We'll test there's no queued changes by deleting the
+     * queue file.
+     */
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/admin@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/admin@EXAMPLE.COM");
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(0, code, "sync_chpass of admin instance succeeds");
+    code = sync_status(data, ctx, princ, true);
+    is_int(0, code, "sync_status enable of admin instance succeeds");
+
     /* Unwind the queue and be sure all the right files exist. */
     ok(unlink("queue/.lock") == 0, "Lock file still exists");
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Check failure when there's no queue directory. */
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/root@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/root@EXAMPLE.COM");
     basprintf(&wanted, "cannot open lock file queue/.lock: %s",
               strerror(ENOENT));
     code = sync_chpass(data, ctx, princ, "foobar");
