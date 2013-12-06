@@ -156,19 +156,25 @@ sub queue {
 # commands.  It transforms the arguments into the format expected by the queue
 # function.
 #
+# Due to a bug in Net::Remctl::Backend prior to 3.7, we have to check that we
+# got sufficient arguments for the password action.
+#
 # $operation   - The operation (enable, disable, or password)
 # $options_ref - Reference to hash of command-line options
 #   directory - The queue directory to use
 # $principal   - The principal for which to queue a change
-# $password    - For the password operation, the password to set
+# @data        - Any extra data (for password changes, the password)
 #
 # Returns: 0, indicating success
 #  Throws: Text exception on invalid arguments, write failure, or inability
 #          to create a usable queue file name
 sub queue_command {
-    my ($operation, $options_ref, $principal, $password) = @_;
+    my ($operation, $options_ref, $principal, @data) = @_;
     my $queue = $options_ref->{directory} || $QUEUE;
-    queue($queue, $principal, $operation, $password);
+    if ($operation eq 'password' && !@data) {
+        die "sync password: insufficient arguments\n";
+    }
+    queue($queue, $principal, $operation, @data);
     return 0;
 }
 
@@ -407,12 +413,12 @@ my %commands = (
         syntax   => q{},
     },
     password => {
-        args_min => 2,
+        args_min => 1,
         args_max => 2,
         code     => sub { queue_command('password', @_) },
         options  => ['directory|d=s'],
         stdin    => 2,
-        summary  => 'Queue <user> password chagne in AD',
+        summary  => 'Queue <user> password change in AD',
         syntax   => '<user> <password>',
     },
     process => {
