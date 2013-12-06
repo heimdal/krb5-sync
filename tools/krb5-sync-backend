@@ -1,28 +1,10 @@
 #!/usr/bin/perl
 #
-# krb5-sync-backend -- Manipulate Kerberos password and status change queue.
+# Manipulate Kerberos password and status change queue.
 #
-# Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2007, 2008, 2010, 2012, 2013
-#     The Board of Trustees of the Leland Stanford Junior University
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to
-# deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-# sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
+# Provides various utility commands to manipulate the queue of password and
+# status changes created by krb5-sync's Kerberos plugin.  Uses the krb5-sync
+# utility to process changes.
 
 ##############################################################################
 # Declarations and site configuration
@@ -33,28 +15,34 @@ use strict;
 use warnings;
 
 use Fcntl qw(LOCK_EX O_WRONLY O_CREAT O_EXCL);
+use File::Basename qw(basename);
 use Getopt::Long qw(GetOptions);
+use IPC::Run qw(run);
+use Net::Remctl::Backend;
+use Pod::Usage qw(pod2usage);
 use POSIX qw(EEXIST);
 
-# Default path to the krb5-sync binary.
+# Path to the krb5-sync binary.
 my $SYNC = '/usr/sbin/krb5-sync';
 
 # Default path to the directory that contains queued changes.
 my $QUEUE = '/var/spool/krb5-sync';
 
 # Regular expression prefix to match when ignoring error messages.
-my $IGNORE_PREFIX
-  = qr{ AD [ ] (?:password|status) [ ] change [ ] for [ ] \S+ [ ] failed }xms;
+my $IGNORE_PREFIX = qr{
+    \A krb5-sync: [ ]
+    AD [ ] (?:password|status) [ ] change [ ] for [ ] \S+ [ ] failed:
+}xms;
 
 # Regexes of error messages to ignore when running in silent mode.  These are
 # all error messages that can indicate that the target account doesn't exist
 # in Active Directory yet, as opposed to some more serious error.
 my @IGNORE = (
-    qr{ $IGNORE_PREFIX: .* Connection [ ] timed [ ] out \z }xms,
-    qr{ $IGNORE_PREFIX: .* Authentication error \z }xms,
-    qr{ $IGNORE_PREFIX: .* for [ ] service_locator \z }xms,
-    qr{ $IGNORE_PREFIX: .* Operation [ ] not [ ] permitted \z }xms,
-    qr{ $IGNORE_PREFIX: .* user [ ] .* [ ] not [ ] found [ ] in [ ] \S+\z}xms,
+    qr{ $IGNORE_PREFIX .* Connection [ ] timed [ ] out \z }xms,
+    qr{ $IGNORE_PREFIX .* Authentication error \z }xms,
+    qr{ $IGNORE_PREFIX .* for [ ] service_locator \z }xms,
+    qr{ $IGNORE_PREFIX .* Operation [ ] not [ ] permitted \z }xms,
+    qr{ $IGNORE_PREFIX .* user [ ] .* [ ] not [ ] found [ ] in [ ] \S+\z}xms,
 );
 
 ##############################################################################
@@ -70,7 +58,7 @@ my @IGNORE = (
 sub lock_queue {
     open(my $lock_fh, '+<', "$QUEUE/.lock")
       or die "$0: cannot open $QUEUE/.lock: $!\n";
-    flock($lock_fh, LOCK_EX);
+    flock($lock_fh, LOCK_EX)
       or die "$0: cannot lock $QUEUE/.lock: $!\n";
     return $lock_fh;
 }
@@ -96,8 +84,8 @@ sub queue_timestamp {
     my ($sec, $min, $hour, $mday, $mon, $year) = gmtime;
     $mon++;
     $year += 1900;
-    return sprintf('%04d%02d%02dT%02d%02d%02dZ', $year, $mon, $mday, $hour,
-                   $min, $sec);
+    return sprintf('%04d%02d%02dT%02d%02d%02dZ',
+        $year, $mon, $mday, $hour, $min, $sec);
 }
 
 # Write out a new queue file.  We currently hard-code the target system to be
@@ -105,6 +93,7 @@ sub queue_timestamp {
 # the data field for future expansion.  The queue file will be written with a
 # timestamp for the current time.
 #
+# $queue     - Queue directory to use
 # $principal - Principal to queue an operation for
 # $operation - Operation, chosen from enable, disable, or password
 # @data      - Additional data to add to the queue file
@@ -113,7 +102,7 @@ sub queue_timestamp {
 #  Throws: Text exception on invalid arguments, write failure, or inability
 #          to create a usable queue file name
 sub queue {
-    my ($principal, $operation, @data) = @_;
+    my ($queue, $principal, $operation, @data) = @_;
 
     # Convert the principal to a simple username, used for our queue format.
     my $user = $principal;
@@ -128,67 +117,120 @@ sub queue {
 
     # Create the filename prefix for the queue file.  "-" and a sequence
     # number from 00 to 99 will be appended.
-    my $base = "$QUEUE/$baseuser-ad-$type-" . queue_timestamp();
+    my $base = "$queue/$user-ad-$type-" . queue_timestamp();
 
     # Find the next file name.
     my $lock = lock_queue;
-    my ($file, $queue);
-    for my $count (0..99) {
-        $file = "$base-" . sprintf('%02d', $count);
-        if (sysopen($queue, $file, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
+    my ($filename, $file);
+    for my $count (0 .. 99) {
+        $filename = "$base-" . sprintf('%02d', $count);
+        if (sysopen($file, $filename, O_WRONLY | O_CREAT | O_EXCL, 0600)) {
             last;
         }
         if ($! != EEXIST) {
-            die "$0: cannot create $file: $!\n";
+            die "$0: cannot create $filename: $!\n";
         }
     }
 
     # Write the data to the queue file.
-    print {$queue} "$username\n$system\n$action\n"
-      or die "$0: cannot write to $file: $!\n";
+    print {$file} "$user\nad\n$operation\n"
+      or die "$0: cannot write to $filename: $!\n";
     for my $data (@data) {
-        print {$queue} $data or die "$0: cannot write to $file: $!\n";
+        print {$file} $data or die "$0: cannot write to $filename: $!\n";
         if ($data !~ m{\n}xms) {
-            print {$queue} "\n" or die "$0: cannot write to $file: $!\n";
+            print {$file} "\n" or die "$0: cannot write to $filename: $!\n";
         }
     }
-    close($queue) or die "$0: cannot flush $file: $!\n";
+    close($file) or die "$0: cannot flush $filename: $!\n";
 
     # Done.  Unlock the queue.
     unlock_queue($lock);
     return;
 }
 
+# Handle a command that writes out a queue file.  This is the command function
+# called by Net::Remctl::Backend for the enable, disable, and password
+# commands.  It transforms the arguments into the format expected by the queue
+# function.
+#
+# $operation   - The operation (enable, disable, or password)
+# $options_ref - Reference to hash of command-line options
+#   directory - The queue directory to use
+# $principal   - The principal for which to queue a change
+# $password    - For the password operation, the password to set
+#
+# Returns: 0, indicating success
+#  Throws: Text exception on invalid arguments, write failure, or inability
+#          to create a usable queue file name
+sub queue_command {
+    my ($operation, $options_ref, $principal, $password) = @_;
+    my $queue = $options_ref->{directory} || $QUEUE;
+    queue($queue, $principal, $operation, $password);
+    return 0;
+}
+
 ##############################################################################
 # Queue listing
 ##############################################################################
+
+# List all files in the queue and return them as a list of file names.  The
+# caller is responsible for locking the queue.
+#
+# $queue - The queue directory to read
+#
+# Returns: List of queue file names
+#  Throws: Text exception on failure to read the queue
+sub queue_files {
+    my ($queue) = @_;
+
+    # Read the files, ignoring ones with a leading period.
+    opendir(my $dir, $queue) or die "$0: cannot open $queue: $!\n";
+    my @files = sort grep { !m{ \A [.] }xms } readdir($dir);
+    closedir($dir) or die "$0: cannot close $queue: $!\n";
+    return @files;
+}
 
 # List the current queue.  Displays the user, the type of event, the
 # destination service, and the timestamp.  Sort the events the same way
 # they're read when processing the queue.
 #
-# Returns: undef
+# $options_ref - Reference to hash of command-line options
+#   directory - The queue directory to use
+#
+# Returns: 0, indicating success
 #  Throws: Text exception on failure to read the queue
 sub list {
-    my $lock = lock_queue;
+    my ($options_ref) = @_;
+    my $queue = $options_ref->{directory} || $QUEUE;
 
-    # Read the files from the queue.
-    opendir(my $queue, $QUEUE) or die "$0: cannot open $QUEUE: $!\n";
-    my @files = sort grep { !m{ \A \. }xms } readdir($queue);
-    closedir($queue) or die "$0: cannot close $QUEUE: $!\n";
-    unlock_queue;
-    for my $file (@files) {
-        my ($user, undef, undef, $timestamp) = split ('-', $file);
-        $timestamp =~ s{^(\d\d\d\d)(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z\z}
-                       {$1-$2-$3 $4:$5:$6 UTC};
-        open (FILE, '<', "$QUEUE/$file") or next;
-        my @data = <FILE>;
-        close FILE;
-        chomp @data;
-        next unless @data >= 3;
-        printf "%-8s  %-8s  %-4s  %s\n", $user, $data[2], $data[1],
-            $timestamp;
+    # Read in the files within a queue lock.
+    my $lock  = lock_queue();
+    my @files = queue_files($queue);
+    unlock_queue($lock);
+
+    # Walk through the files and read in the data for each.  We don't hold a
+    # lock for this, since it doesn't really matter if things disappear out
+    # from under us when listing the queue.
+    for my $filename (@files) {
+        my ($user, undef, undef, $time) = split(m{-}xms, $filename);
+        $time =~ s{^(\d\d\d\d)(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)Z\z}
+                  {$1-$2-$3 $4:$5:$6 UTC}xms;
+
+        # Each data element is on one line.  The first is the user, the second
+        # is the domain, the third is the operation, and the fourth is the
+        # password for password changes.  Ignore corrupt files.  If we can't
+        # open the file, it's probably been processed by another copy running
+        # process, so just ignore it.
+        if (open(my $file, '<', "$queue/$filename")) {
+            my @data = <$file>;
+            close($file) or die "$0: cannot read $queue/$filename: $!\n";
+            chomp(@data);
+            next if @data < 3;
+            printf {*STDOUT} "%-8s  %-8s  %-4s  %s\n",
+              $user, $data[2], $data[1], $time;
+        }
     }
+    return 0;
 }
 
 ##############################################################################
@@ -198,49 +240,88 @@ sub list {
 # Go through the queue and process each pending event using krb5-sync.
 # krb5-sync will remove the files when the processing is successful.  If
 # processing any of the queue files of a particular type fails, we skip all
-# subsequent queue files of the same type.
+# subsequent queue files of the same type for the same user.
+#
+# $options_ref - Reference to hash of command-line options
+#   directory - The queue directory to use
+#   silent    - Filter out error messages indicating a missing user in AD
+#
+# Returns: 0 if all processing succeeded, 1 otherwise
+#  Throws: Text exception on failure to read the queue or spawn the command
 sub process {
-    my ($silent) = @_;
-    chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
-    lock_queue;
-    opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
-    my @files = sort grep { !/^\./ } readdir QUEUE;
-    closedir QUEUE;
-    unlock_queue;
-    my %skipped;
-    for my $file (@files) {
-        next unless -f $file;
-        my ($id) = ($file =~ /^([^-]+-[^-]+-[^-]+)-/);
-        $id ||= 'UNKNOWN';
-        next if $skipped{$id};
-        my $pid = open (SYNC, '-|');
-        if (not defined $pid) {
-            die "$0: cannot fork: $!\n";
-        } elsif ($pid == 0) {
-            if ($silent) {
-                open (STDERR, '>&STDOUT') or die "$0: cannot dup STDOUT: $!\n";
+    my ($options_ref) = @_;
+    my $queue = $options_ref->{directory} || $QUEUE;
+    my $silent = $options_ref->{silent};
+
+    # Read in the files within a queue lock.
+    my $list_lock = lock_queue();
+    my @files     = queue_files($queue);
+    unlock_queue($list_lock);
+
+    # Walk through the list of files and process each in turn, but keep track
+    # of which ones failed with an error and skip processing of other files
+    # with the same user, domain, and operation.  We don't hold a lock across
+    # the entire operation, since it takes too long, but we do hold a queue
+    # lock while dealing with any single file.
+    my (%skip, $has_errors);
+    for my $filename (queue_files($queue)) {
+        my $path = "$queue/$filename";
+
+        # Grab the queue lock.
+        my $lock = lock_queue();
+
+        # Skip missing files, since they've probably been processed by some
+        # other job running in parallel.
+        next if !-f "$path";
+
+        # Skip determinations are based on the first three elements of the
+        # file name, which will be the username, domain, and operation with
+        # enable and disable smashed to enable.  Be sure the file name is
+        # sane.
+        my ($id) = ($filename =~ m{ \A ([^-]+-[^-]+-[^-]+)- }xms);
+        if (!defined($id)) {
+            warn "$0: invalid queue file name $path\n";
+            $has_errors = 1;
+            next;
+        }
+
+        # Skip if we already failed a conflicting change.
+        next if $skip{$id};
+
+        # Run the krb5-sync command on the queued change.
+        my ($stdout, $stderr);
+        run([$SYNC, '-f', $path], q{>}, \$stdout, q{2>}, \$stderr);
+
+        # Done with this file.  Unlock the queue.
+        unlock_queue($lock);
+
+        # If the comamnd failed, skip conflicting changes and note errors.
+        if ($? != 0) {
+            $skip{$id} = 1;
+            $has_errors = 1;
+        }
+
+        # If in silent mode, filter standard error.  Otherwise, print out
+        # everything, including standard output.
+        if ($options_ref->{silent}) {
+          STDERR:
+            for my $line (split(m{\n}xms, $stderr)) {
+                for my $ignore (@IGNORE) {
+                    next STDERR if $line =~ m{ $ignore }xms;
+                }
+                print {*STDERR} $line
+                  or warn "$0: cannot write to standard error: $!\n";
             }
-            exec ($SYNC, '-f', $file) or die "$0: cannot exec $SYNC: $!\n";
         } else {
-            local $/;
-            my $output = <SYNC>;
-            close SYNC;
-            my $ignore;
-            for my $regex (@IGNORE) {
-                $ignore = 1 if $output =~ /^krb5-sync: $regex/;
-            }
-            if (not $silent) {
-                print $output if $output;
-                warn "$0: krb5-sync failed on $file\n" unless $? == 0;
-            } elsif (not $ignore and $? != 0) {
-                warn $output;
-                warn "$0: krb5-sync failed on $file\n";
-            }
-            unless ($? == 0) {
-                $skipped{$id} = 1;
-            }
+            print {*STDERR} $stderr
+              or warn "$0: cannot write to standard error: $!\n";
+            print {*STDOUT} $stdout
+              or warn "$0: cannot write to standard output: $!\n";
         }
     }
+
+    # Return an exit status.
+    return $has_errors ? 1 : 0;
 }
 
 ##############################################################################
@@ -249,85 +330,117 @@ sub process {
 
 # Given a number of days, remove all queue files older than that number of
 # days.
+#
+# $options_ref - Reference to hash of command-line options
+#   directory - The queue directory to use
+# $days        - Maximum age in days, beyond which queue files are removed
+#
+# Returns: 0 for success, 1 if we failed to unlink any files
+#  Throws: Text exception on any failures
 sub purge {
-    my ($days) = @_;
-    chdir $QUEUE or die "$0: cannot chdir to $QUEUE: $!\n";
-    lock_queue;
-    opendir (QUEUE, '.') or die "$0: cannot open $QUEUE: $!\n";
-    my @files = sort grep { !/^\./ } readdir QUEUE;
-    closedir QUEUE;
-    for my $file (@files) {
-        if (-M $file > $days) {
-            unlink $file or warn "$0: cannot unlink $QUEUE/$file: $!\n";
+    my ($options_ref, $days) = @_;
+    my $queue = $options_ref->{directory} || $QUEUE;
+
+    # Lock the queue walk through the queue files and check their age.
+    my $has_errors;
+    my $lock = lock_queue();
+    for my $filename (queue_files($queue)) {
+        my $path = "$queue/$filename";
+        if (-M $path > $days) {
+            if (!unlink($path)) {
+                warn "$0: cannot delete $path: $!\n";
+                $has_errors = 1;
+            }
         }
     }
-    unlock_queue;
+
+    # Return an exit status.
+    return $has_errors ? 1 : 0;
 }
 
 ##############################################################################
 # Main routine
 ##############################################################################
 
-# Flush output and clean up the program name for error reporting.
-$| = 1;
+# Always flush output.
+STDOUT->autoflush;
+
+# Clean up the script name for error reporting.
 my $fullpath = $0;
-$0 =~ s%.*/%%;
+local $0 = basename($0);
 
-# Read command-line options.
-my ($help, $silent) = @_;
-Getopt::Long::config ('bundling', 'require_order');
-GetOptions (
-    'd|directory=s' => \$QUEUE,
-    'h|help'        => \$help,
-    's|silent'      => \$silent
+# Standard options that all commands take.
+my @options = qw(directory|d=s elp|h silent|s);
+
+# The Net::Remctl::Backend configuration for our commands.
+my %commands = (
+    disable => {
+        args_min => 1,
+        args_max => 1,
+        code     => sub { queue_command('disable', @_) },
+        options  => ['directory|d=s'],
+        summary  => 'Queue disable of <user> in AD',
+        syntax   => '<user>',
+    },
+    enable => {
+        args_min => 1,
+        args_max => 1,
+        code     => sub { queue_command('enable', @_) },
+        options  => ['directory|d=s'],
+        summary  => 'Queue enable of <user> in AD',
+        syntax   => '<user>',
+    },
+    list => {
+        args_max => 0,
+        code     => \&list,
+        options  => ['directory|d=s'],
+        summary  => 'List pending queued actions',
+        syntax   => q{},
+    },
+    manual => {
+        args_max => 0,
+        code     => sub { pod2usage(-exitval => 0, -verbose => 2) },
+        summary  => 'Show full manual including options',
+        syntax   => q{},
+    },
+    password => {
+        args_min => 2,
+        args_max => 2,
+        code     => sub { queue_command('password', @_) },
+        options  => ['directory|d=s'],
+        stdin    => 2,
+        summary  => 'Queue <user> password chagne in AD',
+        syntax   => '<user> <password>',
+    },
+    process => {
+        args_max => 0,
+        code     => \&process,
+        options  => ['directory|d=s', 'silent|s'],
+        summary  => 'Process pending queued actions',
+        syntax   => q{},
+    },
+    purge => {
+        args_min => 1,
+        args_max => 1,
+        code     => \&purge,
+        options  => ['directory|d=s'],
+        summary  => 'Delete queued actions older than <days>',
+        syntax   => '<days>',
+    },
 );
-if ($help) {
-    print "Feeding myself to perldoc, please wait....\n";
-    exec ('perldoc', '-t', $fullpath);
-}
-my ($function, @args) = @ARGV;
-die "$0: no function specified\n" unless $function;
 
-# Take the appropriate action.
-if ($function eq 'disable') {
-    die "Usage: sync disable <username>\n" unless @args == 1;
-    queue('disable', @args);
-} elsif ($function eq 'enable') {
-    die "Usage: sync enable <username>\n" unless @args == 1;
-    queue('enable', @args);
-} elsif ($function eq 'help') {
-    print <<'EOH';
-Kerberos status synchronization help:
-  sync disable <user>                   Queue disable of <user> in AD
-  sync enable <user>                    Queue enable of <user> in AD
-  sync help                             This text
-  sync list                             List pending queued actions
-  sync password <user> ad <password>    Queue <user> password change in AD
-  sync process                          Process pending queued actions
-  sync purge <days>                     Delete queued actions older than <days>
-EOH
-} elsif ($function eq 'list') {
-    die "Usage: sync list\n" unless @args == 0;
-    list;
-} elsif ($function eq 'process') {
-    die "Usage: sync process\n" unless @args == 0;
-    process ($silent);
-} elsif ($function eq 'password') {
-    if (@args < 1 || @args > 2) {
-        die "Usage: sync password <user> <password>\n";
+# Configure Net::Remctl::Backend.
+my $backend = Net::Remctl::Backend->new(
+    {
+        command     => 'sync',
+        commands    => \%commands,
+        help_banner => 'Kerberos status synchronization help:',
     }
-    my ($principal, $password) = @args;
-    if (!defined($password) {
-        local $/;
-        $password = <STDIN>;
-    }
-    queue($principal, 'password', $password);
-} elsif ($function eq 'purge') {
-    die "Usage: sync purge <days>\n" unless @args == 1;
-    purge (@args);
-} else {
-    die "$0: unknown function $function\n";
-}
+);
+
+# Dispatch to the appropriate command.
+exit($backend->run);
+__END__
 
 ##############################################################################
 # Documentation
@@ -335,6 +448,7 @@ EOH
 
 =for stopwords
 krb5-sync-backend krb5-sync UTC Allbery timestamp username propagations
+Kerberos regexes
 
 =head1 NAME
 
@@ -342,17 +456,17 @@ krb5-sync-backend - Manipulate Kerberos password and status change queue
 
 =head1 SYNOPSIS
 
-B<krb5-sync-backend> B<-h> [help]
+B<krb5-sync-backend> (help|manual)
 
-B<krb5-sync-backend> [B<-d> I<queue>] (disable|enable) I<user>
+B<krb5-sync-backend> (disable|enable) [B<-d> I<queue>] I<user>
 
-B<krb5-sync-backend> [B<-d> I<queue>] list
+B<krb5-sync-backend> list [B<-d> I<queue>]
 
-B<krb5-sync-backend> [B<-s>] [B<-d> I<queue>] process
+B<krb5-sync-backend> process [B<-s>] [B<-d> I<queue>]
 
-B<krb5-sync-backend> [B<-d> I<queue>] password I<user> ad < I<password>
+B<krb5-sync-backend> password [B<-d> I<queue>] I<user> ad < I<password>
 
-B<krb5-sync-backend> [B<-d> I<queue>] purge I<days>
+B<krb5-sync-backend> purge [B<-d> I<queue>] I<days>
 
 =head1 DESCRIPTION
 
@@ -398,6 +512,10 @@ List the supported commands.
 
 List the current contents of the queue.
 
+=item manual
+
+Display this documentation.
+
 =item process
 
 Process the queue.  All queued actions will be sorted alphanumerically
@@ -431,31 +549,24 @@ removed and never created in other environments.
 
 =head1 OPTIONS
 
+Options must be specified after the command.
+
 =over 4
 
 =item B<-d> I<queue>, B<--directory>=I<queue>
 
 Use I<queue> as the queue directory instead of the default of
-F</var/spool/krb5-sync>.  This also changes the lock file accordingly.
-
-=item B<-h>, B<--help>
-
-Display this documentation (by running this script through C<perldoc -t> and
-exit.  All other options and commands are ignored.
+F</var/spool/krb5-sync>.  This also changes the lock file accordingly.  This
+option is supported for all commands except C<help> and C<manual>.
 
 =item B<-s>, B<--silent>
 
-When running the process command, filter out the output of B<krb5-sync> to
-ignore common errors and success messages and only show uncommon errors.
-This option will filter out all output when B<krb5-sync> is successful and
-will filter out error messages matching:
-
-    ^AD password change for \S+ failed \(3\):.*Authentication error$
-    ^AD status change for \S+ failed \(1\): user .* not found in \S+$
-
-even when it fails.  (This message generally means the account doesn't exist
-in Active Directory.)  The regexes can be modified at the start of this
-script.
+This option is only allowed for the C<process> command.  Filter out the
+output of B<krb5-sync> to ignore common errors and success messages and
+only show uncommon errors.  This option will filter out all output when
+B<krb5-sync> is successful and will filter out error messages that
+normally indicate the account is missing in Active Directory.  The regexes
+can be modified at the start of this script.
 
 =back
 
@@ -483,15 +594,38 @@ use the same locking mechanism for safe operation.
 
 =back
 
+=head1 AUTHOR
+
+Russ Allbery <eagle@eyrie.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2007, 2008, 2010, 2012, 2013 The Board of Trustees of the Leland
+Stanford Junior University
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
 =head1 SEE ALSO
 
 krb5-sync(8)
 
 The current version of this program is available from its web page at
 L<http://www.eyrie.org/~eagle/software/krb5-sync/>.
-
-=head1 AUTHOR
-
-Russ Allbery <eagle@eyrie.org>
 
 =cut
