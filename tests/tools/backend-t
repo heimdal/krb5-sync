@@ -20,7 +20,7 @@ use Test::More tests => 30;
 use Test::RRA qw(use_prereq);
 use Test::RRA::Automake qw(test_file_path test_tmpdir);
 
-use_prereq('IPC::Run', 'run');
+use_prereq('IPC::Run',     'run');
 use_prereq('Perl6::Slurp', 'slurp');
 
 # Run krb5-sync-backend and return the status, output, and error output as a
@@ -123,8 +123,8 @@ sub check_queued_action {
         is($data[1], 'ad',    '...queued domain is correct');
         is($data[2], $action, '...queued operation is correct');
         if ($action eq 'password') {
-            is(scalar(@data), 4, '...no extraneous data');
-            is($data[3], $password, '...queued password is correct');
+            is(scalar(@data), 4,         '...no extraneous data');
+            is($data[3],      $password, '...queued password is correct');
         } else {
             is(scalar(@data), 3, '...no extraneous data');
         }
@@ -153,7 +153,7 @@ run_backend_checked('password', 'test', 'foobar');
 # timestamp directly without messing about with various improbable but
 # possible time transitions, so just make sure it's in the correct format.
 my $timestamp = qr{ \d{4}-\d\d-\d\d [ ] \d\d:\d\d:\d\d [ ] UTC }xms;
-my $expected = qr{
+my $expected  = qr{
     \A
     longtest [ ]{2} enable   [ ]{4} ad [ ]{4} $timestamp \n
     test     [ ]{6} disable  [ ]{3} ad [ ]{4} $timestamp \n
@@ -173,4 +173,4 @@ check_queued_action('longtest', 'enable');
 # Verify that the lock file exists and that there are no other queued files by
 # removing the queue.
 ok(unlink("$queue/.lock"), 'Lock file exists and can be removed');
-ok(rmdir($queue), 'No extraneous files in the queue');
+ok(rmdir($queue),          'No extraneous files in the queue');
