@@ -100,7 +100,7 @@ get_creds(kadm5_hook_modinfo *config, krb5_context ctx, krb5_ccache *cc)
     if (code != 0)
         goto fail;
     code = krb5_cc_initialize(ctx, *cc, princ);
-    if (code != 0)
+    if (code == 0)
         code = krb5_cc_store_cred(ctx, *cc, &creds);
     if (code != 0) {
         krb5_cc_close(ctx, *cc);
@@ -156,8 +156,8 @@ get_ad_principal(kadm5_hook_modinfo *config, krb5_context ctx,
         if (strcmp(instance, config->ad_base_instance) == 0) {
             base = krb5_principal_get_comp_string(ctx, principal, 0);
             code = krb5_build_principal(ctx, ad_principal,
-                                       strlen(config->ad_realm),
-                                       config->ad_realm, base, (char *) 0);
+                                        strlen(config->ad_realm),
+                                        config->ad_realm, base, (char *) 0);
             if (code != 0)
                 return code;
         }
