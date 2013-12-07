@@ -218,10 +218,10 @@ sync_ad_chpass(kadm5_hook_modinfo *config, krb5_context ctx,
     if (result_code != 0) {
         code = sync_error_generic(ctx, "password change failed for %s: (%d)"
                                   " %.*s%s%.*s", target, result_code,
-                                  result_code_string.length,
+                                  (int) result_code_string.length,
                                   (char *) result_code_string.data,
                                   result_string.length ? ": " : "",
-                                  result_string.length,
+                                  (int) result_string.length,
                                   (char *) result_string.data);
         goto done;
     }
