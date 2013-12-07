@@ -70,7 +70,7 @@ sync_instance_exists(krb5_context ctx, krb5_principal base,
         goto fail;
     mask = KADM5_ATTRIBUTES | KADM5_PW_EXPIRATION;
     code = kadm5_get_principal(handle, princ, &ent, mask);
-    if (code != KADM5_UNK_PRINC)
+    if (code != 0 && code != KADM5_UNK_PRINC)
         goto fail;
     if (code == 0) {
         *exists = true;
