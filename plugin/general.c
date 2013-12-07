@@ -276,7 +276,7 @@ sync_status(kadm5_hook_modinfo *config, krb5_context ctx,
         return 0;
 
     /* Check if this principal should be synchronized. */
-    code = principal_allowed(config, ctx, principal, true, &allowed);
+    code = principal_allowed(config, ctx, principal, false, &allowed);
     if (code != 0)
         return code;
     if (!allowed)
