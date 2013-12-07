@@ -102,7 +102,12 @@ instance_allowed(kadm5_hook_modinfo *config, const char *instance)
 {
     size_t i;
 
-    if (config->ad_instances == NULL || instance == NULL)
+    if (instance == NULL)
+        return false;
+    if (config->ad_base_instance)
+        if (strcmp(config->ad_base_instance, instance) == 0)
+            return true;
+    if (config->ad_instances == NULL)
         return false;
     for (i = 0; i < config->ad_instances->count; i++)
         if (strcmp(config->ad_instances->strings[i], instance) == 0)
