@@ -26,7 +26,8 @@ LT_INIT
 
 dnl Only check for krb5/kadm5_hook_plugin.h if building with MIT, since we may
 dnl find a system MIT header file that can't be included when building with
-dnl Heimdal.
+dnl Heimdal.  We use the probe for the krb5_realm data type as a proxy for
+dnl whether we're building with Heimdal.
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
 AC_CHECK_HEADERS([kadm5/kadm5_err.h])
@@ -39,14 +40,8 @@ AC_CHECK_FUNCS([krb5_free_default_realm \
     krb5_principal_get_realm \
     krb5_principal_set_realm \
     krb5_xfree])
-AC_CHECK_TYPES([krb5_realm])
-AC_CHECK_MEMBER([krb5_creds.session],
-    [AC_DEFINE([HAVE_KRB5_HEIMDAL], [1],
-        [Define if your Kerberos implementation is Heimdal.])],
-    [AC_DEFINE([HAVE_KRB5_MIT], [1],
-        [Define if your Kerberos implementation is MIT.])
-     AC_CHECK_HEADERS([krb5/kadm5_hook_plugin.h])],
-    [RRA_INCLUDES_KRB5])
+AC_CHECK_TYPES([krb5_realm], [],
+    [AC_CHECK_HEADERS([krb5/kadm5_hook_plugin.h])], [RRA_INCLUDES_KRB5])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_free],
     [RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS])
 AC_CHECK_FUNCS([krb5_appdefault_string], [],
@@ -57,7 +52,7 @@ RRA_LIB_KRB5_RESTORE
 
 RRA_LIB_KADM5SRV
 RRA_LIB_KADM5SRV_SWITCH
-AC_CHECK_FUNCS([kadm5_init_with_skey_ctx])
+AC_CHECK_FUNCS([kadm5_init_krb5_context kadm5_init_with_skey_ctx])
 RRA_LIB_KADM5SRV_RESTORE
 
 RRA_LIB_LDAP

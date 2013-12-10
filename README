@@ -255,9 +255,6 @@ CONFIGURATION
 
   ad_base_instance
 
-      This option is only available if built with Heimdal.  It will result
-      in an initialization error if set when using MIT Kerberos.
-
       If ad_base_instance is set, then any password change for a
       single-component principal (such as user@EXAMPLE.COM) will be
       handled somewhat specially.

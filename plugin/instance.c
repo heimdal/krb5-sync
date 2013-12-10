@@ -34,6 +34,7 @@ sync_instance_exists(krb5_context ctx, krb5_principal base,
     krb5_principal princ = NULL;
     krb5_error_code code;
     const char *realm;
+    krb5_context kadm_ctx = NULL;
     kadm5_config_params params;
     void *handle = NULL;
     int mask;
@@ -59,12 +60,20 @@ sync_instance_exists(krb5_context ctx, krb5_principal base,
     if (code != 0)
         goto fail;
 
-    /* Open the local KDB and look up this new principal. */
+    /*
+     * Open the local KDB and look up this new principal.  We need to use a
+     * separate Kerberos context from the one passed in by our caller.
+     * Otherwise, on MIT Kerberos, we tromp on kadmind's copy of the KDB,
+     * with bad results.
+     */
+    code = kadm5_init_krb5_context(&kadm_ctx);
+    if (code != 0)
+        goto fail;
     memset(&params, 0, sizeof(params));
     params.realm = (char *) realm;
     params.mask = KADM5_CONFIG_REALM;
-    code = kadm5_init_with_skey_ctx(ctx, (char *) "kadmin/admin", NULL, NULL,
-                                    &params, KADM5_STRUCT_VERSION,
+    code = kadm5_init_with_skey_ctx(kadm_ctx, (char *) "kadmin/admin", NULL,
+                                    NULL, &params, KADM5_STRUCT_VERSION,
                                     KADM5_API_VERSION_2, &handle);
     if (code != 0)
         goto fail;
@@ -77,10 +86,13 @@ sync_instance_exists(krb5_context ctx, krb5_principal base,
         kadm5_free_principal_ent(handle, &ent);
     }
     kadm5_destroy(handle);
+    krb5_free_context(kadm_ctx);
     krb5_free_principal(ctx, princ);
     return 0;
 
 fail:
+    if (kadm_ctx != NULL)
+        krb5_free_context(kadm_ctx);
     if (princ != NULL)
         krb5_free_principal(ctx, princ);
     return code;
