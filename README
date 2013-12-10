@@ -1,10 +1,10 @@
-                              krb5-sync 2.3
+                              krb5-sync 3.0
             (Kerberos Active Directory synchronization plugin)
 
-              Maintained by Russ Allbery <rra@stanford.edu>
+               Maintained by Russ Allbery <eagle@eyrie.org>
 
-  Copyright 2006, 2007, 2010, 2011, 2012 The Board of Trustees of the
-  Leland Stanford Junior University.  Originally developed by Derrick
+  Copyright 2006, 2007, 2010, 2011, 2012, 2013 The Board of Trustees of
+  the Leland Stanford Junior University.  Originally developed by Derrick
   Brashear and Ken Hornstein of Sine Nomine Associates, on behalf of
   Stanford University.  This software is distributed under a BSD-style
   license.  Please see the section LICENSE below for more information.
@@ -16,7 +16,7 @@ BLURB
   Password changes are done via the Kerberos password change protocol, and
   account status is updated via LDAP.  It provides a plugin for the kadmin
   libraries and supporting command-line utilities, as well as a patch for
-  Heimdal and older versions of MIT Kerberos to add plugin support.
+  Heimdal to add plugin support.
 
 DESCRIPTION
 
@@ -37,24 +37,24 @@ DESCRIPTION
 
   This toolkit consists of three basic pieces:
 
-   * A plugin that uses that system to push password changes and selected
-     account flag changes to Active Directory.  This is done using a
-     separate keytab for authentication.  Active Directory password
-     updates are done via the Kerberos set-password protocol and status
-     updates are done via LDAP.
+   * A plugin that pushes password changes and selected account flag
+     changes to Active Directory.  This is done using a separate keytab
+     for authentication.  Active Directory password updates are done via
+     the Kerberos set-password protocol and status updates are done via
+     LDAP.
 
    * A set of command-line utilities that can perform the same password
      and status updates as the plugin but from the command-line.  These
      can be used to process failed synchronizations later, to test the
      system, or to make manual changes as required.
 
-   * Patches to Heimdal and to versions of MIT Kerberos prior to 1.9 to
-     add a plugin system for password changes and account status updates.
-     MIT Kerberos 1.9 and later do not require patching.  These patches
-     add hooks that are run prior to a password change, after a password
-     change, and after a change to an account's flags.  The code added by
-     these patches to libkadm5srv is independent of what that plugin might
-     do.
+   * Patches to Heimdal to add a plugin system for password changes and
+     account status updates.  MIT Kerberos 1.9 and later do not require
+     patching, and earlier versions of MIT Kerberos are not supported.
+     These patches add hooks that are run before and after password
+     changes, principal creations, and changes to principals.  The code
+     added by these patches to libkadm5srv is independent of what that
+     plugin might do.
 
   The plugin and system are designed so that operations done in the hook
   prior to the password change can abort the password change if they fail.
@@ -68,30 +68,18 @@ DESCRIPTION
 
   Currently, only one Active Directory realm is supported for updates.
 
-  Be aware that, due to the structure of the MIT Kerberos libkadm5srv
-  code, the patch for versions prior to 1.9 runs the pre-commit hook and
-  hence password propagation to Active Directory before the password is
-  checked for reuse.  This means that the password may be changed in
-  Active Directory but then rejected by the local KDC if it is present in
-  the account's password history.  If you remember only one password in
-  the password history, this will be harmless, since it will only mean the
-  Active Directory password will be reset to the existing password.  If,
-  however, you store multiple passwords in the password history, the
-  passwords could end up being desynchronized.  I believe this is fixed in
-  MIT Kerberos 1.9.
-
 REQUIREMENTS
 
   The utilities provided in this package will work without any
   modifications to your KDC or kadmind, but to use this entire system, you
   will either need MIT Kerberos 1.9 or later or apply the patch in the
-  patches directory to MIT Kerberos or Heimdal and rebuild.  Due to how
-  kadmind is constructed, the changes are actually in the libkadm5srv
-  library, not the kadmind binary, so you'll need to install the modified
-  libraries.  It is my hope that eventually the hooks necessary to do this
-  will be incorporated into the Heimdal distribution as well, and these
-  tools will be modified to support the Heimdal interfaces, and then
-  patching will not be necessary.
+  patches directory to Heimdal and rebuild.  Due to how kadmind is
+  constructed, the changes are actually in the libkadm5srv library, not
+  the kadmind binary, so you'll need to install the modified libraries.
+  It is my hope that eventually the hooks necessary to do this will be
+  incorporated into the Heimdal distribution as well, and these tools will
+  be modified to support the Heimdal interfaces, and then patching will
+  not be necessary.
 
   To build the account status update code, you will need OpenLDAP
   installed.  To authenticate to Active Directory, you will also need
@@ -100,6 +88,31 @@ REQUIREMENTS
   administrative privileges in Active Directory.  To configure status
   updates, you will also need to know the server to which to do LDAP
   queries (generally, this is one of the Domain Controllers).
+
+  The krb5-sync-backend utility program to manipulate the change queue
+  requires the IPC::Run and Net::Remctl::Backend Perl modules.  The first
+  is available from CPAN.  The latter is part of the remctl distribution,
+  available from:
+
+      http://www.eyrie.org/~eagle/software/remctl/
+
+  To run the full test suite, Perl 5.6.2 or later is required, as well as
+  the prerequisites for krb5-sync-backend.  The following additional Perl
+  modules will be used if present:
+
+      Perl6::Slurp
+      Test::MinimumVersion
+      Test::Perl::Critic
+      Test::Pod
+      Test::Spelling
+      Test::Strict
+
+  All are available on CPAN.  Those tests will be skipped if the modules
+  are not available.
+
+  To enable tests that may be sensitive to the local environment or that
+  produce a lot of false positives without uncovering many problems, set
+  RRA_MAINTAINER_TESTS to a true value.
 
   To bootstrap from a Git checkout, or if you change the Automake files
   and need to regenerate Makefile.in, you will need Automake 1.11 or
@@ -111,12 +124,11 @@ REQUIREMENTS
 
 INSTALLATION
 
-  First, for Heimdal or versions of MIT Kerberos prior to 1.9, patch MIT
-  Kerberos or Heimdal with the patch provided in the patches directory and
-  install the new libkadm5srv or libkadm5srv_mit library.  See
-  patches/README for more information about the patch.  If you're using a
-  different version of MIT Kerberos or Heimdal, you may need to adjust the
-  patch accordingly.
+  First, for Heimdal, patch Heimdal with one of the patches provided in
+  the patches directory and install the new libkadm5srv library.  See
+  patches/README for more information about the patches.  If you're using
+  a different version of MIT Kerberos or Heimdal, you may need to adjust
+  the patch accordingly.
 
   Then, you can build and install the plugin and command-line utilities
   with the standard commands:
@@ -157,16 +169,17 @@ INSTALLATION
   searched by your compiler.  If the the krb5-config script first in your
   path is not the one corresponding to the Kerberos libraries you want to
   use or if your Kerberos libraries and includes aren't in a location
-  searched by default by your compiler, you need to specify
-  --with-krb5=PATH:
+  searched by default by your compiler, you need to specify the flags
+  --with-krb5=PATH and --with-kadm-server=PATH:
 
-      ./configure --with-krb5=/usr/pubsw
+      ./configure --with-krb5=/usr/pubsw --with-kadm-server=/usr/pubsw
 
   You can also individually set the paths to the include directory and the
-  library directory with --with-krb5-include and --with-krb5-lib.  You may
-  need to do this if Autoconf can't figure out whether to use lib, lib32,
-  or lib64 on your platform.  Note that these settings aren't used if a
-  krb5-config script is found.
+  library directory with --with-krb5-include and --with-krb5-lib, and with
+  --with-kadm-server-include and --with-kadm-server-lib.  You may need to
+  do this if Autoconf can't figure out whether to use lib, lib32, or lib64
+  on your platform.  Note that these settings aren't used if a krb5-config
+  script is found.
 
   To specify a particular krb5-config script to use, either set the
   KRB5_CONFIG environment variable or pass it to configure like:
@@ -214,46 +227,118 @@ CONFIGURATION
   example:
 
       krb5-sync = {
-          ad_keytab       = /etc/krb5kdc/ad-keytab
-          ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
-          ad_realm        = WINDOWS.EXAMPLE.COM
-          ad_admin_server = dc1.windows.example.com
-          ad_ldap_base    = ou=People
-          ad_instances    = root ipass
+          ad_keytab        = /etc/krb5kdc/ad-keytab
+          ad_principal     = service/sync@WINDOWS.EXAMPLE.COM
+          ad_realm         = WINDOWS.EXAMPLE.COM
+          ad_admin_server  = dc1.windows.example.com
+          ad_ldap_base     = ou=People,dc=windows,dc=example,dc=com
+          ad_instances     = root ipass
+          ad_base_instance = windows
+          ad_queue_only    = false
 
-          queue_dir       = /var/spool/krb5-sync
+          queue_dir        = /var/spool/krb5-sync
+          syslog           = true
       }
 
-  The ad_keytab option specifies the location of a srvtab or keytab for
-  authenticating to the other realm, the ad_principal option specifies the
-  principal to authenticate as (using the key in the srvtab or keytab),
-  and the ad_realm option specifies the foreign realm.  ad_admin_server is
-  the host to contact via LDAP to push account status changes.
-  ad_ldap_base specifies the base tree inside Active Directory where
-  account information is stored.  Omit the trailing "dc=" part; it will be
-  added automatically from ad_realm.  The default is "dc=Accounts".
+  It is possible to add realm-specific configuration here following the
+  normal krb5.conf syntax, but be aware that the plugin only looks for
+  configuration for the default realm, not for the realm of the affected
+  principal.  In other words, it's not possible to have multiple
+  configurations based on the realm of the principal affected.
 
-  The ad_instances option specifies which instances have passwords and
-  account status propagated to that environment.  By default, all
-  principals with non-empty instances are not propagated.  You can list a
-  specific set of instances (space-separated) which are propagated to the
-  AD environment.  The ad_instances option is only used by the plugin and
-  is not used by the command-line utility.  Any principals passed to the
-  command-line utility will be acted on, even if they have non-empty
-  instances.
+  The configuration options are:
 
-  If ad_realm is not set, the plugin will not attempt to push changes to
-  Active Directory, so you can deactivate this plugin while still loading
-  it by removing that part of the configuration.
+  ad_admin_server
 
-  The queue_dir setting specifies where to queue changes that couldn't be
-  made.  If password changes fail in AD, the whole password change is
-  failed, but status changes are done before synchronization with AD is
-  attempted.  The queuing mechanism is used to be sure that failed changes
-  aren't lost and can be investigated further.  For more information, see
-  the man page for krb5-sync and krb5-sync-backend.  If you use a queue
-  directory other than the one given, you will need to change the
-  beginning of the krb5-sync-backend script as well.
+      The host to contact via LDAP to push account status changes.  If not
+      set, status changes will not be synchronized, only password changes.
+
+  ad_base_instance
+
+      If ad_base_instance is set, then any password change for a
+      single-component principal (such as user@EXAMPLE.COM) will be
+      handled somewhat specially.
+
+      First, the instance set in ad_base_instance will be added and a
+      check against the local Kerberos database will be done to see if
+      that instance (in this case, user/windows@EXAMPLE.COM) exists.  If
+      it doesn't, the password change is processed as normal.  If it does,
+      the password change will be ignored.  Instead, if the password for
+      user/windows@EXAMPLE.COM is changed, that will be propagated as the
+      password for the main account in Active Directory (in this case,
+      user@WINDOWS.EXAMPLE.COM).
+
+      This allows the Active Directory principal to be linked to a
+      separate instance, rather than the main account, in the MIT or
+      Heimdal Kerberos realm for particular users.
+
+  ad_instances
+
+      Specifies which instances should have passwords and account status
+      propagated to the Active Directory environment.  By default, only
+      principals no instances (single-part principals) are propagated.
+      You can list a specific set of instances (space-separated), which
+      will then also be propagated to Active Directory.
+
+      The ad_instances option is only used by the plugin and is not used
+      by the command-line utility.  Any principals passed to the
+      command-line utility will be acted on, even if they have non-empty
+      instances.
+
+  ad_keytab
+
+      Specifies the location of a keytab for authenticating to the Active
+      Directory other realm.  Must be set.
+
+  ad_ldap_base
+
+      Specifies the root DN of the tree inside Active Directory where
+      account information is stored.  If not set, status changes will not
+      be synchronized, only password changes.
+
+  ad_principal
+
+      Specifies the principal to authenticate as (using the key in the
+      keytab).  Must be set.
+
+  ad_queue_only
+
+      Controls whether we attempt to push changes directly to Active
+      Directory or always queue them.  It can be set to true to write all
+      changes to the queue where they can be processed later (by
+      krb5-sync-backend, for example).  This may be helpful if the delay
+      from pushing changes to Active Directory causes problems for clients
+      (such as kpasswd clients, which are aggressive about retries and
+      don't like long delays).
+
+  ad_realm
+
+      Specifies the foreign realm.  If ad_realm is not set, the plugin
+      will not attempt to push changes to Active Directory, so you can
+      deactivate this plugin while still loading it by removing that part
+      of the configuration.
+
+  queue_dir
+
+      Specifies where to queue changes that couldn't be made.  If password
+      changes fail in AD, the whole password change is failed, but status
+      changes are done before synchronization with AD is attempted.  The
+      queuing mechanism is used to be sure that failed changes aren't lost
+      and can be investigated further.  For more information, see the man
+      page for krb5-sync and krb5-sync-backend.  Must be set.
+
+      A setting of /var/spool/krb5-sync is recommended, since that's the
+      default path in krb5-sync-backend.  If you use a different path,
+      you'll want to either change the path in that script or always use
+      the -d option.
+
+  syslog
+
+      Whether or not to log errors, warnings, and informational messages
+      from the plugin to syslog.  By default, this is enabled.  Set this
+      configuration option to false to suppress this logging, in which
+      case the only logging will be for errors returned to the kadmind or
+      kpasswdd servers.
 
   With MIT Kerberos 1.9 or later, support for kadmind plugins is built in.
   To load this plugin, add the following to the kdc.conf or krb5.conf file
@@ -261,21 +346,21 @@ CONFIGURATION
 
     [plugins]
       kadm5_hook = {
-        module = krb5_sync:/usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+        module = krb5_sync:/usr/local/lib/krb5/plugins/kadm5_hook/sync.so
       }
 
   You may wish to install krb5_sync.so under a krb5/plugins/kadm5_hook in
   the library directory used for your Kerberos installation instead, if
   that is not /usr/local/lib, in which case you can use
-  "kadm5_hook/krb5_sync.so" as the relative path to the plugin.
+  "kadm5_hook/sync.so" as the relative path to the plugin.
 
   The kadmind patch for Heimdal adds a configuration option for the
   krb5.conf file in the [kadmin] section.  If this option is not set, the
   plugin will not be loaded and none of the hooks will be run.  Therefore,
   to use the plugin, add configuration like:
 
-    [kadmin]
-      hook_libraries = /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+      [kadmin]
+          hook_libraries = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
 
   to the configuration file used by kadmind and kpasswdd.  Update the path
   for wherever the krb5-sync plugin is located.
@@ -284,7 +369,7 @@ CONFIGURATION
   option for the kdc.conf.  To use the plugin on older versions of MIT,
   add a line like:
 
-    pwupdate_plugin = /usr/local/lib/krb5/plugins/kadm5_hook/krb5_sync.so
+      pwupdate_plugin = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
 
   to the local realm sub-section of the [realms] section.
 
@@ -343,14 +428,14 @@ HOMEPAGE AND SOURCE REPOSITORY
 
       http://git.eyrie.org/?p=devel/krb5-sync.git
 
-  Please send any bug reports, patches, or questions to rra@stanford.edu.
+  Please send any bug reports, patches, or questions to eagle@eyrie.org.
 
 LICENSE
 
   The krb5-sync package as a whole is covered by the following copyright
   statement and license:
 
-    Copyright 2006, 2007, 2008, 2010, 2011, 2012
+    Copyright 2006, 2007, 2008, 2010, 2011, 2012, 2013
         The Board of Trustees of the Leland Stanford Junior University
 
     Permission is hereby granted, free of charge, to any person obtaining a
