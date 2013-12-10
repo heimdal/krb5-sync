@@ -100,10 +100,10 @@ check_PROGRAMS = tests/runtests$(EXEEXT) \
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/config.h.in $(top_srcdir)/portable/strndup.c \
-	$(top_srcdir)/portable/asprintf.c \
+	$(srcdir)/config.h.in $(top_srcdir)/portable/snprintf.c \
+	$(top_srcdir)/portable/strndup.c \
 	$(top_srcdir)/portable/krb5-profile.c \
-	$(top_srcdir)/portable/snprintf.c $(dist_sbin_SCRIPTS) \
+	$(top_srcdir)/portable/asprintf.c $(dist_sbin_SCRIPTS) \
 	$(top_srcdir)/build-aux/depcomp $(dist_man_MANS) NEWS README \
 	TODO build-aux/ar-lib build-aux/compile build-aux/config.guess \
 	build-aux/config.sub build-aux/depcomp build-aux/install-sh \

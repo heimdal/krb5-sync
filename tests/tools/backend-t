@@ -23,6 +23,9 @@ use Test::RRA::Automake qw(test_file_path test_tmpdir);
 use_prereq('IPC::Run',     'run');
 use_prereq('Perl6::Slurp', 'slurp');
 
+# Not actually used by the test, but required by krb5-sync-backend.
+use_prereq('Net::Remctl::Backend');
+
 # Run krb5-sync-backend and return the status, output, and error output as a
 # list.  Always uses a directory named 'queue' under test_tmpdir() as the
 # queue directory.
