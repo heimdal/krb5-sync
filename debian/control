@@ -3,8 +3,9 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Build-Depends: debhelper (>= 9), dh-autoreconf, libipc-run-perl,
- libkrb5-dev, libldap2-dev, libnet-remctl-perl, libperl6-slurp-perl,
- libtest-minimumversion-perl, libtest-pod-perl, libtest-strict-perl
+ libkrb5-dev, libldap2-dev, libnet-remctl-perl (>= 3.4),
+ libperl6-slurp-perl, libtest-minimumversion-perl, libtest-pod-perl,
+ libtest-strict-perl
 Standards-Version: 3.9.5
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
 Vcs-Browser: http://git.eyrie.org/?p=kerberos/krb5-sync.git
@@ -30,7 +31,7 @@ Package: krb5-sync-tools
 Architecture: any
 Multi-Arch: foreign
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends},
- libipc-run-perl, libnet-remctl-perl
+ libipc-run-perl, libnet-remctl-perl (>= 3.4)
 Recommends: krb5-sync-plugin
 Breaks: krb5-sync
 Replaces: krb5-sync
