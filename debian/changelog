@@ -6,8 +6,9 @@ krb5-sync-heimdal (3.0-1) oldstable-kdc; urgency=low
     plugin and the tools package, built against Heimdal, for continued
     Stanford local use with a patched Heimdal KDC until the Heimdal
     support is integrated and the main package can build both plugins.
-  * Conflict with and replace the old krb5-sync package.
-  * Conflict with the MIT krb5-sync-plugin and krb5-sync-tools packages.
+  * Conflict with the MIT krb5-sync-plugin package.
+  * Back out of the multiarch changes, since multiarch was not supported
+    in squeeze.
 
  -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 13:37:12 -0800
 
