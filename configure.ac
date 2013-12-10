@@ -38,8 +38,14 @@ AC_CHECK_FUNCS([krb5_free_default_realm \
     krb5_principal_get_realm \
     krb5_principal_set_realm \
     krb5_xfree])
-AC_CHECK_TYPES([krb5_realm], [],
-    [AC_CHECK_HEADERS([krb5/kadm5_hook_plugin.h])], [RRA_INCLUDES_KRB5])
+AC_CHECK_TYPES([krb5_realm])
+AC_CHECK_MEMBER([krb5_creds.session],
+    [AC_DEFINE([HAVE_KRB5_HEIMDAL], [1],
+        [Define if your Kerberos implementation is Heimdal.])],
+    [AC_DEFINE([HAVE_KRB5_MIT], [1],
+        [Define if your Kerberos implementation is MIT.])
+     AC_CHECK_HEADERS([krb5/kadm5_hook_plugin.h])],
+    [RRA_INCLUDES_KRB5])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_free],
     [RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS])
 AC_CHECK_FUNCS([krb5_appdefault_string], [],
