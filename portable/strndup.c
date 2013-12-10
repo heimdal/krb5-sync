@@ -4,7 +4,7 @@
  * The canonical version of this file is maintained in the rra-c-util package,
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  *
  * The authors hereby relinquish any claim to any copyright that they may have
  * in this work, whether granted under contract or by operation of law or
@@ -33,6 +33,7 @@ char *test_strndup(const char *, size_t);
 char *
 strndup(const char *s, size_t n)
 {
+    const char *p;
     size_t length;
     char *copy;
 
@@ -40,9 +41,11 @@ strndup(const char *s, size_t n)
         errno = EINVAL;
         return NULL;
     }
-    length = strlen(s);
-    if (length > n)
-        length = n;
+
+    /* Don't assume that the source string is nul-terminated. */
+    for (p = s; (size_t) (p - s) < n && *p != '\0'; p++)
+        ;
+    length = p - s;
     copy = malloc(length + 1);
     if (copy == NULL)
         return NULL;

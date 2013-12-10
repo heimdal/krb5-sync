@@ -3,16 +3,19 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Bugs: mailto:rra@debian.org
-Build-Depends: debhelper (>= 8), heimdal-dev, libldap2-dev
-Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9), dh-autoreconf, libipc-run-perl,
+ libkrb5-dev, libldap2-dev, libnet-remctl-perl (>= 3.4),
+ libperl6-slurp-perl, libtest-minimumversion-perl, libtest-pod-perl
+Standards-Version: 3.9.5
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
+Vcs-Browser: http://git.eyrie.org/?p=kerberos/krb5-sync.git
+Vcs-Git: git://git.eyrie.org/kerberos/krb5-sync.git -b stanford
 
-Package: krb5-sync-heimdal
+Package: krb5-sync-plugin-heimdal
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Recommends: heimdal-kdc
-Conflicts: krb5-sync, krb5-sync-plugin, krb5-sync-tools
-Replaces: krb5-sync
+Conflicts: krb5-sync-plugin
 Description: Heimdal KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign realm
  via the Kerberos password change protocol.  It can also propagate changes
@@ -23,3 +26,15 @@ Description: Heimdal KDC plugin for password synchronization
  .
  This package is a Stanford-specific version of the krb5-sync package
  built against Heimdal rather than MIT Kerberos.
+
+Package: krb5-sync-tools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends},
+ libipc-run-perl, libnet-remctl-perl (>= 3.4)
+Recommends: krb5-sync-plugin | krb5-sync-plugin-heimdal
+Description: Kerberos Active Directory synchronization tools
+ Provides tools to enable, disable, and set the password of an account in
+ a Windows Active Directory using the same configuration used by the
+ krb5-sync-plugin package.  These supporting tools are normally used to
+ handle queued changes created by the plugin that failed due to a
+ temporary error, but can be used on their own.

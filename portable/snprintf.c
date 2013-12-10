@@ -2,8 +2,9 @@
  * Replacement for a missing snprintf or vsnprintf.
  *
  * The following implementation of snprintf was taken mostly verbatim from
- * <http://www.fiction.net/~blong/programs/>; it is the version of snprintf
- * used in Mutt.
+ * <http://www.fiction.net/blong/programs/>; it is the version of snprintf
+ * used in Mutt.  A possibly newer version is used in wget, found at
+ * <https://github.com/wertarbyte/wget/blob/master/src/snprintf.c>.
  *
  * Please do not reformat or otherwise change this file more than necessary so
  * that later merges with the original source are easy.  Bug fixes and
@@ -73,7 +74,7 @@
  *    fixed handling of %.0f
  *    added test for HAVE_LONG_DOUBLE
  *
- *  Russ Allbery <rra@stanford.edu> 2000-08-26
+ *  Russ Allbery <eagle@eyrie.org> 2000-08-26
  *    fixed return value to comply with C99
  *    fixed handling of snprintf(NULL, ...)
  *
@@ -432,7 +433,7 @@ static int dopr (char *buffer, size_t maxlen, const char *format, va_list args)
 	break;
       case 'w':
 	/* not supported yet, treat as next char */
-	ch = *format++;
+	format++;
 	break;
       default:
 	/* Unknown, skip */
@@ -695,7 +696,7 @@ static int fmtfp (char *buffer, size_t *currlen, size_t maxlen,
 	  /* For each leading 0 in fractional part, print one more
 	     fractional digit. */
 	  LDOUBLE temp;
-	  if (ufvalue != 0)
+	  if (ufvalue > 0)
 	    for (temp = ufvalue; temp < 0.1; temp *= 10)
 	      ++max;
 	}

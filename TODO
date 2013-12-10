@@ -1,17 +1,12 @@
                            krb5-sync To-Do List
 
- * The base DN for finding users in Active Directory probably has to be
-   configurable.
+General:
 
- * krb5-sync-backend should get the path to Perl and krb5-sync from
-   configure.
+ * Look at http://code.google.com/p/krb5-adsync/ (based on this code) for
+   what ideas can be incorporated back into this package.  Currently, code
+   cannot be shared due to licensing reasons.
 
- * Currently, the queue path is hard-coded in krb5-sync-backend even
-   though for the plugin it's configurable in krb5.conf.
-   krb5-sync-backend needs to be able to read the krb5.conf value somehow.
-
- * A test suite would be nice, probably drawing on the code in the wallet
-   for testing Kerberos operations and keys.
+Plugin:
 
  * Support a list of accounts that should be synchronized instead of doing
    the configuration by instance.
@@ -20,6 +15,30 @@
    exists but the keytab does not is horrible.  Nothing is logged and the
    client just gets a generic failure message.
 
- * Look at http://code.google.com/p/krb5-adsync/ (based on this code) for
-   what ideas can be incorporated back into this package.  Currently, code
-   cannot be shared due to licensing reasons.
+Configuration:
+
+ * krb5-sync-backend should get the path to Perl from configure.
+
+ * Currently, the queue path is hard-coded in krb5-sync-backend even
+   though for the plugin it's configurable in krb5.conf.
+   krb5-sync-backend needs to be able to read the krb5.conf value somehow.
+
+Test Suite:
+
+ * Provide a way to point to a test realm for testing password change
+   actions.
+
+ * Mock out LDAP libraries to test pushing Active Directory status
+   changes.
+
+ * In krb5-sync-backend, search the user's PATH plus sbin directories for
+   krb5-sync instead of hard-coding the path to it.
+
+ * Add tests for krb5-sync-backend process and purge.  This may require a
+   way to tell krb5-sync-backend which time to use when creating queue
+   files instead of always using the current time.
+
+ * Add tests for allowed instances.
+
+ * Add tests for ad_base_instance, which will require initializing a local
+   Kerberos database and pointing kadm5srv to it.

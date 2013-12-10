@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# Remove the spool lock file on package purge.
+
+set -e
+
+if [ "$1" = "purge" ] ; then
+    rm -f /var/spool/krb5-sync/.lock
+fi
+
+#DEBHELPER#
+
+exit 0

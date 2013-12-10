@@ -1,0 +1,30 @@
+krb5-sync-plugin for Debian
+---------------------------
+
+This package installs the plugin but does not enable it by default since
+it requires additional configuration.  To enable it, add a section to
+[appdefaults] in krb5.conf like:
+
+    krb5-sync = {
+        ad_keytab       = /etc/krb5kdc/ad-keytab
+        ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
+        ad_realm        = WINDOWS.EXAMPLE.COM
+        ad_admin_server = dc1.windows.example.com
+        ad_ldap_base    = ou=People,dc=windows,dc=example,dc=com
+        ad_instances    = root ipass
+
+        queue_dir       = /var/spool/krb5-sync
+    }
+
+(see README.gz in this directory for more information about the meaning of
+these settings) and then add to the [plugins] section (creating it if
+necessary) of the configuration file for the Kerberos KDC the following:
+
+    kadm5_hook = {
+        module = sync:kadm5_hook/sync.so
+    }
+
+You will probably also want to install the krb5-sync-tools package, which
+provides some additional useful command-line utilities.
+
+ -- Russ Allbery <rra@debian.org>, Mon,  9 Dec 2013 20:58:51 -0800

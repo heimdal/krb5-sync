@@ -3,7 +3,8 @@
 set -e
 
 # Create the spool lock file on package installation since krb5-sync-backend
-# requires that it exist.
+# requires that it exist.  The module will create it as needed, but doesn't
+# guarantee that it's already there.
 if [ "$1" = "configure" ] || [ "$1" = "reconfigure" ] ; then
     if [ ! -f /var/spool/krb5-sync/.lock ] ; then
         touch /var/spool/krb5-sync/.lock

@@ -1,4 +1,4 @@
-krb5-sync-heimdal (2.2-1) stable; urgency=low
+krb5-sync-heimdal (3.0-1) oldstable-kdc; urgency=low
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
     main krb5-sync package is now being built against MIT Kerberos for
@@ -6,19 +6,119 @@ krb5-sync-heimdal (2.2-1) stable; urgency=low
     plugin and the tools package, built against Heimdal, for continued
     Stanford local use with a patched Heimdal KDC until the Heimdal
     support is integrated and the main package can build both plugins.
+  * Conflict with and replace the old krb5-sync package.
+  * Conflict with the MIT krb5-sync-plugin and krb5-sync-tools packages.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 13:37:12 -0800
+
+krb5-sync (3.0-1) unstable; urgency=low
+
+  * New upstream release.
+    - Module name changed to sync.so.  This will require configuration
+      changes in the KDC krb5.conf or kdc.conf configuration file in the
+      [plugins] section.
+    - The ad_ldap_base configuration parameter must now contain the full
+      DN of the tree in Active Directory where account information is
+      stored, and is now mandatory for status synchronization.
+    - New option ad_base_instance, which allows an instance's password to
+      be synchronized to the unqualified principal name in Active
+      Directory.
+    - New option ad_queue_only that, if set to true, forces queuing of all
+      changes rather than pushing any changes immediately.
+    - New option syslog that, if set to false, suppresses supplemental
+      syslog logging of notice, info, and debug messages.
+    - All failed Active Directory password changes are now queued, instead
+      of just those that returned specific errors.
+    - krb5-sync-backend now requires its parameters be given after the
+      subcommand.
+    - krb5-sync-backend now supports a -d option to specify the path to
+      the queue directory.
+    - krb5-sync-backend process skips queue files that no longer exist by
+      the time we get to them.
+  * Update standards version to 3.9.5 (no changes required).
+
+ -- Russ Allbery <rra@debian.org>  Mon, 09 Dec 2013 22:58:10 -0800
+
+krb5-sync (2.3-2) unstable; urgency=low
+
+  * Upload to unstable.
+  * Update standards version to 3.9.4.
+    - Add Vcs-Git and Vcs-Browser control fields.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 11 May 2013 16:57:12 -0700
+
+krb5-sync (2.3-1) experimental; urgency=low
+
+  * New upstream release.
+    - Also protect against a NULL password on Heimdal.
+    - Ignore "Operation not permitted" errors in krb5-sync-backend when
+      running in silent mode.
+  * Switch to xz compression for the upstream and Debian tarballs and the
+    Debian packages.
+  * Mark krb5-sync-tools Multi-Arch: foreign.
+  * Remove debugging display of config.log from the build rules.
+  * Convert debian/copyright to copyright-format 1.0.
+  * Update standards version to 3.9.3 (no changes required).
+  
+ -- Russ Allbery <rra@debian.org>  Tue, 18 Sep 2012 13:17:43 -0700
+
+krb5-sync (2.2-3) unstable; urgency=low
+
+  * Apply upstream commit to silently ignore password changes with a NULL
+    password, only new keys.  This represents a key randomization, such as
+    from addprinc -randkey, which is outside the synchronization scope of
+    this package.  Without this change, the plugin would segfault on that
+    operation.  (Closes: #687346)
+
+ -- Russ Allbery <rra@debian.org>  Mon, 17 Sep 2012 20:24:01 -0700
+
+krb5-sync (2.2-2) unstable; urgency=low
+
+  * Fix debian/rules syntax for setting hardening flags and enable bindnow
+    and PIE.
+  * Regenerate the Autotools build system with dh-autoreconf.
+  * Bump debhelper dependency to 9 now that compatibility mode V9 is no
+    longer experimental.
+  * Move single-debian-patch to local-options and patch-header to
+    local-patch-header so that they only apply to the packages I build and
+    NMUs get regular version-numbered patches.
+
+ -- Russ Allbery <rra@debian.org>  Tue, 07 Feb 2012 17:14:21 -0800
+
+krb5-sync (2.2-1) unstable; urgency=low
+
+  * Initial upload to Debian.  (Closes: #655396)
   * New upstream release.
     - Add support for the hooks provided by MIT Kerberos 1.9.
     - Quietly skip -randkey password changes under MIT Kerberos.
     - krb5-sync-backend accepts the password on standard input.
     - krb5-sync diagnoses missing configuration instead of segfaulting.
-  * The module is now installed in /usr/lib/krb5/plugins/krb5_sync.so.
-    The KDC configuration will have to be updated for the new path.
-  * Conflict with and replace the old krb5-sync package.
-  * Conflict with the MIT krb5-sync-plugin and krb5-sync-tools packages.
-  * Update to debhelper compatibility level V8.
-  * Update to standards version 3.9.2 (no changes required).
+  * Split the package into krb5-sync-plugin and krb5-sync-tools packages,
+    since the former needs to be multiarch.
+  * Add Breaks and Replaces on the old internal krb5-sync package to
+    krb5-sync-tools.  This is unnecessary for Debian but helpful for the
+    transition at Stanford and will be removed once that transition is
+    complete.
+  * Update to experimental debhelper compatibility level V9.
+    - krb5-sync-plugin is multiarch.
+    - Enable hardening build flags.
+  * Recommend krb5-admin-server 1.9 or later in the plugin package.  This
+    isn't the best way to express the dependency, since the plugin is
+    actually loaded by libkadm5srv, but otherwise we have to depend on the
+    specific SONAME of libkadm5srv even though any version of the package
+    will do.  This will capture the most common scenarios.
+  * Restart krb5-admin-server if it's running when the plugin is
+    configured to ensure the latest version is loaded.
+  * Update the krb5-sync-plugin README.Debian for the built-in support for
+    loading this plugin in MIT Kerberos 1.9 and later and to provide a
+    sample of the krb5.conf configuration required.
+  * Update the package description and dependencies to reflect that it's
+    now specific to MIT Kerberos.
+  * Remove the special bug reporting address, as this package is now in
+    Debian proper.
+  * Update standards version to 3.9.2 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Wed, 11 Jan 2012 14:28:15 -0800
+ -- Russ Allbery <rra@debian.org>  Wed, 11 Jan 2012 14:36:33 -0800
 
 krb5-sync (2.1-1) unstable; urgency=low
 

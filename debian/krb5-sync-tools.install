@@ -1,0 +1,4 @@
+usr/sbin/krb5-sync
+usr/sbin/krb5-sync-backend
+usr/share/man/man8/krb5-sync.8
+usr/share/man/man8/krb5-sync-backend.8

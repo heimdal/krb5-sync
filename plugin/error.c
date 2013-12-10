@@ -1,45 +1,135 @@
 /*
- * Error reporting routines.
+ * Store errors in the Kerberos context.
  *
- * Set the plugin error string based on a provided error message and an
- * optional Kerberos error to append to the end of the string.
+ * Provides helper functions for the rest of the plugin code to store an error
+ * message in the Kerberos context.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2006, 2007, 2010, 2012
+ * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
+#include <portable/kadmin.h>
 #include <portable/krb5.h>
 #include <portable/system.h>
+
+#include <errno.h>
+#include <ldap.h>
 
 #include <plugin/internal.h>
 
 
 /*
- * Given an error buffer, its length, a Kerberos context, a Kerberos error,
- * and a format string, write the resulting error string into the buffer and
- * append the Kerberos error.
+ * Internal helper function to set the Kerberos error message given a format,
+ * an error code, and a variable argument structure.  Returns the error code
+ * set, which is normally the same as the one passed in, but which may change
+ * if we can't allocate memory.
  */
-void
-pwupdate_set_error(char *buffer, size_t length, krb5_context ctx,
-                   krb5_error_code code, const char *format, ...)
+static krb5_error_code
+set_error(krb5_context ctx, krb5_error_code code, const char *format,
+          va_list args)
+{
+    char *message;
+
+    if (vasprintf(&message, format, args) < 0)
+        return sync_error_system(ctx, "cannot allocate memory");
+    krb5_set_error_message(ctx, code, "%s", message);
+    free(message);
+    return code;
+}
+
+
+/*
+ * Set the Kerberos error code to indicate a server configuration error and
+ * set the message to the format and arguments passed to this function.
+ */
+krb5_error_code
+sync_error_config(krb5_context ctx, const char *format, ...)
 {
     va_list args;
-    ssize_t used;
-    const char *message;
+    krb5_error_code code;
 
     va_start(args, format);
-    used = vsnprintf(buffer, length, format, args);
+    code = set_error(ctx, KADM5_MISSING_KRB5_CONF_PARAMS, format, args);
     va_end(args);
-    if (ctx == NULL || code == 0)
-        return;
-    if (used < 0 || (size_t) used >= length)
-        return;
-    message = krb5_get_error_message(ctx, code);
-    if (message != NULL)
-        snprintf(buffer + used, length - used, ": %s", message);
-    krb5_free_error_message(ctx, message);
+    return code;
+}
+
+
+/*
+ * Set the Kerberos error code to a generic kadmin failure error and the
+ * message to the format and arguments passed to this function.  This is used
+ * for internal failures of various types.
+ */
+krb5_error_code
+sync_error_generic(krb5_context ctx, const char *format, ...)
+{
+    va_list args;
+    krb5_error_code code;
+
+    va_start(args, format);
+    code = set_error(ctx, KADM5_FAILURE, format, args);
+    va_end(args);
+    return code;
+}
+
+
+/*
+ * Set the Kerberos error code to a generic service unavailable error and the
+ * message to the format and arguments passed to this function with the LDAP
+ * error string appended.
+ */
+krb5_error_code
+sync_error_ldap(krb5_context ctx, int code, const char *format, ...)
+{
+    va_list args;
+    char *message;
+    bool okay = true;
+    int oerrno;
+
+    va_start(args, format);
+    if (vasprintf(&message, format, args) < 0) {
+        oerrno = errno;
+        krb5_set_error_message(ctx, errno, "cannot allocate memory: %s",
+                               strerror(errno));
+        okay = false;
+    }
+    va_end(args);
+    if (!okay)
+        return oerrno;
+    krb5_set_error_message(ctx, KADM5_FAILURE, "%s: %s", message,
+                           ldap_err2string(code));
+    free(message);
+    return KADM5_FAILURE;
+}
+
+
+/*
+ * Set the Kerberos error code to the current errno and the message to the
+ * format and arguments passed to this function.
+ */
+krb5_error_code
+sync_error_system(krb5_context ctx, const char *format, ...)
+{
+    va_list args;
+    char *message;
+    bool okay = true;
+    int oerrno = errno;
+
+    va_start(args, format);
+    if (vasprintf(&message, format, args) < 0) {
+        oerrno = errno;
+        krb5_set_error_message(ctx, errno, "cannot allocate memory: %s",
+                               strerror(errno));
+        okay = false;
+    }
+    va_end(args);
+    if (!okay)
+        return oerrno;
+    krb5_set_error_message(ctx, oerrno, "%s: %s", message, strerror(oerrno));
+    free(message);
+    return oerrno;
 }
