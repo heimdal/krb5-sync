@@ -21,10 +21,10 @@ these settings) and then add to the [plugins] section (creating it if
 necessary) of the configuration file for the Kerberos KDC the following:
 
     kadm5_hook = {
-        module = krb5_sync:kadm5_hook/sync.so
+        module = sync:kadm5_hook/sync.so
     }
 
 You will probably also want to install the krb5-sync-tools package, which
 provides some additional useful command-line utilities.
 
- -- Russ Allbery <rra@debian.org>, Mon,  9 Dec 2013 18:10:56 -0800
+ -- Russ Allbery <rra@debian.org>, Mon,  9 Dec 2013 20:58:51 -0800
