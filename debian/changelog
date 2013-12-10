@@ -1,4 +1,4 @@
-krb5-sync (3.0-1) UNRELEASED; urgency=low
+krb5-sync (3.0-1) unstable; urgency=low
 
   * New upstream release.
     - Module name changed to sync.so.  This will require configuration
@@ -24,7 +24,7 @@ krb5-sync (3.0-1) UNRELEASED; urgency=low
       the time we get to them.
   * Update standards version to 3.9.5 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Mon, 09 Dec 2013 18:02:18 -0800
+ -- Russ Allbery <rra@debian.org>  Mon, 09 Dec 2013 21:00:01 -0800
 
 krb5-sync (2.3-2) unstable; urgency=low
 
