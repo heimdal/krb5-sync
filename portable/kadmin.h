@@ -56,6 +56,14 @@
 #endif
 
 /*
+ * MIT Kerberos provides this function for pure kadmin clients to get a
+ * Kerberos context.  With Heimdal, just use krb5_init_context.
+ */
+#ifndef HAVE_KADM5_INIT_KRB5_CONTEXT
+# define kadm5_init_krb5_context(c) krb5_init_context(c)
+#endif
+
+/*
  * Heimdal provides _ctx functions that take an existing context.  MIT always
  * requires the context be passed in.  Code should use the _ctx variant, and
  * the below will fix it up if built against MIT.

@@ -55,20 +55,8 @@ sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
     /* Get allowed instances from krb5.conf. */
     sync_config_list(ctx, "ad_instances", &config->ad_instances);
 
-    /*
-     * See if we're propagating an instance to the base account in AD.  This
-     * option is not supported on MIT Kerberos and results in an error there,
-     * since calling libkadm5srv functions from inside a plugin appears to
-     * result in corruption with MIT Kerberos (at least in 1.10.1).
-     */
+    /* See if we're propagating an instance to the base account in AD. */
     sync_config_string(ctx, "ad_base_instance", &config->ad_base_instance);
-#if HAVE_KRB5_MIT
-    if (config->ad_base_instance != NULL) {
-        sync_close(ctx, config);
-        return sync_error_config(ctx, "ad_base_instance not supported on MIT"
-                                 " Kerberos");
-    }
-#endif
 
     /* See if we're forcing queuing of all changes. */
     sync_config_boolean(ctx, "ad_queue_only", &config->ad_queue_only);
