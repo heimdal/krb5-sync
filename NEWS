@@ -55,6 +55,10 @@ krb5-sync 3.0 (2013-12-09)
     errors that should fail the change and errors that should be queued.
     The previous logic was very Stanford-specific.
 
+    krb5-sync-backend now requires the IPC::Run and Net::Remctl::Backend
+    modules be installed.  The former is available from CPAN, and the
+    latter is available from the remctl package (version 3.4 or later).
+
     krb5-sync-backend supports a new flag, -d, which specifies the
     location of the queue directory, changing the default of
     /var/spool/krb5-sync.
