@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 3.0 (unreleased)
+krb5-sync 3.0 (2013-12-09)
 
     The default installed module name has been changed to sync.so from
     krb5_sync.so, since the krb5 part is redundant in the Kerberos plugin
