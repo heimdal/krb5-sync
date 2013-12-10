@@ -107,8 +107,7 @@ struct vector *sync_vector_new(void)
     __attribute__((__malloc__));
 bool sync_vector_add(struct vector *, const char *string)
     __attribute__((__nonnull__));
-void sync_vector_free(struct vector *)
-    __attribute__((__nonnull__));
+void sync_vector_free(struct vector *);
 
 /*
  * vector_split_multi splits on a set of characters.  If the vector argument
