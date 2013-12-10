@@ -6,274 +6,187 @@
  * we can test all plugin behavior that involves queuing, by forcing changes
  * to queue.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2012
+ * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2012, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
+#include <portable/kadmin.h>
 #include <portable/krb5.h>
 #include <portable/system.h>
 
-#include <fcntl.h>
+#include <errno.h>
 #include <sys/stat.h>
-#include <time.h>
 
 #include <plugin/internal.h>
 #include <tests/tap/basic.h>
+#include <tests/tap/kerberos.h>
 #include <tests/tap/string.h>
+#include <tests/tap/sync.h>
 
 
 int
 main(void)
 {
-    char *tmpdir, *krb5conf, *env, *old_env, *queue;
+    char *path, *tmpdir, *krb5_config, *old_krb5_config;
     krb5_context ctx;
     krb5_principal princ;
     krb5_error_code code;
-    void *data;
-    int fd;
-    char errstr[BUFSIZ], buffer[BUFSIZ];
-    time_t now, try;
-    struct tm *date;
-    FILE *file;
-    struct stat st;
+    kadm5_hook_modinfo *data;
+    const char *message;
+    char *wanted;
 
+    /* Define the plan. */
+    plan(47);
+
+    /* Set up a temporary directory and queue relative to it. */
     tmpdir = test_tmpdir();
     if (chdir(tmpdir) < 0)
         sysbail("cannot cd to %s", tmpdir);
-    krb5conf = test_file_path("data/krb5.conf");
-    if (krb5conf == NULL)
-        bail("cannot find tests/data/krb5.conf");
     if (mkdir("queue", 0777) < 0)
         sysbail("cannot mkdir queue");
-    basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
-    if (putenv(env) < 0)
-        sysbail("cannot set KRB5CCNAME");
+
+    /* Point KRB5_CONFIG at the correct krb5.conf file. */
+    path = test_file_path("data/krb5.conf");
+    if (path == NULL)
+        bail("cannot find data/krb5.conf in the test suite");
+    basprintf(&krb5_config, "KRB5_CONFIG=%s", path);
+    if (putenv(krb5_config) < 0)
+        sysbail("cannot set KRB5_CONFIG in the environment");
+
+    /* Obtain a new Kerberos context with that krb5.conf file. */
     code = krb5_init_context(&ctx);
     if (code != 0)
-        bail("cannot create Kerberos context (%d)", (int) code);
-    code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
-    if (code != 0)
-        bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
-
-    plan(42);
+        bail_krb5(ctx, code, "cannot create Kerberos context");
 
     /* Test init. */
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
+    is_int(0, sync_init(ctx, &data), "sync_init succeeds");
     ok(data != NULL, "...and data is non-NULL");
 
     /* Block processing for our test user and then test password change. */
-    fd = open("queue/test-ad-password-19700101T000000Z", O_CREAT | O_WRONLY,
-              0666);
-    if (fd < 0)
-        sysbail("cannot create fake queue file");
-    close(fd);
-    errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
-    is_int(0, code, "pwupdate_precommit_password succeeds");
+    code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test@EXAMPLE.COM");
+    sync_queue_block("queue", "test", "password");
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(0, code, "sync_chpass succeeds");
     ok(access("queue/.lock", F_OK) == 0, "...lock file now exists");
-    is_string("", errstr, "...and there is no error");
-    queue = NULL;
-    now = time(NULL);
-    for (try = now - 1; try <= now; try++) {
-        date = gmtime(&try);
-        basprintf(&queue,
-                  "queue/test-ad-password-%04d%02d%02dT%02d%02d%02dZ-00",
-                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
-                  date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
-            break;
-        free(queue);
-        queue = NULL;
-    }
-    ok(queue != NULL, "...password change was queued");
-    if (queue == NULL)
-        ok_block(5, false, "No queued change to check");
-    else {
-        if (stat(queue, &st) < 0)
-            sysbail("cannot stat %s", queue);
-        is_int(0600, st.st_mode & 0777, "...mode of queue file is correct");
-        file = fopen(queue, "r");
-        if (file == NULL)
-            sysbail("cannot open %s", queue);
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("test\n", buffer, "...queued user is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("ad\n", buffer, "...queued domain is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("password\n", buffer, "...queued operation is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("foobar\n", buffer, "...queued password is correct");
-        fclose(file);
-    }
-
-    /* pwupdate_postcommit_password should do nothing, silently. */
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_password(data, princ, "foobar",
-                                        strlen("foobar"), errstr,
-                                        sizeof(errstr));
-    is_int(0, code, "pwupdate_postcommit_password succeeds");
-    is_string("", errstr, "...and there is no error");
-
-    /* Clean up password change queue files. */
-    ok(unlink("queue/test-ad-password-19700101T000000Z") == 0,
-       "Sentinel file still exists");
-    ok(unlink(queue) == 0, "Queued password change still exists");
-    free(queue);
+    sync_queue_check_password("queue", "test", "foobar");
+    sync_queue_unblock("queue", "test", "password");
 
     /* Block processing for our test user and then test enable. */
-    fd = open("queue/test-ad-enable-19700101T000000Z", O_CREAT | O_WRONLY,
-              0666);
-    if (fd < 0)
-        sysbail("cannot create fake queue file");
-    close(fd);
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 1, errstr, sizeof(errstr));
-    is_int(0, code, "pwupdate_postcommit_status enable succeeds");
-    is_string("", errstr, "...and there is no error");
-    queue = NULL;
-    now = time(NULL);
-    for (try = now - 1; try <= now; try++) {
-        date = gmtime(&try);
-        basprintf(&queue, "queue/test-ad-enable-%04d%02d%02dT%02d%02d%02dZ-00",
-                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
-                  date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
-            break;
-        free(queue);
-        queue = NULL;
-    }
-    ok(queue != NULL, "...enable was queued");
-    if (queue == NULL)
-        ok_block(3, false, "No queued change to check");
-    else {
-        file = fopen(queue, "r");
-        if (file == NULL)
-            sysbail("cannot open %s", queue);
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("test\n", buffer, "...queued user is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("ad\n", buffer, "...queued domain is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("enable\n", buffer, "...queued operation is correct");
-        fclose(file);
-    }
-    ok(unlink(queue) == 0, "Remove queued enable");
-    free(queue);
+    sync_queue_block("queue", "test", "enable");
+    code = sync_status(data, ctx, princ, true);
+    is_int(0, code, "sync_status enable succeeds");
+    sync_queue_check_enable("queue", "test", true);
+
+    /* Do the same thing for disables, which should still be blocked. */
+    code = sync_status(data, ctx, princ, false);
+    is_int(0, code, "sync_status disable succeeds");
+    sync_queue_check_enable("queue", "test", false);
+    sync_queue_unblock("queue", "test", "enable");
+
+    /* Queue a password change for a root instance. */
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/root@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/root@EXAMPLE.COM");
+    sync_queue_block("queue", "test/root", "password");
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(0, code, "sync_chpass of root instance succeeds");
+    sync_queue_check_password("queue", "test/root", "foobar");
+    sync_queue_unblock("queue", "test/root", "password");
+
+    /* Queue an account disable for an ipass instance. */
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/ipass@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/ipass@EXAMPLE.COM");
+    sync_queue_block("queue", "test/ipass", "enable");
+    code = sync_status(data, ctx, princ, true);
+    is_int(0, code, "sync_status of root instance succeeds");
+    sync_queue_check_enable("queue", "test/ipass", true);
+    sync_queue_unblock("queue", "test/ipass", "enable");
 
     /*
-     * Do the same thing for disables, which should still be blocked by the
-     * same marker.
+     * Try queuing a change for an admin instance, which should do nothing,
+     * successfully.  We'll test there's no queued changes by deleting the
+     * queue file.
      */
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
-    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
-    is_string("", errstr, "...and there is no error");
-    queue = NULL;
-    now = time(NULL);
-    for (try = now - 1; try <= now; try++) {
-        date = gmtime(&try);
-        basprintf(&queue, "queue/test-ad-enable-%04d%02d%02dT%02d%02d%02dZ-00",
-                  date->tm_year + 1900, date->tm_mon + 1, date->tm_mday,
-                  date->tm_hour, date->tm_min, date->tm_sec);
-        if (access(queue, F_OK) == 0)
-            break;
-        free(queue);
-        queue = NULL;
-    }
-    ok(queue != NULL, "...enable was queued");
-    if (queue == NULL)
-        ok_block(3, false, "No queued change to check");
-    else {
-        file = fopen(queue, "r");
-        if (file == NULL)
-            sysbail("cannot open %s", queue);
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("test\n", buffer, "...queued user is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("ad\n", buffer, "...queued domain is correct");
-        if (fgets(buffer, sizeof(buffer), file) == NULL)
-            buffer[0] = '\0';
-        is_string("disable\n", buffer, "...queued operation is correct");
-        fclose(file);
-    }
-    ok(unlink("queue/test-ad-enable-19700101T000000Z") == 0,
-       "Sentinel file still exists");
-    ok(unlink(queue) == 0, "Remove queued disable");
-    free(queue);
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/admin@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/admin@EXAMPLE.COM");
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(0, code, "sync_chpass of admin instance succeeds");
+    code = sync_status(data, ctx, princ, true);
+    is_int(0, code, "sync_status enable of admin instance succeeds");
 
     /* Unwind the queue and be sure all the right files exist. */
     ok(unlink("queue/.lock") == 0, "Lock file still exists");
     ok(rmdir("queue") == 0, "No other files in queue directory");
 
     /* Check failure when there's no queue directory. */
-    errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
-    is_int(1, code, "pwupdate_precommit_password fails with no queue");
-    is_string("queueing AD password change failed", errstr,
-              "...with correct error");
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
-    is_int(1, code, "pwupdate_postcommit_status disable fails with no queue");
-    is_string("queueing AD status change failed", errstr,
-              "...with correct error");
+    krb5_free_principal(ctx, princ);
+    code = krb5_parse_name(ctx, "test/root@EXAMPLE.COM", &princ);
+    if (code != 0)
+        bail_krb5(ctx, code, "cannot parse principal test/root@EXAMPLE.COM");
+    basprintf(&wanted, "cannot open lock file queue/.lock: %s",
+              strerror(ENOENT));
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(ENOENT, code, "sync_chpass fails with no queue");
+    message = krb5_get_error_message(ctx, code);
+    is_string(wanted, message, "...with correct error message");
+    krb5_free_error_message(ctx, message);
+    code = sync_status(data, ctx, princ, false);
+    is_int(ENOENT, code, "sync_status disable fails with no queue");
+    message = krb5_get_error_message(ctx, code);
+    is_string(wanted, message, "...with correct error message");
+    krb5_free_error_message(ctx, message);
 
     /* Shut down the plugin. */
-    pwupdate_close(data);
-
-    /*
-     * Change to an empty Kerberos configuration file, and then make sure the
-     * plugin does nothing when there's no configuration.
-     */
+    sync_close(ctx, data);
+    free(wanted);
     krb5_free_principal(ctx, princ);
     krb5_free_context(ctx);
-    test_file_path_free(krb5conf);
-    krb5conf = test_file_path("data/empty.conf");
-    if (krb5conf == NULL)
-        bail("cannot find tests/data/empty.conf");
-    old_env = env;
-    basprintf(&env, "KRB5_CONFIG=%s", krb5conf);
-    if (putenv(env) < 0)
+    test_file_path_free(path);
+
+    /* Change to an empty Kerberos configuration file. */
+    path = test_file_path("data/krb5-empty.conf");
+    if (path == NULL)
+        bail("cannot find data/krb5-empty.conf in the test suite");
+    old_krb5_config = krb5_config;
+    basprintf(&krb5_config, "KRB5_CONFIG=%s", path);
+    if (putenv(krb5_config) < 0)
         sysbail("cannot set KRB5CCNAME");
-    free(old_env);
+    free(old_krb5_config);
     code = krb5_init_context(&ctx);
     if (code != 0)
-        bail("cannot create Kerberos context (%d)", (int) code);
+        bail_krb5(ctx, code, "cannot create Kerberos context");
+
+    /* Make sure the plugin does nothing when there's no configuration. */
+    is_int(0, sync_init(ctx, &data), "sync_init succeeds");
+    ok(data != NULL, "...and data is non-NULL");
     code = krb5_parse_name(ctx, "test@EXAMPLE.COM", &princ);
     if (code != 0)
-        bail("cannot parse principal: %s", krb5_get_error_message(ctx, code));
-    is_int(0, pwupdate_init(ctx, &data), "pwupdate_init succeeds");
-    ok(data != NULL, "...and data is non-NULL");
-    errstr[0] = '\0';
-    code = pwupdate_precommit_password(data, princ, "foobar", strlen("foobar"),
-                                       errstr, sizeof(errstr));
-    is_int(0, code, "pwupdate_precommit_password succeeds");
-    is_string("", errstr, "...and there is no error");
-    errstr[0] = '\0';
-    code = pwupdate_postcommit_status(data, princ, 0, errstr, sizeof(errstr));
-    is_int(0, code, "pwupdate_postcommit_status disable succeeds");
-    is_string("", errstr, "...and there is no error");
+        bail_krb5(ctx, code, "cannot parse principal test@EXAMPLE.COM");
+    code = sync_chpass(data, ctx, princ, "foobar");
+    is_int(0, code, "sync_chpass succeeds");
+    code = sync_status(data, ctx, princ, false);
+    is_int(0, code, "sync_status disable succeeds");
+    sync_close(ctx, data);
 
     /* Clean up. */
     krb5_free_principal(ctx, princ);
     krb5_free_context(ctx);
-    test_file_path_free(krb5conf);
+    putenv((char *) "KRB5_CONFIG=");
     if (chdir("..") < 0)
         sysbail("cannot chdir to parent directory");
     test_tmpdir_free(tmpdir);
-    free(env);
+    free(krb5_config);
+    test_file_path_free(path);
     return 0;
 }

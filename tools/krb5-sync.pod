@@ -155,7 +155,7 @@ L<http://www.eyrie.org/~eagle/software/krb5-sync/>.
 
 =head1 AUTHOR
 
-Russ Allbery <rra@stanford.edu>
+Russ Allbery <eagle@eyrie.org>
 
 =head1 COPYRIGHT AND LICENSE
 

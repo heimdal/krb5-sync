@@ -1,5 +1,87 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 3.0 (2013-12-09)
+
+    The default installed module name has been changed to sync.so from
+    krb5_sync.so, since the krb5 part is redundant in the Kerberos plugin
+    context.  This will require configuration changes for existing users
+    to load the new plugin path name.
+
+    The meaning of the ad_ldap_base configuration option has changed, and
+    it's now mandatory for status synchronization.  This setting should
+    now contain the full DN of the tree in Active Directory where account
+    information is stored (such as cn=Accounts,dc=example,dc=com).
+    Previously, the dc components should be omitted and were derived from
+    the realm; this is no longer done.  If this configuration option is
+    not set, principal status will not be synchronized to Active
+    Directory.
+
+    Drop support for MIT Kerberos versions prior to 1.9.  All major
+    distributions are now shipping with a newer version of MIT Kerberos
+    than this, and supporting older versions requires supporting patches
+    and maintaining handicapped internal APIs.  MIT Kerberos 1.9 and later
+    do not require patches to use this module.  Patches for Heimdal are
+    still provided.
+
+    Add a new string krb5.conf option, ad_base_instance, which, if set,
+    changes the way that password synchronization is handled.  When this
+    option is set, the password for the principal formed by appending that
+    instance to a base principal is propagated to Active Directory as the
+    password for the base principal.  So, for instance, if this is set to
+    the string "windows", the password of the principal "user/windows" is
+    propagated to Active Directory as the password for the principal
+    "user" and password changes for the principal "user" are ignored.
+    This special behavior only happens if "user/windows" exists in the
+    local Kerberos KDC database; if not, password propagation for the
+    principal "user" happens normally, just as if this option weren't set.
+    This allows the Active Directory principal to be treated as an
+    instance rather than a main account for specific users without
+    affecting behavior for other users.
+
+    Add a new boolean krb5.conf option, ad_queue_only, which, if set to
+    true, forces all changes to be queued even if there are no conflicting
+    changes already queued.  The changes can then be processed later with
+    krb5-sync-backend.  This can be useful if real-time updates to Active
+    Directory cause performance issues in kadmind or kpasswdd.  kpasswd
+    clients in particular are often intolerant of delays.
+
+    Add a new boolean krb5.conf option, syslog, which can be set to false
+    to suppress syslog logging of the actions taken by the plugin and
+    error messages leading to queuing the change.  Always log the error
+    that leads to queuing a status change.
+
+    Any time an Active Directory password change fails, queue the change
+    instead of failing it, rather than trying to distinguish between local
+    errors that should fail the change and errors that should be queued.
+    The previous logic was very Stanford-specific.
+
+    krb5-sync-backend supports a new flag, -d, which specifies the
+    location of the queue directory, changing the default of
+    /var/spool/krb5-sync.
+
+    When processing events in krb5-sync-backend, skip event files which no
+    longer exist by the time we get to them.  This makes krb5-sync-backend
+    more robust against multiple copies running at the same time.
+
+    Update to rra-c-util 4.12:
+
+    * Better error messages from xasprintf on failure to format output.
+    * Check return status of vsnprintf properly.
+    * Significant improvements to POD tests.
+    * Avoid leaking a dummy symbol from the portability layer.
+    * Probe for Kerberos headers with file existence checks.
+
+    Update to C TAP Harness 2.3:
+
+    * runtests now treats the command line as a list of tests by default.
+    * The full test executable path can now be passed to runtests -o.
+    * Improved harness output for tests with lazy plans.
+    * Improved harness output to a terminal for some abort cases.
+    * Flush harness output after each test even when not on a terminal.
+    * bail and sysbail now exit with status 255 to match Test::More.
+    * Suppress lazy plans and test summaries if the test failed with bail.
+    * Add warn_unused_result gcc attributes to relevant functions.
+
 krb5-sync 2.3 (2012-09-18)
 
     When handling password changes from MIT Kerberos, quietly ignore

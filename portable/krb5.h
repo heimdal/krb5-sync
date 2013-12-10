@@ -19,7 +19,7 @@
  * The canonical version of this file is maintained in the rra-c-util package,
  * which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
  *
- * Written by Russ Allbery <rra@stanford.edu>
+ * Written by Russ Allbery <eagle@eyrie.org>
  *
  * The authors hereby relinquish any claim to any copyright that they may have
  * in this work, whether granted under contract or by operation of law or
@@ -64,6 +64,30 @@ void krb5_appdefault_boolean(krb5_context, const char *, const krb5_data *,
                              const char *, int, int *);
 void krb5_appdefault_string(krb5_context, const char *, const krb5_data *,
                             const char *, const char *, char **);
+#endif
+
+/*
+ * MIT-specific.  The Heimdal documentation says to use free(), but that
+ * doesn't actually make sense since the memory is allocated inside the
+ * Kerberos library.  Use krb5_xfree instead.
+ */
+#ifndef HAVE_KRB5_FREE_DEFAULT_REALM
+# define krb5_free_default_realm(c, r) krb5_xfree(r)
+#endif
+
+/*
+ * Heimdal: krb5_xfree, MIT: krb5_free_string, older MIT uses free().  Note
+ * that we can incorrectly allocate in the library and call free() if
+ * krb5_free_string is not available but something we use that API for is
+ * available, such as krb5_appdefaults_*, but there isn't anything we can
+ * really do about it.
+ */
+#ifndef HAVE_KRB5_FREE_STRING
+# ifdef HAVE_KRB5_XFREE
+#  define krb5_free_string(c, s) krb5_xfree(s)
+# else
+#  define krb5_free_string(c, s) free(s)
+# endif
 #endif
 
 /* Heimdal: krb5_xfree, MIT: krb5_free_unparsed_name. */

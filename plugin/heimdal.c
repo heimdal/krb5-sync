@@ -6,22 +6,19 @@
  * the Heimdal hook API, so the interface exposed here may change in the
  * future.
  *
- * Written by Russ Allbery <rra@stanford.edu>
- * Copyright 2010
+ * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2010, 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
  * See LICENSE for licensing terms.
  */
 
 #include <config.h>
+#include <portable/kadmin.h>
+#include <portable/krb5.h>
 #include <portable/system.h>
 
 #include <errno.h>
-#include <kadm5/admin.h>
-#ifdef HAVE_KADM5_KADM5_ERR_H
-# include <kadm5/kadm5_err.h>
-#endif
-#include <krb5.h>
 
 #include <plugin/internal.h>
 #include <util/macros.h>
@@ -58,11 +55,7 @@ typedef struct kadm5_hook {
 static krb5_error_code
 init(krb5_context ctx, void **data)
 {
-    krb5_error_code code = 0;
-
-    if (pwupdate_init(ctx, data) != 0)
-        code = errno;
-    return code;
+    return sync_init(ctx, (kadm5_hook_modinfo **) data);
 }
 
 
@@ -70,9 +63,9 @@ init(krb5_context ctx, void **data)
  * Shut down the object, freeing any internal resources.
  */
 static void
-fini(krb5_context ctx UNUSED, void *data)
+fini(krb5_context ctx, void *data)
 {
-    pwupdate_close(data);
+    sync_close(ctx, data);
 }
 
 
@@ -83,10 +76,6 @@ static krb5_error_code
 chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
        krb5_principal princ, const char *password)
 {
-    char error[BUFSIZ];
-    size_t length;
-    int status = 0;
-
     /*
      * If password is NULL, we have a new key set but no password (meaning
      * this is an operation such as add -r).  We can't do anything without a
@@ -94,22 +83,12 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
      */
     if (password == NULL)
         return 0;
-    length = strlen(password);
 
     /* Dispatch to the appropriate function. */
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        status = pwupdate_precommit_password(data, princ, password, length,
-                                             error, sizeof(error));
-    else if (stage == KADM5_HOOK_STAGE_POSTCOMMIT)
-        status = pwupdate_postcommit_password(data, princ, password, length,
-                                              error, sizeof(error));
-    if (status == 0)
+        return sync_chpass(data, ctx, princ, password);
+    else
         return 0;
-    else {
-        krb5_set_error_message(ctx, KADM5_FAILURE,
-                               "cannot synchronize password: %s", error);
-        return KADM5_FAILURE;
-    }
 }
 
 
@@ -139,20 +118,11 @@ static krb5_error_code
 modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
        kadm5_principal_ent_t entry, uint32_t mask)
 {
-    char error[BUFSIZ];
-    int enabled, status;
+    bool enabled;
 
     if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
-        status = pwupdate_postcommit_status(data, entry->principal, enabled,
-                                            error, sizeof(error));
-        if (status == 0)
-            return 0;
-        else {
-            krb5_set_error_message(ctx, KADM5_FAILURE,
-                                   "cannot synchronize status: %s", error);
-            return KADM5_FAILURE;
-        }
+        return sync_status(data, ctx, entry->principal, enabled);
     }
     return 0;
 }
