@@ -22,6 +22,7 @@ krb5-sync (3.0-1) UNRELEASED; urgency=low
       the queue directory.
     - krb5-sync-backend process skips queue files that no longer exist by
       the time we get to them.
+  * Update standards version to 3.9.5 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Mon, 09 Dec 2013 18:02:18 -0800
 
