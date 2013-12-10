@@ -90,7 +90,6 @@ void krb5_appdefault_string(krb5_context, const char *, const krb5_data *,
 # endif
 #endif
 
-
 /* Heimdal: krb5_xfree, MIT: krb5_free_unparsed_name. */
 #ifdef HAVE_KRB5_XFREE
 # define krb5_free_unparsed_name(c, p) krb5_xfree(p)
