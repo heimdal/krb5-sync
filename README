@@ -255,6 +255,9 @@ CONFIGURATION
 
   ad_base_instance
 
+      This option is only available if built with Heimdal.  It will result
+      in an initialization error if set when using MIT Kerberos.
+
       If ad_base_instance is set, then any password change for a
       single-component principal (such as user@EXAMPLE.COM) will be
       handled somewhat specially.
@@ -345,14 +348,14 @@ CONFIGURATION
   used by kadmind:
 
     [plugins]
-      kadm5_hook = {
-        module = krb5_sync:/usr/local/lib/krb5/plugins/kadm5_hook/sync.so
-      }
+        kadm5_hook = {
+            module = sync:/usr/local/lib/krb5/plugins/kadm5_hook/sync.so
+        }
 
-  You may wish to install krb5_sync.so under a krb5/plugins/kadm5_hook in
-  the library directory used for your Kerberos installation instead, if
-  that is not /usr/local/lib, in which case you can use
-  "kadm5_hook/sync.so" as the relative path to the plugin.
+  You may wish to install sync.so under a krb5/plugins/kadm5_hook in the
+  library directory used for your Kerberos installation instead, if that
+  is not /usr/local/lib, in which case you can use "kadm5_hook/sync.so" as
+  the relative path to the plugin.
 
   The kadmind patch for Heimdal adds a configuration option for the
   krb5.conf file in the [kadmin] section.  If this option is not set, the
@@ -364,14 +367,6 @@ CONFIGURATION
 
   to the configuration file used by kadmind and kpasswdd.  Update the path
   for wherever the krb5-sync plugin is located.
-
-  The kadmind patch for older versions of MIT adds a similar configuration
-  option for the kdc.conf.  To use the plugin on older versions of MIT,
-  add a line like:
-
-      pwupdate_plugin = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
-
-  to the local realm sub-section of the [realms] section.
 
 ACTIVE DIRECTORY SETUP
 
