@@ -24,9 +24,8 @@ krb5-sync 3.0 (2013-12-09)
     still provided.
 
     Add a new string krb5.conf option, ad_base_instance, which, if set,
-    changes the way that password synchronization is handled.  This option
-    is only available for Heimdal, not for MIT Kerberos.  When this option
-    is set, the password for the principal formed by appending that
+    changes the way that password synchronization is handled.  When this
+    option is set, the password for the principal formed by appending that
     instance to a base principal is propagated to Active Directory as the
     password for the base principal.  For example, if this is set to the
     string "windows", the password of the principal "user/windows" is

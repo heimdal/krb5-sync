@@ -2136,63 +2136,6 @@ $as_echo "$ac_res" >&6; }
 
 } # ac_fn_c_check_type
 
-# ac_fn_c_check_member LINENO AGGR MEMBER VAR INCLUDES
-# ----------------------------------------------------
-# Tries to find if the field MEMBER exists in type AGGR, after including
-# INCLUDES, setting cache variable VAR accordingly.
-ac_fn_c_check_member ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2.$3" >&5
-$as_echo_n "checking for $2.$3... " >&6; }
-if eval \${$4+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$5
-int
-main ()
-{
-static $2 ac_aggr;
-if (ac_aggr.$3)
-return 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  eval "$4=yes"
-else
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$5
-int
-main ()
-{
-static $2 ac_aggr;
-if (sizeof ac_aggr.$3)
-return 0;
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  eval "$4=yes"
-else
-  eval "$4=no"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-eval ac_res=\$$4
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-$as_echo "$ac_res" >&6; }
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-
-} # ac_fn_c_check_member
-
 # ac_fn_c_check_decl LINENO SYMBOL VAR INCLUDES
 # ---------------------------------------------
 # Tests whether SYMBOL is declared in INCLUDES, setting cache variable VAR
@@ -15934,17 +15877,7 @@ _ACEOF
 fi
 done
 
-ac_fn_c_check_type "$LINENO" "krb5_realm" "ac_cv_type_krb5_realm" "$ac_includes_default"
-if test "x$ac_cv_type_krb5_realm" = xyes; then :
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_KRB5_REALM 1
-_ACEOF
-
-
-fi
-
-ac_fn_c_check_member "$LINENO" "krb5_creds" "session" "ac_cv_member_krb5_creds_session" "
+ac_fn_c_check_type "$LINENO" "krb5_realm" "ac_cv_type_krb5_realm" "
 #if HAVE_KRB5_H
 # include <krb5.h>
 #else
@@ -15952,15 +15885,15 @@ ac_fn_c_check_member "$LINENO" "krb5_creds" "session" "ac_cv_member_krb5_creds_s
 #endif
 
 "
-if test "x$ac_cv_member_krb5_creds_session" = xyes; then :
+if test "x$ac_cv_type_krb5_realm" = xyes; then :
 
-$as_echo "#define HAVE_KRB5_HEIMDAL 1" >>confdefs.h
+cat >>confdefs.h <<_ACEOF
+#define HAVE_KRB5_REALM 1
+_ACEOF
+
 
 else
-
-$as_echo "#define HAVE_KRB5_MIT 1" >>confdefs.h
-
-     for ac_header in krb5/kadm5_hook_plugin.h
+  for ac_header in krb5/kadm5_hook_plugin.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "krb5/kadm5_hook_plugin.h" "ac_cv_header_krb5_kadm5_hook_plugin_h" "$ac_includes_default"
 if test "x$ac_cv_header_krb5_kadm5_hook_plugin_h" = xyes; then :
@@ -16452,12 +16385,13 @@ rra_KADM5SRV_save_CPPFLAGS="$CPPFLAGS"
  CPPFLAGS="$KADM5SRV_CPPFLAGS $CPPFLAGS"
  LDFLAGS="$KADM5SRV_LDFLAGS $LDFLAGS"
  LIBS="$KADM5SRV_LIBS $LIBS"
-for ac_func in kadm5_init_with_skey_ctx
+for ac_func in kadm5_init_krb5_context kadm5_init_with_skey_ctx
 do :
-  ac_fn_c_check_func "$LINENO" "kadm5_init_with_skey_ctx" "ac_cv_func_kadm5_init_with_skey_ctx"
-if test "x$ac_cv_func_kadm5_init_with_skey_ctx" = xyes; then :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_KADM5_INIT_WITH_SKEY_CTX 1
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
 _ACEOF
 
 fi
