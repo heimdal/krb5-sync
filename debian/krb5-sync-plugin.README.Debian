@@ -10,7 +10,7 @@ it requires additional configuration.  To enable it, add a section to
         ad_principal    = service/sync@WINDOWS.EXAMPLE.COM
         ad_realm        = WINDOWS.EXAMPLE.COM
         ad_admin_server = dc1.windows.example.com
-        ad_ldap_base    = ou=People
+        ad_ldap_base    = ou=People,dc=windows,dc=example,dc=com
         ad_instances    = root ipass
 
         queue_dir       = /var/spool/krb5-sync
@@ -21,10 +21,10 @@ these settings) and then add to the [plugins] section (creating it if
 necessary) of the configuration file for the Kerberos KDC the following:
 
     kadm5_hook = {
-        module = krb5_sync:kadm5_hook/krb5_sync.so
+        module = krb5_sync:kadm5_hook/sync.so
     }
 
 You will probably also want to install the krb5-sync-tools package, which
 provides some additional useful command-line utilities.
 
- -- Russ Allbery <rra@debian.org>, Tue, 10 Jan 2012 16:26:04 -0800
+ -- Russ Allbery <rra@debian.org>, Mon,  9 Dec 2013 18:10:56 -0800

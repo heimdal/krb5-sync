@@ -1,0 +1,20 @@
+krb5-sync (3.0-1) unstable; urgency=low
+
+  The plugin name changed in this release from krb5_sync.so to sync.so.
+  The [plugins] section for the kdc.conf or krb5.conf configuration for
+  the Kerberos KDC will have to change accordingly, to:
+
+    kadm5_hook = {
+        module = krb5_sync:kadm5_hook/sync.so
+    }
+
+  if you were using the default configuration.
+
+  In order to synchronize account status with Active Directory, the
+  ad_ldap_base configuration setting is now mandatory and must contain the
+  full DN.  Previously, the dc components of the DN were added
+  automatically, based on the Active Directory realm, but now they must be
+  specified in order for status synchronization to work.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 09 Dec 2013 18:12:03 -0800
+
