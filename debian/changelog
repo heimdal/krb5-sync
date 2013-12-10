@@ -1,3 +1,30 @@
+krb5-sync (3.0-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Module name changed to sync.so.  This will require configuration
+      changes in the KDC krb5.conf or kdc.conf configuration file in the
+      [plugins] section.
+    - The ad_ldap_base configuration parameter must now contain the full
+      DN of the tree in Active Directory where account information is
+      stored, and is now mandatory for status synchronization.
+    - New option ad_base_instance, which allows an instance's password to
+      be synchronized to the unqualified principal name in Active
+      Directory.
+    - New option ad_queue_only that, if set to true, forces queuing of all
+      changes rather than pushing any changes immediately.
+    - New option syslog that, if set to false, suppresses supplemental
+      syslog logging of notice, info, and debug messages.
+    - All failed Active Directory password changes are now queued, instead
+      of just those that returned specific errors.
+    - krb5-sync-backend now requires its parameters be given after the
+      subcommand.
+    - krb5-sync-backend now supports a -d option to specify the path to
+      the queue directory.
+    - krb5-sync-backend process skips queue files that no longer exist by
+      the time we get to them.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 09 Dec 2013 18:02:18 -0800
+
 krb5-sync (2.3-2) unstable; urgency=low
 
   * Upload to unstable.
