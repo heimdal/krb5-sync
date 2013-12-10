@@ -36,7 +36,7 @@ BEGIN {
     # This version should match the corresponding rra-c-util release, but with
     # two digits for the minor version, including a leading zero if necessary,
     # so that it will sort properly.
-    $VERSION = '4.11';
+    $VERSION = '4.12';
 }
 
 # If BUILD or SOURCE are set in the environment, look for data/perl.conf under
