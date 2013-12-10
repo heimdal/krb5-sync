@@ -14,7 +14,9 @@ EXTRA_DIST = .gitignore LICENSE autogen patches/README			    \
 	tests/data/perlcriticrc tests/data/perltidyrc			    \
 	tests/data/valgrind.supp tests/docs/pod-spelling-t tests/docs/pod-t \
 	tests/perl/critic-t tests/perl/minimum-version-t		    \
-	tests/perl/strict-t tests/tap/libtap.sh tests/tools/backend	    \
+	tests/perl/strict-t tests/tap/libtap.sh tests/tap/perl/Test/RRA.pm  \
+	tests/tap/perl/Test/RRA/Automake.pm				    \
+	tests/tap/perl/Test/RRA/Config.pm tests/tools/backend-t		    \
 	tests/util/xmalloc-t tools/krb5-sync.pod
 
 # Everything in the package needs to be able to find the Kerberos headers
