@@ -23,9 +23,12 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AM_DISABLE_STATIC
 LT_INIT
 
+dnl Only check for krb5/kadm5_hook_plugin.h if building with MIT, since we may
+dnl find a system MIT header file that can't be included when building with
+dnl Heimdal.
 RRA_LIB_KRB5
 RRA_LIB_KRB5_SWITCH
-AC_CHECK_HEADERS([kadm5/kadm5_err.h krb5/kadm5_hook_plugin.h])
+AC_CHECK_HEADERS([kadm5/kadm5_err.h])
 AC_CHECK_FUNCS([krb5_free_default_realm \
     krb5_free_string \
     krb5_get_init_creds_opt_alloc \
@@ -35,7 +38,8 @@ AC_CHECK_FUNCS([krb5_free_default_realm \
     krb5_principal_get_realm \
     krb5_principal_set_realm \
     krb5_xfree])
-AC_CHECK_TYPES([krb5_realm], [], [], [RRA_INCLUDES_KRB5])
+AC_CHECK_TYPES([krb5_realm], [],
+    [AC_CHECK_HEADERS([krb5/kadm5_hook_plugin.h])], [RRA_INCLUDES_KRB5])
 AC_CHECK_FUNCS([krb5_get_init_creds_opt_free],
     [RRA_FUNC_KRB5_GET_INIT_CREDS_OPT_FREE_ARGS])
 AC_CHECK_FUNCS([krb5_appdefault_string], [],
