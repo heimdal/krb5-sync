@@ -1,4 +1,4 @@
-Source: krb5-sync-heimdal
+Source: krb5-sync
 Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>

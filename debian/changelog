@@ -1,4 +1,4 @@
-krb5-sync-heimdal (3.0-1) oldstable-kdc; urgency=low
+krb5-sync (3.0-1su1) oldstable-kdc; urgency=low
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
     main krb5-sync package is now being built against MIT Kerberos for
