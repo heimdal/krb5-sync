@@ -9,6 +9,7 @@ krb5-sync (3.0-1su1) oldstable-kdc; urgency=low
   * Conflict with the MIT krb5-sync-plugin package.
   * Back out of the multiarch changes, since multiarch was not supported
     in squeeze.
+  * Change build dependency to heimdal-dev.
 
  -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 13:37:12 -0800
 

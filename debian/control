@@ -3,8 +3,8 @@ Section: net
 Priority: extra
 Maintainer: Russ Allbery <rra@debian.org>
 Bugs: mailto:rra@debian.org
-Build-Depends: debhelper (>= 9), dh-autoreconf, libipc-run-perl,
- libkrb5-dev, libldap2-dev, libnet-remctl-perl (>= 3.4),
+Build-Depends: debhelper (>= 9), dh-autoreconf, heimdal-dev,
+ libipc-run-perl, libldap2-dev, libnet-remctl-perl (>= 3.4),
  libperl6-slurp-perl, libtest-minimumversion-perl, libtest-pod-perl
 Standards-Version: 3.9.5
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
