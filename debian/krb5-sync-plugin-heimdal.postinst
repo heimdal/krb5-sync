@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+# Restart heimdal-kdc on upgrade of the plugin to ensure kpasswdd is using the
+# latest version.
+if invoke-rc.d heimdal-kdc status >/dev/null 2>&1 ; then
+    invoke-rc.d heimdal-kdc restart
+fi
+
+#DEBHELPER#
+
+exit 0

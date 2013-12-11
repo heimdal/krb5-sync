@@ -2,15 +2,16 @@ krb5-sync (3.0-1su1) oldstable-kdc; urgency=low
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
     main krb5-sync package is now being built against MIT Kerberos for
-    upload to Debian proper.  krb5-sync-heimdal will combine both the
-    plugin and the tools package, built against Heimdal, for continued
-    Stanford local use with a patched Heimdal KDC until the Heimdal
-    support is integrated and the main package can build both plugins.
+    upload to Debian proper.  krb5-sync-plugin-heimdal will contain the
+    plugin, built against Heimdal, for continued Stanford local use with a
+    patched Heimdal KDC until the Heimdal support is integrated and the
+    main package can build both plugins.  For the time being, we also
+    build a version of krb5-sync-tools linked with Heimdal.
   * Back out of the multiarch changes, since multiarch was not supported
     in squeeze.
   * Change build dependency to heimdal-dev.
 
- -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 14:33:20 -0800
+ -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 18:33:26 -0800
 
 krb5-sync (3.0-1) unstable; urgency=low
 
