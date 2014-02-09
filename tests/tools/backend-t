@@ -87,9 +87,9 @@ sub run_backend_checked {
 
 # Given a user, an action, and (for a password change) the new password,
 # locate that queued action and check that the correct information was stored
-# for it.  Expects the action to have been queued in the past second.  Reports
-# results with Test::More functions.  Always uses a directory named 'queue'
-# under test_tmpdir() as the queue directory.
+# for it.  Expects the action to have been queued in the five seconds.
+# Reports results with Test::More functions.  Always uses a directory named
+# 'queue' under test_tmpdir() as the queue directory.
 #
 # $user     - User for which the action should be queued
 # $action   - The queued action, chosen from enable, disable, or password
@@ -109,9 +109,12 @@ sub check_queued_action {
     # with the same timestamp with a non-zero sequence number.
     my $now = time;
     my $path;
-    for my $time ($now - 1 .. $now) {
-        $path = $base . strftime('%Y%m%dT%H%M%SZ-00', gmtime($time));
-        last if -f $path;
+    for my $time ($now - 5 .. $now) {
+        my $candidate = $base . strftime('%Y%m%dT%H%M%SZ-00', gmtime($time));
+        if (-f $candidate) {
+            $path = $candidate;
+            last;
+        }
     }
     ok(defined($path), 'Queued change found');
 
