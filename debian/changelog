@@ -1,3 +1,13 @@
+krb5-sync (3.0-3) unstable; urgency=medium
+
+  * The change in 3.0-3 fixed the test suite failure on all architectures
+    except armel, which appears to still be failing with a variation on
+    the original issue.  Further expand the valid timing range on the
+    test, since this seems to be on the right track but just didn't go far
+    enough.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 09 Feb 2014 19:21:52 -0800
+
 krb5-sync (3.0-2) unstable; urgency=medium
 
   * Fix the tools/backend test suite to be less sensitive to timing when
