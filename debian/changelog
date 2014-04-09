@@ -1,3 +1,11 @@
+krb5-sync (3.0-1su2) stable-kdc; urgency=medium
+
+  * Stanford local package.
+  * Rebuild for wheezy.
+  * Re-add the multiarch changes.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 09 Apr 2014 16:15:31 -0700
+
 krb5-sync (3.0-1su1) oldstable-kdc; urgency=low
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
