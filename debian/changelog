@@ -1,12 +1,4 @@
-krb5-sync (3.0-1su2) stable-kdc; urgency=medium
-
-  * Stanford local package.
-  * Rebuild for wheezy.
-  * Re-add the multiarch changes.
-
- -- Russ Allbery <rra@debian.org>  Wed, 09 Apr 2014 16:15:31 -0700
-
-krb5-sync (3.0-1su1) oldstable-kdc; urgency=low
+krb5-sync (3.0-3su1) stable-kdc; urgency=medium
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
     main krb5-sync package is now being built against MIT Kerberos for
@@ -15,11 +7,26 @@ krb5-sync (3.0-1su1) oldstable-kdc; urgency=low
     patched Heimdal KDC until the Heimdal support is integrated and the
     main package can build both plugins.  For the time being, we also
     build a version of krb5-sync-tools linked with Heimdal.
-  * Back out of the multiarch changes, since multiarch was not supported
-    in squeeze.
   * Change build dependency to heimdal-dev.
 
  -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 18:33:26 -0800
+
+krb5-sync (3.0-3) unstable; urgency=medium
+
+  * The change in 3.0-3 fixed the test suite failure on all architectures
+    except armel, which appears to still be failing with a variation on
+    the original issue.  Further expand the valid timing range on the
+    test, since this seems to be on the right track but just didn't go far
+    enough.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 09 Feb 2014 19:21:52 -0800
+
+krb5-sync (3.0-2) unstable; urgency=medium
+
+  * Fix the tools/backend test suite to be less sensitive to timing when
+    queuing changes.  (Closes: #738364)
+
+ -- Russ Allbery <rra@debian.org>  Sun, 09 Feb 2014 13:41:36 -0800
 
 krb5-sync (3.0-1) unstable; urgency=low
 
