@@ -1,1 +1,1 @@
-usr/lib/krb5/plugins/kadm5_hook/*
+usr/lib/*/krb5/plugins/kadm5_hook/*

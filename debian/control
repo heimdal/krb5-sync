@@ -13,8 +13,9 @@ Vcs-Git: git://git.eyrie.org/kerberos/krb5-sync.git -b stanford
 
 Package: krb5-sync-plugin-heimdal
 Architecture: any
+Multi-Arch: same
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Recommends: heimdal-kdc
+Recommends: heimdal-kdc, krb5-sync-tools
 Description: Heimdal KDC plugin for password synchronization
  This plugin synchronizes passwords changed via kadmind to a foreign realm
  via the Kerberos password change protocol.  It can also propagate changes
@@ -23,14 +24,14 @@ Description: Heimdal KDC plugin for password synchronization
  Heimdal's libkadm5srv library to be called by kadmin, kadmind, and
  kpasswdd.
  .
- This package is a Stanford-specific version of the krb5-sync package
+ This package is a Stanford-specific version of the krb5-sync plugin
  built against Heimdal rather than MIT Kerberos.
 
 Package: krb5-sync-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${perl:Depends},
  libipc-run-perl, libnet-remctl-perl (>= 3.4)
-Recommends: krb5-sync-plugin | krb5-sync-plugin-heimdal
+Recommends: krb5-sync-plugin-heimdal
 Description: Kerberos Active Directory synchronization tools
  Provides tools to enable, disable, and set the password of an account in
  a Windows Active Directory using the same configuration used by the
