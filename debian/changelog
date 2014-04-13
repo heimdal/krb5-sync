@@ -1,5 +1,7 @@
 krb5-sync (3.0-5) UNRELEASED; urgency=medium
 
+  * Add the upstream release signing key and verify it in debian/watch.
+  * Prefer *.tar.xz in debian/watch to match packaging.
   * Fix Upstream-Contact email address in debian/copyright.
 
  -- Russ Allbery <rra@debian.org>  Sun, 13 Apr 2014 12:30:34 -0700
