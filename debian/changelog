@@ -1,3 +1,9 @@
+krb5-sync (3.0-5) UNRELEASED; urgency=medium
+
+  * Fix Upstream-Contact email address in debian/copyright.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 13 Apr 2014 12:30:34 -0700
+
 krb5-sync (3.0-4) unstable; urgency=medium
 
   * Actually use dh_autoreconf rather than only depending on it.  Thanks
