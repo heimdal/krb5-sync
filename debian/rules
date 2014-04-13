@@ -6,14 +6,14 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+bindnow,+pie
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 %:
-	dh $@
+	dh $@ --parallel --with autoreconf
 
 override_dh_auto_configure:
-	dh_auto_configure -- --enable-reduced-depends \
+	dh_auto_configure --parallel -- --enable-reduced-depends \
 	    --libdir=/usr/lib/$(DEB_HOST_MULTIARCH)
 
 override_dh_auto_install:
-	dh_auto_install
+	dh_auto_install --parallel
 	rm debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook/*.la
 	chmod 644 debian/tmp/usr/lib/*/krb5/plugins/kadm5_hook/*.so
 

@@ -1,3 +1,11 @@
+krb5-sync (3.0-4) unstable; urgency=medium
+
+  * Actually use dh_autoreconf rather than only depending on it.  Thanks
+    to Matthias Klose for the report.  (Closes: #744600)
+  * Enable parallel builds.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 13 Apr 2014 11:14:45 -0700
+
 krb5-sync (3.0-3) unstable; urgency=medium
 
   * The change in 3.0-3 fixed the test suite failure on all architectures
