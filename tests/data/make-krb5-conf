@@ -4,7 +4,7 @@
 # contains all the key/value pairs given on the command line.  This script is
 # used by C tests to set up the environment.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
 # Copyright 2009, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
