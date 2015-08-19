@@ -2,6 +2,9 @@
 
 krb5-sync 3.1 (unreleased)
 
+    In krb5-sync-backend silent mode, fix the ignore regex for missing
+    users and report unsuppressed errors properly with an ending newline.
+
     Update to rra-c-util 5.8:
 
     * Support the Solaris 10 embedded Kerberos implementation.
