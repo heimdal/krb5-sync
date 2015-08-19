@@ -1,6 +1,6 @@
                       User-Visible krb5-sync Changes
 
-krb5-sync 3.1 (unreleased)
+krb5-sync 3.1 (2015-08-18)
 
     In krb5-sync-backend silent mode, fix the ignore regex for missing
     users and report unsuppressed errors properly with an ending newline.
