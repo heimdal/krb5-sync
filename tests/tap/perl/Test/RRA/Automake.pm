@@ -101,7 +101,15 @@ sub automake_setup {
     my ($vol, $dirs) = File::Spec->splitpath($start, 1);
     my @dirs = File::Spec->splitdir($dirs);
     pop(@dirs);
-    if ($dirs[-1] eq File::Spec->updir) {
+
+    # Simplify relative paths at the end of the directory.
+    my $ups = 0;
+    my $i   = $#dirs;
+    while ($i > 2 && $dirs[$i] eq File::Spec->updir) {
+        $ups++;
+        $i--;
+    }
+    for (1 .. $ups) {
         pop(@dirs);
         pop(@dirs);
     }

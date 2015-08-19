@@ -11,7 +11,7 @@ krb5-sync 3.1 (unreleased)
     * Use calloc or reallocarray instead of malloc.
     * Fix compilation with a C++ compiler.
 
-    Update to C TAP Harness 3.3:
+    Update to C TAP Harness 3.4:
 
     * Display verbose test results with -v or C_TAP_VERBOSE.
     * Reopen standard input to /dev/null when running a test list.

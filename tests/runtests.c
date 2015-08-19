@@ -3,9 +3,9 @@
  *
  * Usage:
  *
- *      runtests [-b <build-dir>] [-s <source-dir>] -l <test-list>
- *      runtests [-b <build-dir>] [-s <source-dir>] <test> [<test> ...]
- *      runtests -o [-b <build-dir>] [-s <source-dir>] <test>
+ *      runtests [-hv] [-b <build-dir>] [-s <source-dir>] -l <test-list>
+ *      runtests [-hv] [-b <build-dir>] [-s <source-dir>] <test> [<test> ...]
+ *      runtests -o [-h] [-b <build-dir>] [-s <source-dir>] <test>
  *
  * In the first case, expects a list of executables located in the given file,
  * one line per executable.  For each one, runs it as part of a test suite,
@@ -53,6 +53,10 @@
  * the source and build directory and will look for tests under both
  * directories.  These paths can also be set with the -b and -s command-line
  * options, which will override anything set at build time.
+ *
+ * If the -v option is given, or the C_TAP_VERBOSE environment variable is set,
+ * display the full output of each test as it runs rather than showing a
+ * summary of the results of each test.
  *
  * Any bug reports, bug fixes, and improvements are very much welcome and
  * should be sent to the e-mail address below.  This program is part of C TAP
@@ -202,16 +206,18 @@ struct testlist {
  * split into variables to satisfy the pedantic ISO C90 limit on strings.
  */
 static const char usage_message[] = "\
-Usage: %s [-b <build-dir>] [-s <source-dir>] <test> ...\n\
-       %s [-b <build-dir>] [-s <source-dir>] -l <test-list>\n\
-       %s -o [-b <build-dir>] [-s <source-dir>] <test>\n\
-\n%s";
-static const char usage_extra[] = "\
+Usage: %s [-hv] [-b <build-dir>] [-s <source-dir>] <test> ...\n\
+       %s [-hv] [-b <build-dir>] [-s <source-dir>] -l <test-list>\n\
+       %s -o [-h] [-b <build-dir>] [-s <source-dir>] <test>\n\
+\n\
 Options:\n\
     -b <build-dir>      Set the build directory to <build-dir>\n\
+%s";
+static const char usage_extra[] = "\
     -l <list>           Take the list of tests to run from <test-list>\n\
     -o                  Run a single test rather than a list of tests\n\
     -s <source-dir>     Set the source directory to <source-dir>\n\
+    -v                  Show the full output of each test\n\
 \n\
 runtests normally runs each test listed on the command line.  With the -l\n\
 option, it instead runs every test listed in a file.  With the -o option,\n\
@@ -1198,7 +1204,8 @@ find_test(const char *name, const char *source, const char *build)
 
 /*
  * Read a list of tests from a file, returning the list of tests as a struct
- * testlist.  Reports an error to standard error and exits if the list of
+ * testlist, or NULL if there were no tests (such as a file containing only
+ * comments).  Reports an error to standard error and exits if the list of
  * tests cannot be read.
  */
 static struct testlist *
@@ -1252,6 +1259,12 @@ read_test_list(const char *filename)
     }
     fclose(file);
 
+    /* If there were no tests, current is still NULL. */
+    if (current == NULL) {
+        free(listhead);
+        return NULL;
+    }
+
     /* Return the results. */
     return listhead;
 }
@@ -1260,7 +1273,8 @@ read_test_list(const char *filename)
 /*
  * Build a list of tests from command line arguments.  Takes the argv and argc
  * representing the command line arguments and returns a newly allocated test
- * list.  The caller is responsible for freeing.
+ * list, or NULL if there were no tests.  The caller is responsible for
+ * freeing.
  */
 static struct testlist *
 build_test_list(char *argv[], int argc)
@@ -1283,6 +1297,12 @@ build_test_list(char *argv[], int argc)
         current->ts = xcalloc(1, sizeof(struct testset));
         current->ts->plan = PLAN_INIT;
         current->ts->file = xstrdup(argv[i]);
+    }
+
+    /* If there were no tests, current is still NULL. */
+    if (current == NULL) {
+        free(listhead);
+        return NULL;
     }
 
     /* Return the results. */
