@@ -1,6 +1,7 @@
 # Automake makefile for krb5-sync.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2015 Russ Allbery <eagle@eyrie.org>
 # Copyright 2006, 2007, 2010, 2012, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
@@ -80,16 +81,17 @@ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 build-aux/ar-lib		   \
 #
 #     -Wconversion      http://bugs.debian.org/488884 (htons warnings)
 #
-# Last checked against gcc 4.7.2 (2013-04-22).  -D_FORTIFY_SOURCE=2 enables
+# Last checked against gcc 4.8.2 (2014-04-12).  -D_FORTIFY_SOURCE=2 enables
 # warn_unused_result attribute markings on glibc functions on Linux, which
 # catches a few more issues.
-WARNINGS = -g -O -D_FORTIFY_SOURCE=2 -Wall -Wextra -Wendif-labels	   \
-	-Wformat=2 -Winit-self -Wswitch-enum -Wuninitialized -Wfloat-equal \
-	-Wdeclaration-after-statement -Wshadow -Wpointer-arith		   \
-	-Wbad-function-cast -Wcast-align -Wwrite-strings		   \
-	-Wjump-misses-init -Wlogical-op -Wstrict-prototypes		   \
-	-Wold-style-definition -Wmissing-prototypes -Wnormalized=nfc	   \
-	-Wpacked -Wredundant-decls -Wnested-externs -Winline -Wvla -Werror
+WARNINGS = -g -O -fstrict-overflow -fstrict-aliasing -D_FORTIFY_SOURCE=2   \
+    -Wall -Wextra -Wendif-labels -Wformat=2 -Winit-self -Wswitch-enum	   \
+    -Wstrict-overflow=5 -Wmissing-format-attribute -Wfloat-equal	   \
+    -Wdeclaration-after-statement -Wshadow -Wpointer-arith		   \
+    -Wbad-function-cast -Wcast-align -Wwrite-strings -Wjump-misses-init	   \
+    -Wlogical-op -Wstrict-prototypes -Wold-style-definition		   \
+    -Wmissing-prototypes -Wnormalized=nfc -Wpacked -Wredundant-decls	   \
+    -Wnested-externs -Winline -Wvla -Werror
 
 warnings:
 	$(MAKE) V=0 CFLAGS='$(WARNINGS)'
@@ -98,7 +100,8 @@ warnings:
 # The bits below are for the test suite, not for the main package.
 check_PROGRAMS = tests/runtests tests/plugin/heimdal-t tests/plugin/mit-t   \
 	tests/plugin/queue-only-t tests/plugin/queuing-t		    \
-	tests/portable/asprintf-t tests/portable/snprintf-t		    \
+	tests/portable/asprintf-t tests/portable/mkstemp-t		    \
+	tests/portable/reallocarray-t tests/portable/snprintf-t		    \
 	tests/util/messages-krb5-t tests/util/messages-t tests/util/xmalloc
 check_LIBRARIES = tests/tap/libtap.a
 tests_runtests_CPPFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
@@ -134,6 +137,13 @@ tests_plugin_queuing_t_LDADD = tests/tap/libtap.a portable/libportable.la \
 tests_portable_asprintf_t_SOURCES = tests/portable/asprintf-t.c \
 	tests/portable/asprintf.c
 tests_portable_asprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_portable_mkstemp_t_SOURCES = tests/portable/mkstemp-t.c \
+	tests/portable/mkstemp.c
+tests_portable_mkstemp_t_LDADD = tests/tap/libtap.a portable/libportable.la
+tests_portable_reallocarray_t_SOURCES = tests/portable/reallocarray-t.c \
+	tests/portable/reallocarray.c
+tests_portable_reallocarray_t_LDADD = tests/tap/libtap.a \
+	portable/libportable.la
 tests_portable_snprintf_t_SOURCES = tests/portable/snprintf-t.c \
 	tests/portable/snprintf.c
 tests_portable_snprintf_t_LDADD = tests/tap/libtap.a portable/libportable.la

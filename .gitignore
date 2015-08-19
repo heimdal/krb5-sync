@@ -20,6 +20,8 @@
 /tests/plugin/queue-only-t
 /tests/plugin/queuing-t
 /tests/portable/asprintf-t
+/tests/portable/mkstemp-t
+/tests/portable/reallocarray-t
 /tests/portable/snprintf-t
 /tests/runtests
 /tests/util/concat-t
