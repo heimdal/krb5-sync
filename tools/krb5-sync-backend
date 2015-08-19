@@ -318,7 +318,7 @@ sub process {
                 for my $ignore (@IGNORE) {
                     next STDERR if $line =~ m{ $ignore }xms;
                 }
-                print {*STDERR} $line
+                print {*STDERR} $line, "\n"
                   or warn "$0: cannot write to standard error: $!\n";
             }
         } else {
