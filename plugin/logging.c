@@ -8,6 +8,7 @@
  * configuration option is set to false.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2015 Russ Allbery <eagle@eyrie.org>
  * Copyright 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
@@ -28,7 +29,7 @@
  * message to log, we just do nothing, since these functions are only used for
  * supplemental logging.
  */
-static void
+static void __attribute__((__format__(printf, 3, 0)))
 log_syslog(kadm5_hook_modinfo *config, int priority, const char *fmt,
            va_list args)
 {
