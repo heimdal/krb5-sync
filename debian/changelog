@@ -1,4 +1,4 @@
-krb5-sync (3.1-1) UNRELEASED; urgency=medium
+krb5-sync (3.1-1) unstable; urgency=medium
 
   * New upstream release.
     - Fix ignore regex and errors for krb5-sync-backend silent mode.
@@ -9,7 +9,7 @@ krb5-sync (3.1-1) UNRELEASED; urgency=medium
     packaging repository.
   * Update standards version to 3.9.6 (no changes required).
 
- -- Russ Allbery <rra@debian.org>  Sun, 13 Apr 2014 12:30:34 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 18 Aug 2015 21:45:35 -0700
 
 krb5-sync (3.0-4) unstable; urgency=medium
 
