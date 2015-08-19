@@ -5,14 +5,12 @@
 # Checks all Perl scripts in the tree for problems uncovered by Test::Strict.
 # This includes using strict and warnings for every script and ensuring they
 # all pass a syntax check.  Currently, test suite coverage is not checked.
-# This test is disabled unless RRA_MAINTAINER_TESTS is set, since some scripts
-# may require dependencies that aren't necessarily present.
 #
 # The canonical version of this file is maintained in the rra-c-util package,
 # which can be found at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
-# Copyright 2012, 2013
+# Copyright 2012, 2013, 2014
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -40,12 +38,21 @@ use warnings;
 use lib "$ENV{SOURCE}/tap/perl";
 
 use Test::More;
-use Test::RRA qw(use_prereq);
+use Test::RRA qw(skip_unless_automated use_prereq);
 use Test::RRA::Automake qw(automake_setup perl_dirs);
-use Test::RRA::Config qw(@STRICT_IGNORE);
+use Test::RRA::Config qw(@STRICT_IGNORE @STRICT_PREREQ);
+
+# Skip for normal user installs since this doesn't affect functionality.
+skip_unless_automated('Strictness tests');
 
 # Load prerequisite modules.
 use_prereq('Test::Strict');
+
+# Check whether all prerequisites are available, and skip the test if any of
+# them are not.
+for my $module (@STRICT_PREREQ) {
+    use_prereq($module);
+}
 
 # Set up Automake testing.  This must be done after loading Test::Strict,
 # since it wants to use FindBin to locate this script.
