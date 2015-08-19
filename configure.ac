@@ -1,6 +1,7 @@
 dnl Autoconf configuration for krb5-sync.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
+dnl Copyright 2015 Russ Allbery <eagle@eyrie.org>
 dnl Copyright 2006, 2007, 2010, 2012, 2013
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
@@ -14,6 +15,9 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([1.11 check-news dist-xz foreign silent-rules subdir-objects
     -Wall -Werror])
 AM_MAINTAINER_MODE
+
+dnl Detect unexpanded macros.
+m4_pattern_forbid([^_?RRA_])
 
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
@@ -64,7 +68,7 @@ LIBS="$save_LIBS"
 AC_SUBST([DL_LIBS])
 
 AC_HEADER_STDBOOL
-AC_CHECK_HEADERS([sys/bittypes.h syslog.h])
+AC_CHECK_HEADERS([sys/bittypes.h sys/select.h sys/time.h syslog.h])
 AC_CHECK_DECLS([snprintf, vsnprintf])
 RRA_C_C99_VAMACROS
 RRA_C_GNU_VAMACROS
@@ -74,7 +78,7 @@ AC_CHECK_TYPES([ssize_t], [], [],
     [#include <sys/types.h>])
 RRA_FUNC_SNPRINTF
 AC_CHECK_FUNCS([setrlimit])
-AC_REPLACE_FUNCS([asprintf strndup])
+AC_REPLACE_FUNCS([asprintf mkstemp reallocarray strndup])
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_HEADER([config.h])

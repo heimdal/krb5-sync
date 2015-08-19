@@ -1,5 +1,19 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 3.1 (unreleased)
+
+    Update to rra-c-util 5.8:
+
+    * Support the Solaris 10 embedded Kerberos implementation.
+    * Use calloc or reallocarray instead of malloc.
+    * Fix compilation with a C++ compiler.
+
+    Update to C TAP Harness 3.3:
+
+    * Display verbose test results with -v or C_TAP_VERBOSE.
+    * Reopen standard input to /dev/null when running a test list.
+    * Don't leak extraneous file descriptors to tests.
+
 krb5-sync 3.0 (2013-12-09)
 
     The default installed module name has been changed to sync.so from
