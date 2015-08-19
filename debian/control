@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9), dh-autoreconf, libipc-run-perl,
  libkrb5-dev, libldap2-dev, libnet-remctl-perl (>= 3.4),
  libperl6-slurp-perl, libtest-minimumversion-perl, libtest-pod-perl,
  libtest-strict-perl
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: http://www.eyrie.org/~eagle/software/krb5-sync/
 Vcs-Browser: http://git.eyrie.org/?p=kerberos/krb5-sync.git
 Vcs-Git: git://git.eyrie.org/kerberos/krb5-sync.git -b debian

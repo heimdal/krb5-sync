@@ -7,6 +7,7 @@ krb5-sync (3.1-1) UNRELEASED; urgency=medium
   * Fix Upstream-Contact email address in debian/copyright.
   * Add debian/gbp.conf reflecting the branch layout of the default
     packaging repository.
+  * Update standards version to 3.9.6 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Sun, 13 Apr 2014 12:30:34 -0700
 
