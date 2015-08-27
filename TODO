@@ -15,6 +15,11 @@ Plugin:
    exists but the keytab does not is horrible.  Nothing is logged and the
    client just gets a generic failure message.
 
+ * Support instance-specific roots, DN mappings, and transforms for
+   accounts (such as would be needed for /sunet instances at Stanford).
+
+ * Use krb5_chpw_message to parse AD replies.
+
 Configuration:
 
  * krb5-sync-backend should get the path to Perl from configure.

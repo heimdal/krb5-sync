@@ -42,7 +42,7 @@ my @IGNORE = (
     qr{ $IGNORE_PREFIX .* Authentication error \z }xms,
     qr{ $IGNORE_PREFIX .* for [ ] service_locator \z }xms,
     qr{ $IGNORE_PREFIX .* Operation [ ] not [ ] permitted \z }xms,
-    qr{ $IGNORE_PREFIX .* user [ ] .* [ ] not [ ] found [ ] in [ ] \S+\z}xms,
+    qr{ $IGNORE_PREFIX .* user [ ] .* [ ] not [ ] found [ ] via [ ] \S+\z}xms,
 );
 
 ##############################################################################
@@ -318,7 +318,7 @@ sub process {
                 for my $ignore (@IGNORE) {
                     next STDERR if $line =~ m{ $ignore }xms;
                 }
-                print {*STDERR} $line
+                print {*STDERR} $line, "\n"
                   or warn "$0: cannot write to standard error: $!\n";
             }
         } else {

@@ -1,13 +1,14 @@
-                              krb5-sync 3.0
+                              krb5-sync 3.1
             (Kerberos Active Directory synchronization plugin)
 
                Maintained by Russ Allbery <eagle@eyrie.org>
 
-  Copyright 2006, 2007, 2010, 2011, 2012, 2013 The Board of Trustees of
-  the Leland Stanford Junior University.  Originally developed by Derrick
-  Brashear and Ken Hornstein of Sine Nomine Associates, on behalf of
-  Stanford University.  This software is distributed under a BSD-style
-  license.  Please see the section LICENSE below for more information.
+  Copyright 2015 Russ Allbery <eagle@eyrie.org>.  Copyright 2006, 2007,
+  2010, 2011, 2012, 2013 The Board of Trustees of the Leland Stanford
+  Junior University.  Originally developed by Derrick Brashear and Ken
+  Hornstein of Sine Nomine Associates, on behalf of Stanford University.
+  This software is distributed under a BSD-style license.  Please see the
+  section LICENSE below for more information.
 
 BLURB
 
@@ -427,6 +428,7 @@ LICENSE
   The krb5-sync package as a whole is covered by the following copyright
   statement and license:
 
+    Copyright 2015 Russ Allbery <eagle@eyrie.org>
     Copyright 2006, 2007, 2008, 2010, 2011, 2012, 2013
         The Board of Trustees of the Leland Stanford Junior University
 

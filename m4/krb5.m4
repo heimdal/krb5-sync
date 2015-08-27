@@ -17,6 +17,12 @@ dnl
 dnl If KRB5_CPPFLAGS, KRB5_LDFLAGS, or KRB5_LIBS are set before calling these
 dnl macros, their values will be added to whatever the macros discover.
 dnl
+dnl KRB5_CPPFLAGS_GCC will be set to the same value as KRB5_CPPFLAGS but with
+dnl any occurrences of -I changed to -isystem.  This may be useful to suppress
+dnl warnings from the Kerberos header files when building with GCC and
+dnl aggressive warning flags.  Be aware that this change will change the
+dnl compiler header file search order as well.
+dnl
 dnl Provides the RRA_LIB_KRB5_OPTIONAL macro, which should be used if Kerberos
 dnl support is optional.  In this case, Kerberos libraries are mandatory if
 dnl --with-krb5 is given, and will not be probed for if --without-krb5 is
@@ -44,7 +50,7 @@ dnl The canonical version of this file is maintained in the rra-c-util
 dnl package, available at <http://www.eyrie.org/~eagle/software/rra-c-util/>.
 dnl
 dnl Written by Russ Allbery <eagle@eyrie.org>
-dnl Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013
+dnl Copyright 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2013, 2014
 dnl     The Board of Trustees of the Leland Stanford Junior University
 dnl
 dnl This file is free software; the authors give unlimited permission to copy
@@ -58,6 +64,8 @@ dnl Headers to include when probing for Kerberos library properties.
 AC_DEFUN([RRA_INCLUDES_KRB5], [[
 #if HAVE_KRB5_H
 # include <krb5.h>
+#elif HAVE_KERBEROSV5_KRB5_H
+# include <kerberosv5/krb5.h>
 #else
 # include <krb5/krb5.h>
 #endif
@@ -107,6 +115,23 @@ AC_DEFUN([_RRA_LIB_KRB5_CHECK_HEADER],
      AC_MSG_RESULT([yes])],
     [AC_MSG_RESULT([no])])])
 
+dnl Check for the com_err header.  Internal helper macro since we need
+dnl to do the same checks in multiple places.
+AC_DEFUN([_RRA_LIB_KRB5_CHECK_HEADER_COM_ERR],
+[AS_IF([test x"$rra_krb5_incroot" = x],
+    [AC_CHECK_HEADERS([et/com_err.h kerberosv5/com_err.h])],
+        [_RRA_LIB_KRB5_CHECK_HEADER([et/com_err.h])
+         _RRA_LIB_KRB5_CHECK_HEADER([kerberosv5/com_err.h])])])
+
+dnl Check for the main Kerberos header.  Internal helper macro since we need
+dnl to do the same checks in multiple places.
+AC_DEFUN([_RRA_LIB_KRB5_CHECK_HEADER_KRB5],
+[AS_IF([test x"$rra_krb5_incroot" = x],
+     [AC_CHECK_HEADERS([krb5.h kerberosv5/krb5.h krb5/krb5.h])],
+     [_RRA_LIB_KRB5_CHECK_HEADER([krb5.h])
+      _RRA_LIB_KRB5_CHECK_HEADER([kerberosv5/krb5.h])
+      _RRA_LIB_KRB5_CHECK_HEADER([krb5/krb5.h])])])
+
 dnl Does the appropriate library checks for reduced-dependency Kerberos
 dnl linkage.  The single argument, if true, says to fail if Kerberos could not
 dnl be found.
@@ -116,10 +141,7 @@ AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
      [AS_IF([test x"$1" = xtrue],
          [AC_MSG_ERROR([cannot find usable Kerberos library])])])
  LIBS="$KRB5_LIBS $LIBS"
- AS_IF([test x"$rra_krb5_incroot" = x],
-     [AC_CHECK_HEADERS([krb5.h krb5/krb5.h])],
-     [_RRA_LIB_KRB5_CHECK_HEADER([krb5.h])
-      _RRA_LIB_KRB5_CHECK_HEADER([krb5/krb5.h])])
+ _RRA_LIB_KRB5_CHECK_HEADER_KRB5
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_error_string], [],
@@ -134,7 +156,7 @@ AC_DEFUN([_RRA_LIB_KRB5_REDUCED],
                      [AS_IF([test x"$1" = xtrue],
                          [AC_MSG_ERROR([cannot find usable com_err library])],
                          [KRB5_LIBS=""])])
-                  AC_CHECK_HEADERS([et/com_err.h])])])])])
+                  _RRA_LIB_KRB5_CHECK_HEADER_COM_ERR])])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl Does the appropriate library checks for Kerberos linkage when we don't
@@ -181,10 +203,7 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
         [$rra_krb5_extra])],
     [-lasn1 -lcom_err -lcrypto $rra_krb5_extra])
  LIBS="$KRB5_LIBS $LIBS"
- AS_IF([test x"$rra_krb5_incroot" = x],
-     [AC_CHECK_HEADERS([krb5.h krb5/krb5.h])],
-     [_RRA_LIB_KRB5_CHECK_HEADER([krb5.h])
-      _RRA_LIB_KRB5_CHECK_HEADER([krb5/krb5.h])])
+ _RRA_LIB_KRB5_CHECK_HEADER_KRB5
  AC_CHECK_FUNCS([krb5_get_error_message],
      [AC_CHECK_FUNCS([krb5_free_error_message])],
      [AC_CHECK_FUNCS([krb5_get_error_string], [],
@@ -192,7 +211,7 @@ AC_DEFUN([_RRA_LIB_KRB5_MANUAL],
              [AC_CHECK_FUNCS([krb5_svc_get_msg],
                  [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h], [], [],
                      [RRA_INCLUDES_KRB5])],
-                 [AC_CHECK_HEADERS([et/com_err.h])])])])])
+                 [_RRA_LIB_KRB5_CHECK_HEADER_COM_ERR])])])])
  RRA_LIB_KRB5_RESTORE])
 
 dnl Sanity-check the results of krb5-config and be sure we can really link a
@@ -216,10 +235,7 @@ AC_DEFUN([_RRA_LIB_KRB5_CONFIG],
 [RRA_KRB5_CONFIG([${rra_krb5_root}], [krb5], [KRB5],
     [_RRA_LIB_KRB5_CHECK([$1])
      RRA_LIB_KRB5_SWITCH
-     AS_IF([test x"$rra_krb5_incroot" = x],
-         [AC_CHECK_HEADERS([krb5.h krb5/krb5.h])],
-         [_RRA_LIB_KRB5_CHECK_HEADER([krb5.h])
-          _RRA_LIB_KRB5_CHECK_HEADER([krb5/krb5.h])])
+     _RRA_LIB_KRB5_CHECK_HEADER_KRB5
      AC_CHECK_FUNCS([krb5_get_error_message],
          [AC_CHECK_FUNCS([krb5_free_error_message])],
          [AC_CHECK_FUNCS([krb5_get_error_string], [],
@@ -227,7 +243,7 @@ AC_DEFUN([_RRA_LIB_KRB5_CONFIG],
                  [AC_CHECK_FUNCS([krb5_svc_get_msg],
                      [AC_CHECK_HEADERS([ibm_svc/krb5_svc.h], [], [],
                          [RRA_INCLUDES_KRB5])],
-                     [AC_CHECK_HEADERS([et/com_err.h])])])])])
+                     [_RRA_LIB_KRB5_CHECK_HEADER_COM_ERR])])])])
      RRA_LIB_KRB5_RESTORE],
     [_RRA_LIB_KRB5_PATHS
      _RRA_LIB_KRB5_MANUAL([$1])])])
@@ -239,6 +255,10 @@ dnl checking.
 AC_DEFUN([_RRA_LIB_KRB5_INTERNAL],
 [AC_REQUIRE([RRA_ENABLE_REDUCED_DEPENDS])
  rra_krb5_incroot=
+ AC_SUBST([KRB5_CPPFLAGS])
+ AC_SUBST([KRB5_CPPFLAGS_GCC])
+ AC_SUBST([KRB5_LDFLAGS])
+ AC_SUBST([KRB5_LIBS])
  AS_IF([test x"$rra_krb5_includedir" != x],
     [rra_krb5_incroot="$rra_krb5_includedir"],
     [AS_IF([test x"$rra_krb5_root" != x],
@@ -253,7 +273,8 @@ AC_DEFUN([_RRA_LIB_KRB5_INTERNAL],
  rra_krb5_uses_com_err=false
  AS_CASE([$KRB5_LIBS], [*-lcom_err*], [rra_krb5_uses_com_err=true])
  AM_CONDITIONAL([KRB5_USES_COM_ERR],
-    [test x"$rra_krb5_uses_com_err" = xtrue])])
+    [test x"$rra_krb5_uses_com_err" = xtrue])
+ KRB5_CPPFLAGS_GCC=`echo "$KRB5_CPPFLAGS" | sed -e 's/-I/-isystem /g'`])
 
 dnl The main macro for packages with mandatory Kerberos support.
 AC_DEFUN([RRA_LIB_KRB5],
@@ -261,9 +282,6 @@ AC_DEFUN([RRA_LIB_KRB5],
  rra_krb5_libdir=
  rra_krb5_includedir=
  rra_use_KRB5=true
- AC_SUBST([KRB5_CPPFLAGS])
- AC_SUBST([KRB5_LDFLAGS])
- AC_SUBST([KRB5_LIBS])
 
  AC_ARG_WITH([krb5],
     [AS_HELP_STRING([--with-krb5=DIR],
@@ -289,9 +307,6 @@ AC_DEFUN([RRA_LIB_KRB5_OPTIONAL],
  rra_krb5_libdir=
  rra_krb5_includedir=
  rra_use_KRB5=
- AC_SUBST([KRB5_CPPFLAGS])
- AC_SUBST([KRB5_LDFLAGS])
- AC_SUBST([KRB5_LIBS])
 
  AC_ARG_WITH([krb5],
     [AS_HELP_STRING([--with-krb5@<:@=DIR@:>@],

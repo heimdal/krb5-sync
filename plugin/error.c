@@ -5,6 +5,7 @@
  * message in the Kerberos context.
  *
  * Written by Russ Allbery <eagle@eyrie.org>
+ * Copyright 2015 Russ Allbery <eagle@eyrie.org>
  * Copyright 2013
  *     The Board of Trustees of the Leland Stanford Junior University
  *
@@ -28,7 +29,7 @@
  * set, which is normally the same as the one passed in, but which may change
  * if we can't allocate memory.
  */
-static krb5_error_code
+static krb5_error_code __attribute__((__format__(printf, 3, 0)))
 set_error(krb5_context ctx, krb5_error_code code, const char *format,
           va_list args)
 {

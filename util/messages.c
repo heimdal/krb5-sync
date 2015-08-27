@@ -131,7 +131,7 @@ message_handlers(message_handler_func **list, unsigned int count, va_list args)
 
     if (*list != stdout_handlers && *list != stderr_handlers)
         free(*list);
-    *list = xmalloc(sizeof(message_handler_func) * (count + 1));
+    *list = xcalloc(count + 1, sizeof(message_handler_func));
     for (i = 0; i < count; i++)
         (*list)[i] = (message_handler_func) va_arg(args, message_handler_func);
     (*list)[count] = NULL;
@@ -157,6 +157,31 @@ HANDLER_FUNCTION(debug)
 HANDLER_FUNCTION(notice)
 HANDLER_FUNCTION(warn)
 HANDLER_FUNCTION(die)
+
+
+/*
+ * Reset all handlers back to the defaults and free all allocated memory.
+ * This is primarily useful for programs that undergo comprehensive memory
+ * allocation analysis.
+ */
+void
+message_handlers_reset(void)
+{
+    free(debug_handlers);
+    debug_handlers = NULL;
+    if (notice_handlers != stdout_handlers) {
+        free(notice_handlers);
+        notice_handlers = stdout_handlers;
+    }
+    if (warn_handlers != stderr_handlers) {
+        free(warn_handlers);
+        warn_handlers = stderr_handlers;
+    }
+    if (die_handlers != stderr_handlers) {
+        free(die_handlers);
+        die_handlers = stderr_handlers;
+    }
+}
 
 
 /*
@@ -200,7 +225,7 @@ message_log_stderr(size_t len UNUSED, const char *fmt, va_list args, int err)
  * This needs further attention on Windows.  For example, it currently doesn't
  * log the errno information.
  */
-static void
+static void __attribute__((__format__(printf, 3, 0)))
 message_log_syslog(int pri, size_t len, const char *fmt, va_list args, int err)
 {
     char *buffer;
