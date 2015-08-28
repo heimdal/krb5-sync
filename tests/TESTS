@@ -8,6 +8,8 @@ plugin/mit
 plugin/queue-only
 plugin/queuing
 portable/asprintf
+portable/mkstemp
+portable/reallocarray
 portable/snprintf
 tools/backend
 util/messages

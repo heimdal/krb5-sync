@@ -39,6 +39,7 @@ krb5_error_code
 sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
 {
     kadm5_hook_modinfo *config;
+    krb5_error_code code;
 
     /* Allocate our internal data. */
     config = calloc(1, sizeof(*config));
@@ -53,7 +54,11 @@ sync_init(krb5_context ctx, kadm5_hook_modinfo **result)
     sync_config_string(ctx, "ad_ldap_base", &config->ad_ldap_base);
 
     /* Get allowed instances from krb5.conf. */
-    sync_config_list(ctx, "ad_instances", &config->ad_instances);
+    code = sync_config_list(ctx, "ad_instances", &config->ad_instances);
+    if (code != 0) {
+        sync_close(ctx, config);
+        return code;
+    }
 
     /* See if we're propagating an instance to the base account in AD. */
     sync_config_string(ctx, "ad_base_instance", &config->ad_base_instance);

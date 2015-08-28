@@ -86,6 +86,13 @@ specifies the base tree inside Active Directory where account information
 is stored.  Omit the trailing C<dc=> part; it will be added automatically
 from C<ad_realm>.
 
+Be aware that the C<ad_instances>, C<ad_base_instance>, and
+C<ad_queue_only> configuration options that are used by the krb5-sync
+plugin are ignored by B<krb5-sync>.  The B<krb5-sync> command will push
+changes to whatever principal it was given, regardless of the normal
+limits on instances, and does not do any of the principal remapping
+configured with C<ad_base_instance>.
+
 =head1 OPTIONS
 
 =over 4

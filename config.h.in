@@ -44,6 +44,12 @@
 /* Define to 1 if you have the <kadm5/kadm5_err.h> header file. */
 #undef HAVE_KADM5_KADM5_ERR_H
 
+/* Define to 1 if you have the <kerberosv5/com_err.h> header file. */
+#undef HAVE_KERBEROSV5_COM_ERR_H
+
+/* Define to 1 if you have the <kerberosv5/krb5.h> header file. */
+#undef HAVE_KERBEROSV5_KRB5_H
+
 /* Define to enable Kerberos features. */
 #undef HAVE_KRB5
 
@@ -120,8 +126,14 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `mkstemp' function. */
+#undef HAVE_MKSTEMP
+
 /* Define to 1 if you have the <profile.h> header file. */
 #undef HAVE_PROFILE_H
+
+/* Define to 1 if you have the `reallocarray' function. */
+#undef HAVE_REALLOCARRAY
 
 /* Define to 1 if you have the `setrlimit' function. */
 #undef HAVE_SETRLIMIT
@@ -156,8 +168,14 @@
 /* Define to 1 if you have the <sys/bittypes.h> header file. */
 #undef HAVE_SYS_BITTYPES_H
 
+/* Define to 1 if you have the <sys/select.h> header file. */
+#undef HAVE_SYS_SELECT_H
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H

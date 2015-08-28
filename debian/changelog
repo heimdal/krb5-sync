@@ -1,4 +1,4 @@
-krb5-sync (3.0-3su1) stable-kdc; urgency=medium
+krb5-sync (3.1-1su1) stable-kdc; urgency=medium
 
   * Separate Stanford-local krb5-sync package built against Heimdal.  The
     main krb5-sync package is now being built against MIT Kerberos for
@@ -9,7 +9,28 @@ krb5-sync (3.0-3su1) stable-kdc; urgency=medium
     build a version of krb5-sync-tools linked with Heimdal.
   * Change build dependency to heimdal-dev.
 
- -- Russ Allbery <rra@debian.org>  Tue, 10 Dec 2013 18:33:26 -0800
+ -- Jon C. Robertson <jonrober@stanford.edu>  Thu, 27 Aug 2015 11:18:48 -0700
+
+krb5-sync (3.1-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Fix ignore regex and errors for krb5-sync-backend silent mode.
+  * Add the upstream release signing key and verify it in debian/watch.
+  * Prefer *.tar.xz in debian/watch to match packaging.
+  * Fix Upstream-Contact email address in debian/copyright.
+  * Add debian/gbp.conf reflecting the branch layout of the default
+    packaging repository.
+  * Update standards version to 3.9.6 (no changes required).
+
+ -- Russ Allbery <rra@debian.org>  Tue, 18 Aug 2015 21:45:35 -0700
+
+krb5-sync (3.0-4) unstable; urgency=medium
+
+  * Actually use dh_autoreconf rather than only depending on it.  Thanks
+    to Matthias Klose for the report.  (Closes: #744600)
+  * Enable parallel builds.
+
+ -- Russ Allbery <rra@debian.org>  Sun, 13 Apr 2014 11:14:45 -0700
 
 krb5-sync (3.0-3) unstable; urgency=medium
 
