@@ -1,5 +1,9 @@
                       User-Visible krb5-sync Changes
 
+krb5-sync 3.2 (unreleased)
+
+    Add a patch for Heimdal 7.4.0, contributed by Patrik Lundin.
+
 krb5-sync 3.1 (2015-08-18)
 
     In krb5-sync-backend silent mode, fix the ignore regex for missing
