@@ -361,7 +361,7 @@ CONFIGURATION
   to use the plugin, add configuration like:
 
       [kadmin]
-          hook_libraries = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
+          hooks = /usr/local/lib/krb5/plugins/kadm5_hook/sync.so
 
   to the configuration file used by kadmind and kpasswdd.  Update the path
   for wherever the krb5-sync plugin is located.

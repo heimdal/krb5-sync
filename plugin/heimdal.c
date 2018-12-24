@@ -23,58 +23,189 @@
 #include <plugin/internal.h>
 #include <util/macros.h>
 
-#define KADM5_HOOK_VERSION_V0 0
+#define KADM5_HOOK_VERSION_V1 1
 
 enum kadm5_hook_stage {
     KADM5_HOOK_STAGE_PRECOMMIT,
     KADM5_HOOK_STAGE_POSTCOMMIT
 };
 
-typedef struct kadm5_hook {
-    const char *name;
+typedef struct kadm5_hook_ftable {
     int version;
+    krb5_error_code (KRB5_CALLCONV *init)(krb5_context, void **data);
+    void (KRB5_CALLCONV *fini)(void *data);
+
+    const char *name;
     const char *vendor;
 
-    krb5_error_code (*init)(krb5_context, void **);
-    void (*fini)(krb5_context, void *);
+    /*
+     * Hook functions; NULL functions are ignored. code is only valid on
+     * post-commit hooks and represents the result of the commit. Post-
+     * commit hooks are not called if a pre-commit hook aborted the call.
+     */
+    krb5_error_code (KRB5_CALLCONV *chpass)(krb5_context context,
+					    void *data,
+					    enum kadm5_hook_stage stage,
+					    krb5_error_code code,
+					    krb5_const_principal princ,
+					    uint32_t flags,
+					    size_t n_ks_tuple,
+					    krb5_key_salt_tuple *ks_tuple,
+					    const char *password);
 
-    krb5_error_code (*chpass)(krb5_context, void *, enum kadm5_hook_stage,
-                              krb5_principal, const char *);
-    krb5_error_code (*create)(krb5_context, void *, enum kadm5_hook_stage,
-                              kadm5_principal_ent_t, uint32_t mask,
-                              const char *password);
-    krb5_error_code (*modify)(krb5_context, void *, enum kadm5_hook_stage,
-                              kadm5_principal_ent_t, uint32_t mask);
-} kadm5_hook;
+    krb5_error_code (KRB5_CALLCONV *create)(krb5_context context,
+					    void *data,
+					    enum kadm5_hook_stage stage,
+					    krb5_error_code code,
+					    kadm5_principal_ent_t ent,
+					    uint32_t mask,
+					    const char *password);
 
+    krb5_error_code (KRB5_CALLCONV *modify)(krb5_context context,
+					    void *data,
+					    enum kadm5_hook_stage stage,
+					    krb5_error_code code,
+					    kadm5_principal_ent_t ent,
+					    uint32_t mask);
+
+    krb5_error_code (KRB5_CALLCONV *delete)(krb5_context context,
+					    void *data,
+					    enum kadm5_hook_stage stage,
+					    krb5_error_code code,
+					    krb5_const_principal princ);
+
+    krb5_error_code (KRB5_CALLCONV *randkey)(krb5_context context,
+					     void *data,
+					     enum kadm5_hook_stage stage,
+					     krb5_error_code code,
+					     krb5_const_principal princ);
+
+    krb5_error_code (KRB5_CALLCONV *rename)(krb5_context context,
+					    void *data,
+					    enum kadm5_hook_stage stage,
+					    krb5_error_code code,
+					    krb5_const_principal source,
+					    krb5_const_principal target);
+
+    krb5_error_code (KRB5_CALLCONV *set_keys)(krb5_context context,
+					      void *data,
+					      enum kadm5_hook_stage stage,
+					      krb5_error_code code,
+					      krb5_const_principal princ,
+					      uint32_t flags,
+					      size_t n_ks_tuple,
+					      krb5_key_salt_tuple *ks_tuple,
+					      size_t n_keys,
+					      krb5_keyblock *keyblocks);
+
+    krb5_error_code (KRB5_CALLCONV *prune)(krb5_context context,
+					   void *data,
+					   enum kadm5_hook_stage stage,
+					   krb5_error_code code,
+					   krb5_const_principal princ,
+					   int kvno);
+
+} kadm5_hook_ftable;
+
+static krb5_error_code
+init(krb5_context ctx, void **data);
+
+static void
+fini(void *data);
+
+static krb5_error_code
+chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
+       krb5_error_code code, krb5_const_principal princ,
+       uint32_t flags, size_t n_ks_tuple, krb5_key_salt_tuple *ks_tuple,
+       const char *password);
+
+static krb5_error_code
+create(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
+       krb5_error_code code, kadm5_principal_ent_t entry,
+       uint32_t mask, const char *password);
+
+static krb5_error_code
+modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
+       krb5_error_code code, kadm5_principal_ent_t entry, uint32_t mask);
+
+static const struct kadm5_hook_ftable kadm5_hook_v1 = {
+    KADM5_HOOK_VERSION_V1,
+    init,
+    fini,
+    "krb5-sync",
+    "Russ Allbery",
+    chpass,
+    create,
+    modify
+};
+
+static uintptr_t
+get_instance(const char *libname)
+{
+    if (strcmp(libname, "kadm5") == 0)
+	return kadm5_get_instance(libname);
+    else if (strcmp(libname, "krb5") == 0)
+	return krb5_get_instance(libname);
+
+    return 0;
+}
+
+krb5_error_code
+kadm5_hook_plugin_load(krb5_context ctx,
+		       krb5_get_instance_func_t *func,
+		       size_t *n_hooks,
+		       const kadm5_hook_ftable *const **hooks);
 
 /*
  * Initialize the plugin.  Calls the pwupdate_init() function and returns the
  * resulting data object.
  */
+krb5_error_code
+kadm5_hook_plugin_load(krb5_context ctx,
+		       krb5_get_instance_func_t *func,
+		       size_t *n_hooks,
+		       const kadm5_hook_ftable *const **hooks_p)
+{
+    static const kadm5_hook_ftable *const hooks[] = {
+	&kadm5_hook_v1
+    };
+
+    *func = get_instance;
+    *n_hooks = sizeof(hooks) / sizeof(hooks[0]);
+    *hooks_p = hooks;
+
+    return 0;
+}
+
+static krb5_context hook_krb5_ctx;
+
 static krb5_error_code
 init(krb5_context ctx, void **data)
 {
+    hook_krb5_ctx = ctx;
+
     return sync_init(ctx, (kadm5_hook_modinfo **) data);
 }
-
 
 /*
  * Shut down the object, freeing any internal resources.
  */
 static void
-fini(krb5_context ctx, void *data)
+fini(void *data)
 {
-    sync_close(ctx, data);
+    sync_close(hook_krb5_ctx, data);
+    hook_krb5_ctx = NULL;
 }
-
 
 /*
  * Handle a password change.
  */
 static krb5_error_code
 chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
-       krb5_principal princ, const char *password)
+       krb5_error_code code UNUSED, krb5_const_principal princ,
+       uint32_t flags UNUSED,
+       size_t n_ks_tuple UNUSED, krb5_key_salt_tuple *ks_tuple UNUSED,
+       const char *password)
 {
     /*
      * If password is NULL, we have a new key set but no password (meaning
@@ -86,7 +217,7 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
 
     /* Dispatch to the appropriate function. */
     if (stage == KADM5_HOOK_STAGE_PRECOMMIT)
-        return sync_chpass(data, ctx, princ, password);
+        return sync_chpass(data, ctx, (krb5_principal)princ, password);
     else
         return 0;
 }
@@ -100,10 +231,11 @@ chpass(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
  */
 static krb5_error_code
 create(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
-       kadm5_principal_ent_t entry, uint32_t mask UNUSED,
-       const char *password)
+       krb5_error_code code, kadm5_principal_ent_t entry,
+       uint32_t mask UNUSED, const char *password)
 {
-    return chpass(ctx, data, stage, entry->principal, password);
+    return chpass(ctx, data, stage, code, entry->principal,
+		  0, 0, NULL, password);
 }
 
 
@@ -116,26 +248,14 @@ create(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
  */
 static krb5_error_code
 modify(krb5_context ctx, void *data, enum kadm5_hook_stage stage,
-       kadm5_principal_ent_t entry, uint32_t mask)
+       krb5_error_code code, kadm5_principal_ent_t entry, uint32_t mask)
 {
     bool enabled;
 
-    if (mask & KADM5_ATTRIBUTES && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
+    if (mask & KADM5_ATTRIBUTES &&
+	code == 0 && stage == KADM5_HOOK_STAGE_POSTCOMMIT) {
         enabled = !(entry->attributes & KRB5_KDB_DISALLOW_ALL_TIX);
         return sync_status(data, ctx, entry->principal, enabled);
     }
     return 0;
 }
-
-
-/* The public symbol that Heimdal looks for. */
-struct kadm5_hook kadm5_hook_v0 = {
-    "krb5-sync",
-    KADM5_HOOK_VERSION_V0,
-    "Russ Allbery",
-    init,
-    fini,
-    chpass,
-    create,
-    modify
-};
